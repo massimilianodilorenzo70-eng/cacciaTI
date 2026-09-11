@@ -2,7 +2,7 @@
  * Quando aggiorni i file, incrementa CACHE_NAME (es. cacciaTI-v2) così i
  * telefoni scaricano la nuova versione invece di restare sulla vecchia cache. */
 
-const CACHE_NAME = "cacciaTI-v11";
+const CACHE_NAME = "cacciaTI-v12";
 
 const ASSETS = [
   "./",
@@ -71,6 +71,13 @@ function networkFirst(request) {
       });
   });
 }
+
+// L'app chiede la versione attiva per mostrarla nell'intestazione.
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "GET_VERSION" && event.ports[0]) {
+    event.ports[0].postMessage(CACHE_NAME);
+  }
+});
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
