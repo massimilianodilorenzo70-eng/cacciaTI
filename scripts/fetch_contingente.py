@@ -5,17 +5,22 @@ Legge la pagina pubblica dell'Ufficio della caccia e della pesca del Canton
 Ticino sullo stato dei contingenti di camoscio e capriolo, ed estrae stato
 (APERTO/CHIUSO) e percentuale per categoria.
 
-Progettato per fallire in modo visibile: se la pagina cambia struttura e le
-categorie attese non vengono trovate, lo script esce con errore SENZA
-scrivere/aggiornare il file dati, così l'app continua a mostrare l'ultimo
-dato buono conosciuto (con il suo orario) invece di un dato sbagliato
-spacciato per attuale.
+Riconoscimento PER NOME: ogni riquadro della pagina contiene il titolo della
+categoria (es. "Maschio adulto"), lo stato e la barra con la percentuale; la
+specie è il titolo di sezione che lo precede ("Camoscio" / "Capriolo").
+L'ordine dei riquadri sulla pagina quindi non conta più.
+
+Progettato per fallire in modo visibile: se una categoria attesa manca, compare
+due volte o ha dati non validi, lo script esce con errore SENZA scrivere il
+file, così l'app continua a mostrare l'ultimo dato buono (con il suo orario)
+invece di un dato sbagliato spacciato per attuale.
 """
 
 import datetime
 import json
 import re
 import sys
+import unicodedata
 from pathlib import Path
 
 import requests
@@ -25,80 +30,110 @@ URL = "https://www4.ti.ch/dt/da/ucp/gestione-caccia-alta-camoscio"
 SOURCE_LABEL = "Ufficio della caccia e della pesca, Repubblica e Cantone Ticino"
 OUT_PATH = Path(__file__).resolve().parent.parent / "data" / "contingente_alta.json"
 
+# (specie, categoria) normalizzate -> chiave usata in regolamento_2026.json
+CATEGORY_MAP = {
+    ("camoscio", "maschio adulto"): "camoscio_maschio_adulto",
+    ("camoscio", "femmina adulta"): "camoscio_femmina_adulta",
+    ("camoscio", "anzelli"): "camoscio_anzelli",
+    ("capriolo", "maschio adulto"): "capriolo_maschio_adulto",
+    ("capriolo", "femmina adulta"): "capriolo_femmina_adulta",
+}
 
-def fetch_lines():
+
+def norm(text):
+    """Minuscolo, senza accenti, spazi compattati."""
+    text = unicodedata.normalize("NFKD", text or "")
+    text = "".join(ch for ch in text if not unicodedata.combining(ch))
+    return " ".join(text.lower().split())
+
+
+def fetch_html():
     headers = {
         "User-Agent": "cacciaTI-app/1.0 (uso personale non commerciale; "
                       "https://github.com/massimilianodilorenzo70-eng/cacciaTI)"
     }
     resp = requests.get(URL, timeout=25, headers=headers)
     resp.raise_for_status()
-    soup = BeautifulSoup(resp.text, "html.parser")
-    for tag in soup(["script", "style", "nav", "header", "footer"]):
-        tag.decompose()
-    text = soup.get_text("\n")
-    lines = [l.strip() for l in text.split("\n")]
-    return [l for l in lines if l]
+    return resp.text
 
 
-# La pagina non espone "Camoscio"/"Capriolo"/"Maschio adulto" ecc. come testo
-# semplice (probabilmente sono dentro icone), ma stato e percentuale sì, e
-# compaiono sempre in questo ordine fisso — confermato dal contenuto reale
-# osservato. Mappiamo quindi per POSIZIONE invece che per etichetta.
-POSITIONAL_KEYS = [
-    "camoscio_maschio_adulto",
-    "camoscio_femmina_adulta",
-    "camoscio_anzelli",
-    "capriolo_maschio_adulto",
-    "capriolo_femmina_adulta",
-]
+def parse(html):
+    """Restituisce (items, avvisi, errori)."""
+    soup = BeautifulSoup(html, "html.parser")
+    root = soup.find("main") or soup
 
+    found = {}      # chiave -> item
+    warnings = []
+    errors = []
 
-def parse(lines):
-    pairs = []  # lista di (status, percent) nell'ordine di comparsa
-    i = 0
-    while i < len(lines):
-        cand = lines[i]
-        if cand.upper() in ("APERTO", "CHIUSO"):
-            status = cand.upper()
-            percent = None
-            for j in range(i + 1, min(i + 3, len(lines))):
-                m = re.match(r"^(\d{1,3})\s*%$", lines[j])
-                if m:
-                    percent = int(m.group(1))
-                    break
-            if percent is not None:
-                pairs.append((status, percent))
-        i += 1
+    for strong in root.find_all("strong"):
+        status = strong.get_text(strip=True).upper()
+        if status not in ("APERTO", "CHIUSO"):
+            continue
 
-    if len(pairs) != len(POSITIONAL_KEYS):
-        return [], pairs  # numero inatteso: lascio decidere al chiamante
+        box = strong.find_parent(class_=re.compile(r"frame-box-info"))
+        title = box.find("h3") if box else None
+        species_h2 = strong.find_previous("h2")
+        label = norm(title.get_text(" ")) if title else ""
+        species = norm(species_h2.get_text(" ")) if species_h2 else ""
 
-    items = [
-        {"contingenteKey": key, "status": status, "percent": percent}
-        for key, (status, percent) in zip(POSITIONAL_KEYS, pairs)
-    ]
-    return items, pairs
+        # percentuale: testo della barra (es. "50%"), in ripiego la larghezza
+        percent = None
+        bar = box.find(class_=re.compile(r"progress-bar")) if box else None
+        if bar:
+            m = re.search(r"(\d{1,3})\s*%", bar.get_text(" "))
+            if not m:
+                m = re.search(r"width\s*:\s*(\d{1,3})\s*%", bar.get("style", ""))
+            if m:
+                percent = int(m.group(1))
+
+        key = CATEGORY_MAP.get((species, label))
+        where = f"'{species or '?'}' / '{label or '?'}'"
+
+        if key is None:
+            warnings.append(f"Riquadro non riconosciuto, ignorato: {where} = {status} {percent}%")
+            continue
+        if key in found:
+            errors.append(f"Categoria presente due volte sulla pagina: {where}")
+            continue
+        if percent is None or not 0 <= percent <= 100:
+            errors.append(f"Percentuale mancante o non valida per {where}: {percent}")
+            continue
+
+        found[key] = {
+            "contingenteKey": key,
+            "label": f"{species.capitalize()} – {label}",
+            "status": status,
+            "percent": percent,
+        }
+
+    missing = [k for k in CATEGORY_MAP.values() if k not in found]
+    if missing:
+        errors.append(f"Categorie attese non trovate: {missing}")
+
+    # ordine stabile nel file, indipendente dall'ordine sulla pagina
+    items = [found[k] for k in CATEGORY_MAP.values() if k in found]
+    return items, warnings, errors
 
 
 def main():
     try:
-        lines = fetch_lines()
-        items, pairs = parse(lines)
+        html = fetch_html()
+        items, warnings, errors = parse(html)
     except Exception as e:
         print(f"Errore durante il recupero/parsing della pagina: {e}", file=sys.stderr)
         sys.exit(1)
 
-    if len(items) != len(POSITIONAL_KEYS):
-        print(f"Attese {len(POSITIONAL_KEYS)} coppie stato/percentuale, trovate {len(pairs)}: {pairs}",
-              file=sys.stderr)
+    for w in warnings:
+        print("ATTENZIONE:", w, file=sys.stderr)
+
+    if errors:
+        for e in errors:
+            print("ERRORE:", e, file=sys.stderr)
         print("Non scrivo il file: meglio un dato vecchio dichiarato tale che uno sbagliato.",
               file=sys.stderr)
-        print(f"\n--- DIAGNOSTICA: {len(lines)} righe di testo estratte dalla pagina ---",
+        print("Per capire cosa è cambiato, lancia il workflow 'Diagnostica pagina contingente'.",
               file=sys.stderr)
-        print("\nPrime 60 righe estratte:", file=sys.stderr)
-        for l in lines[:60]:
-            print(f"  | {l}", file=sys.stderr)
         sys.exit(1)
 
     out = {
