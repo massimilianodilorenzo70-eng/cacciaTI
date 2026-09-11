@@ -7,6 +7,7 @@ const Storage = (() => {
   const KEY_LOG = "cacciaTI_log_v1";
   const KEY_REGDATA = "cacciaTI_regolamento_v1";
   const KEY_PREFS = "cacciaTI_prefs_v1";
+  const KEY_DISCLAIMER_ACK = "cacciaTI_disclaimer_ack_v1";
 
   function getLog() {
     try {
@@ -57,9 +58,18 @@ const Storage = (() => {
     localStorage.setItem(KEY_PREFS, JSON.stringify(prefs));
   }
 
+  function hasAckedDisclaimer() {
+    return localStorage.getItem(KEY_DISCLAIMER_ACK) === "1";
+  }
+
+  function setAckedDisclaimer() {
+    localStorage.setItem(KEY_DISCLAIMER_ACK, "1");
+  }
+
   return {
     getLog, saveLog, addKill, deleteKill,
     getCustomRegolamento, setCustomRegolamento, clearCustomRegolamento,
     getPrefs, savePrefs,
+    hasAckedDisclaimer, setAckedDisclaimer,
   };
 })();

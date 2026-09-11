@@ -2,7 +2,7 @@
  * Quando aggiorni i file, incrementa CACHE_NAME (es. cacciaTI-v2) così i
  * telefoni scaricano la nuova versione invece di restare sulla vecchia cache. */
 
-const CACHE_NAME = "cacciaTI-v7";
+const CACHE_NAME = "cacciaTI-v9";
 
 const ASSETS = [
   "./",
@@ -36,6 +36,24 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
+
+  // Il contingente cambia più volte al giorno: prova sempre la rete prima,
+  // usa la cache solo se offline (a differenza del resto dell'app shell).
+  if (event.request.url.includes("contingente_alta.json")) {
+    event.respondWith(
+      fetch(event.request)
+        .then((resp) => {
+          if (resp && resp.ok) {
+            const copy = resp.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          }
+          return resp;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then((cached) => {
       const fetchPromise = fetch(event.request)

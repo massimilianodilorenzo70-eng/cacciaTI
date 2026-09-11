@@ -157,7 +157,8 @@
         "camoscio_totale",
         "camoscio_adulti"
       ],
-      "note": "Chi cattura questo capo come 1° camoscio perde il diritto al 3° capo di camoscio (l'anzello)."
+      "note": "Chi cattura questo capo come 1° camoscio perde il diritto al 3° capo di camoscio (l'anzello).",
+      "contingenteKey": "camoscio_maschio_adulto"
     },
     {
       "id": "cam_maschio_alt",
@@ -178,7 +179,8 @@
         "camoscio_adulti"
       ],
       "manualCheck": "Valido solo se hai già preso 1 femmina non lattifera ≥2,5 anni OPPURE 1 anzello ≤10 kg (capo sanitario). Controlla tu: condizione non verificata automaticamente.",
-      "note": "Se nella stagione precedente hai preso un maschio adulto senza femmina non lattifera, quest'anno NON hai diritto alla cattura diretta del maschio adulto (regola a cavallo d'anno — l'app non conserva dati di stagioni passate)."
+      "note": "Se nella stagione precedente hai preso un maschio adulto senza femmina non lattifera, quest'anno NON hai diritto alla cattura diretta del maschio adulto (regola a cavallo d'anno — l'app non conserva dati di stagioni passate).",
+      "contingenteKey": "camoscio_maschio_adulto"
     },
     {
       "id": "cam_femmina_non_lattifera",
@@ -197,7 +199,8 @@
       "groups": [
         "camoscio_totale",
         "camoscio_adulti"
-      ]
+      ],
+      "contingenteKey": "camoscio_femmina_adulta"
     },
     {
       "id": "cam_anzello",
@@ -216,7 +219,8 @@
       "groups": [
         "camoscio_totale"
       ],
-      "note": "Se maschio con corna >15 cm: esclude il diritto al maschio adulto ≥2,5 anni (e viceversa) — verifica manualmente."
+      "note": "Se maschio con corna >15 cm: esclude il diritto al maschio adulto ≥2,5 anni (e viceversa) — verifica manualmente.",
+      "contingenteKey": "camoscio_anzelli"
     },
     {
       "id": "cam_vietato",
@@ -249,7 +253,8 @@
       "groups": [
         "capriolo_totale"
       ],
-      "note": "14 settembre solo nei settori dove previsto, fino a raggiungimento della quota di Piano."
+      "note": "14 settembre solo nei settori dove previsto, fino a raggiungimento della quota di Piano.",
+      "contingenteKey": "capriolo_maschio_adulto"
     },
     {
       "id": "cap_maschio_alt",
@@ -271,7 +276,8 @@
       "requiresPriorThisSeason": [
         "cap_femmina_non_lattifera"
       ],
-      "note": "Sbloccato automaticamente dopo la cattura di una femmina di capriolo non lattifera ≥1,5 anni in questa stagione."
+      "note": "Sbloccato automaticamente dopo la cattura di una femmina di capriolo non lattifera ≥1,5 anni in questa stagione.",
+      "contingenteKey": "capriolo_maschio_adulto"
     },
     {
       "id": "cap_femmina_non_lattifera",
@@ -290,7 +296,8 @@
       "groups": [
         "capriolo_totale"
       ],
-      "note": "Fino a raggiungimento della quota di Piano di abbattimento."
+      "note": "Fino a raggiungimento della quota di Piano di abbattimento.",
+      "contingenteKey": "capriolo_femmina_adulta"
     },
     {
       "id": "cervo_maschio_2punte",

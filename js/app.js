@@ -5,6 +5,7 @@
   let selectedDate = new Date();
   let prefs = Storage.getPrefs();
   let selectedHunt = null; // 'alta' | 'bassa' | 'acquatica' — scelto dall'utente o dedotto alla prima apertura
+  let contingenteData = null; // dati ufficiali camoscio/capriolo, se disponibili
 
   const HUNT_LABELS = { alta: "Caccia alta", bassa: "Caccia bassa", acquatica: "Caccia acquatica" };
   const HUNT_ORDER = ["alta", "bassa", "acquatica"];
@@ -16,6 +17,55 @@
     if (custom) { regData = custom; return; }
     const res = await fetch("data/regolamento_2026.json");
     regData = await res.json();
+  }
+
+  async function loadContingenteData() {
+    try {
+      const res = await fetch("data/contingente_alta.json", { cache: "no-store" });
+      if (!res.ok) { contingenteData = null; return; }
+      contingenteData = await res.json();
+    } catch (e) {
+      contingenteData = null;
+    }
+  }
+
+  function contingenteFor(key) {
+    if (!contingenteData || !contingenteData.items) return null;
+    return contingenteData.items.find(it => it.contingenteKey === key) || null;
+  }
+
+  function renderContingenteBox(category) {
+    if (!category.contingenteKey) return "";
+    const item = contingenteFor(category.contingenteKey);
+    if (!item) {
+      return `
+        <div class="contingente-box stale">
+          <div class="cline"><span>Contingente ufficiale</span><span>non disponibile</span></div>
+          <div class="csource">Verifica sul
+            <a href="${(contingenteData && contingenteData.source) || "https://www4.ti.ch/dt/da/ucp/gestione-caccia-alta-camoscio"}" target="_blank" rel="noopener">sito ufficiale</a>
+          </div>
+        </div>`;
+    }
+    const fetchedAt = new Date(contingenteData.fetchedAt);
+    const hoursSince = (Date.now() - fetchedAt.getTime()) / 3_600_000;
+    const isStale = hoursSince > 48 || isNaN(hoursSince);
+    const statusCls = item.status === "APERTO" ? "aperto" : "chiuso";
+    const timeLabel = isNaN(fetchedAt.getTime())
+      ? ""
+      : fetchedAt.toLocaleString("it-CH", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+    return `
+      <div class="contingente-box ${isStale ? "stale" : ""}">
+        <div class="cline">
+          <span>Contingente ufficiale</span>
+          <span class="cstatus ${statusCls.toLowerCase()}">${item.status} · ${item.percent}%</span>
+        </div>
+        <div class="cbar"><div class="cbar-fill ${statusCls === "chiuso" ? "chiuso" : ""}" style="width:${Math.min(item.percent, 100)}%"></div></div>
+        <div class="csource">
+          ${isStale ? "Dato non aggiornato di recente — verifica sul " : "Fonte: "}
+          <a href="${contingenteData.source}" target="_blank" rel="noopener">${isStale ? "sito ufficiale" : contingenteData.sourceLabel}</a>
+          ${timeLabel ? ` · letto il ${timeLabel}` : ""}
+        </div>
+      </div>`;
   }
 
   // ---------- Vista OGGI ----------
@@ -110,6 +160,7 @@
       ${st.sub ? `<div class="note">${st.sub}</div>` : ""}
       ${r.category.manualCheck ? `<div class="note">${r.category.manualCheck}</div>` : ""}
       ${r.category.note ? `<div class="note">${r.category.note}</div>` : ""}
+      ${renderContingenteBox(r.category)}
       <button class="reg-btn" ${canRegister ? "" : "disabled"}>Registra abbattimento</button>
     `;
     card.querySelector(".reg-btn").addEventListener("click", () => openModal(r.category.id));
@@ -228,7 +279,17 @@
   // ---------- Init ----------
 
   async function init() {
+    if (!Storage.hasAckedDisclaimer()) {
+      document.getElementById("disclaimerAck").addEventListener("click", () => {
+        Storage.setAckedDisclaimer();
+        document.getElementById("disclaimerGate").classList.add("hidden");
+      });
+    } else {
+      document.getElementById("disclaimerGate").classList.add("hidden");
+    }
+
     await loadRegData();
+    loadContingenteData().then(renderOggi); // aggiorna la vista quando arriva (non blocca l'avvio)
 
     const dateInput = document.getElementById("dateInput");
     dateInput.value = RulesEngine.toISO(selectedDate);

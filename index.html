@@ -12,6 +12,30 @@
 </head>
 <body>
 
+<!-- GATE: letto una volta sola al primo avvio -->
+<div class="disclaimer-gate" id="disclaimerGate">
+  <div class="disclaimer-card">
+    <h2>Prima di iniziare</h2>
+    <p>
+      cacciaTI è un aiuto personale per orientarsi tra periodi, orari e quote del
+      Regolamento sulla caccia (RT 922.110) e per tenere il tuo registro abbattimenti.
+      Non è e non sostituisce in alcun modo il testo ufficiale del regolamento, né le
+      comunicazioni dell'Ufficio della caccia e della pesca.
+    </p>
+    <p>
+      Dove disponibili, i dati sul contingente di camoscio e capriolo sono letti
+      automaticamente dal sito ufficiale dell'Ufficio della caccia e della pesca —
+      ma restano un'informazione di supporto, non una garanzia: prima di agire,
+      verifica sempre tu stesso le fonti ufficiali cantonali.
+    </p>
+    <p>
+      Utilizzando l'app accetti che ogni decisione sul campo resta sotto la tua
+      responsabilità personale.
+    </p>
+    <button class="btn" id="disclaimerAck">Ho capito, continua</button>
+  </div>
+</div>
+
 <header class="app-header">
   <div class="top-row">
     <h1>cacciaTI</h1>
@@ -78,9 +102,11 @@
       stagioni passate e te lo segnala con un'etichetta gialla "da verificare".<br><br>
       Questa app è pensata come supporto pratico durante la stagione: raccoglie periodi, orari e
       quote del regolamento cantonale e li verifica in automatico con il tuo registro
-      abbattimenti. Non sostituisce in alcun caso il testo ufficiale del Regolamento sulla caccia
-      (RT 922.110) né le comunicazioni dell'Ufficio della caccia e della pesca, che restano
-      l'unico riferimento vincolante: in caso di dubbio, consulta sempre quelli prima di agire.
+      abbattimenti; dove disponibile, mostra anche il contingente di camoscio e capriolo letto
+      automaticamente dal sito dell'Ufficio della caccia e della pesca. Non sostituisce in alcun
+      caso il testo ufficiale del Regolamento sulla caccia (RT 922.110) né le comunicazioni
+      dell'Ufficio stesso, che restano l'unico riferimento vincolante: in caso di dubbio, consulta
+      sempre quelli prima di agire.
     </div>
 
     <div class="app-credit">cacciaTI — sviluppata da Massimiliano Di Lorenzo</div>
@@ -92,7 +118,7 @@
 
 <nav class="tabbar">
   <button class="tab-btn active" data-view="oggi"><span class="icon">◎</span>Oggi</button>
-  <button class="tab-btn" data-view="registro"><span class="icon">▤</span>Registro</button>
+  <button class="tab-btn" data-view="registro"><span class="icon">▤</span>Registro catture</button>
   <button class="tab-btn" data-view="regolamento"><span class="icon">§</span>Regolamento</button>
 </nav>
 
