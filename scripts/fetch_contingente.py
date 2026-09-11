@@ -96,6 +96,15 @@ def main():
               file=sys.stderr)
         print("Non scrivo il file: meglio un dato vecchio dichiarato tale che uno sbagliato.",
               file=sys.stderr)
+        print(f"\n--- DIAGNOSTICA: {len(lines)} righe di testo estratte dalla pagina ---",
+              file=sys.stderr)
+        has_camoscio = any("camoscio" in l.lower() for l in lines)
+        has_capriolo = any("capriolo" in l.lower() for l in lines)
+        print(f"Contiene la parola 'camoscio' da qualche parte? {has_camoscio}", file=sys.stderr)
+        print(f"Contiene la parola 'capriolo' da qualche parte? {has_capriolo}", file=sys.stderr)
+        print("\nPrime 60 righe estratte:", file=sys.stderr)
+        for l in lines[:60]:
+            print(f"  | {l}", file=sys.stderr)
         sys.exit(1)
 
     out = {
