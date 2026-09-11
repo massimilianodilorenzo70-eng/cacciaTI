@@ -4,6 +4,7 @@
   let regData = null;
   let selectedDate = new Date();
   let prefs = Storage.getPrefs();
+  let selectedHunt = null; // 'alta' | 'bassa' | 'acquatica' — scelto dall'utente o dedotto alla prima apertura
 
   const HUNT_LABELS = { alta: "Caccia alta", bassa: "Caccia bassa", acquatica: "Caccia acquatica" };
   const HUNT_ORDER = ["alta", "bassa", "acquatica"];
@@ -23,6 +24,15 @@
     return evalResults.some(r => r.category.huntType === huntType && r.dateOpen);
   }
 
+  function renderHuntTabs(results) {
+    document.querySelectorAll(".hunt-tab").forEach(btn => {
+      const ht = btn.dataset.hunt;
+      const active = currentHuntTypeIsActive(ht, results);
+      btn.classList.toggle("active", ht === selectedHunt);
+      btn.innerHTML = HUNT_LABELS[ht] + (active ? '<span class="dot"></span>' : "");
+    });
+  }
+
   function renderOggi() {
     const container = document.getElementById("sectionsContainer");
     container.innerHTML = "";
@@ -32,48 +42,39 @@
     const log = Storage.getLog();
     const results = RulesEngine.evaluateAll(regData, log, selectedDate, now, prefs);
 
-    const query = (document.getElementById("searchInput").value || "").trim().toLowerCase();
-
-    // ordina: sezione col periodo attivo oggi per prima
-    const order = [...HUNT_ORDER].sort((a, b) => {
-      const aActive = currentHuntTypeIsActive(a, results) ? 0 : 1;
-      const bActive = currentHuntTypeIsActive(b, results) ? 0 : 1;
-      return aActive - bActive;
-    });
-
-    for (const huntType of order) {
-      let sectionResults = results.filter(r =>
-        r.category.huntType === huntType && r.category.windows && r.category.windows.length > 0
-      );
-      if (query) {
-        sectionResults = sectionResults.filter(r =>
-          r.category.speciesLabel.toLowerCase().includes(query) ||
-          r.category.categoryLabel.toLowerCase().includes(query)
-        );
-      }
-      if (sectionResults.length === 0) continue;
-
-      const isActive = currentHuntTypeIsActive(huntType, results);
-      const section = document.createElement("div");
-      section.className = "hunt-section";
-      section.innerHTML = `<h2>${HUNT_LABELS[huntType]} ${isActive ? '<span class="badge-active">in corso oggi</span>' : ""}</h2>`;
-
-      // raggruppa per specie
-      const bySpecies = {};
-      for (const r of sectionResults) {
-        (bySpecies[r.category.speciesLabel] ||= []).push(r);
-      }
-
-      for (const speciesLabel of Object.keys(bySpecies)) {
-        for (const r of bySpecies[speciesLabel]) {
-          section.appendChild(renderCatCard(r));
-        }
-      }
-      container.appendChild(section);
+    if (selectedHunt === null) {
+      // alla primissima apertura, seleziona la caccia effettivamente in corso oggi, se c'è
+      selectedHunt = HUNT_ORDER.find(ht => currentHuntTypeIsActive(ht, results)) || "alta";
     }
 
-    if (container.innerHTML === "") {
+    renderHuntTabs(results);
+
+    const query = (document.getElementById("searchInput").value || "").trim().toLowerCase();
+
+    let sectionResults = results.filter(r =>
+      r.category.huntType === selectedHunt && r.category.windows && r.category.windows.length > 0
+    );
+    if (query) {
+      sectionResults = sectionResults.filter(r =>
+        r.category.speciesLabel.toLowerCase().includes(query) ||
+        r.category.categoryLabel.toLowerCase().includes(query)
+      );
+    }
+
+    if (sectionResults.length === 0) {
       container.innerHTML = `<div class="empty-state">Nessuna specie corrisponde alla ricerca.</div>`;
+      return;
+    }
+
+    // raggruppa per specie
+    const bySpecies = {};
+    for (const r of sectionResults) {
+      (bySpecies[r.category.speciesLabel] ||= []).push(r);
+    }
+    for (const speciesLabel of Object.keys(bySpecies)) {
+      for (const r of bySpecies[speciesLabel]) {
+        container.appendChild(renderCatCard(r));
+      }
     }
   }
 
@@ -252,6 +253,13 @@
     });
 
     document.getElementById("searchInput").addEventListener("input", renderOggi);
+
+    document.getElementById("huntTabs").addEventListener("click", (e) => {
+      const btn = e.target.closest(".hunt-tab");
+      if (!btn) return;
+      selectedHunt = btn.dataset.hunt;
+      renderOggi();
+    });
 
     document.querySelectorAll(".tab-btn").forEach(b => {
       b.addEventListener("click", () => switchView(b.dataset.view));
