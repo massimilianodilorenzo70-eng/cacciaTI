@@ -253,17 +253,21 @@
   function populateModalCategories(preselectId) {
     const sel = document.getElementById("modalCategory");
     sel.innerHTML = "";
-    for (const huntType of HUNT_ORDER) {
-      const group = document.createElement("optgroup");
-      group.label = HUNT_LABELS[huntType];
-      for (const c of regData.categories) {
-        if (c.huntType !== huntType || !c.windows || c.windows.length === 0) continue;
-        const opt = document.createElement("option");
-        opt.value = c.id;
-        opt.textContent = `${c.speciesLabel} — ${c.categoryLabel}`;
-        group.appendChild(opt);
-      }
-      sel.appendChild(group);
+
+    // Solo le specie del tipo di caccia selezionato in alto
+    // (se si parte da una scheda, vale il tipo di caccia di quella categoria).
+    const pre = preselectId ? regData.categories.find(c => c.id === preselectId) : null;
+    const huntType = (pre && pre.huntType) || selectedHunt || "alta";
+
+    document.querySelector("#modalBackdrop h3").textContent =
+      `Registra abbattimento — ${HUNT_LABELS[huntType] || ""}`;
+
+    for (const c of regData.categories) {
+      if (c.huntType !== huntType || !c.windows || c.windows.length === 0) continue;
+      const opt = document.createElement("option");
+      opt.value = c.id;
+      opt.textContent = `${c.speciesLabel} — ${c.categoryLabel}`;
+      sel.appendChild(opt);
     }
     if (preselectId) sel.value = preselectId;
   }
