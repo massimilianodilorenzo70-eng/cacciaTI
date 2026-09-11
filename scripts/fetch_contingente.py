@@ -25,18 +25,6 @@ URL = "https://www4.ti.ch/dt/da/ucp/gestione-caccia-alta-camoscio"
 SOURCE_LABEL = "Ufficio della caccia e della pesca, Repubblica e Cantone Ticino"
 OUT_PATH = Path(__file__).resolve().parent.parent / "data" / "contingente_alta.json"
 
-# (specie in minuscolo, etichetta categoria in minuscolo) -> chiave usata in regolamento_2026.json
-CATEGORY_MAP = {
-    ("camoscio", "maschio adulto"): "camoscio_maschio_adulto",
-    ("camoscio", "femmina adulta"): "camoscio_femmina_adulta",
-    ("camoscio", "anzelli"): "camoscio_anzelli",
-    ("capriolo", "maschio adulto"): "capriolo_maschio_adulto",
-    ("capriolo", "femmina adulta"): "capriolo_femmina_adulta",
-}
-
-SPECIES_LINES = {"camoscio", "capriolo"}
-CATEGORY_LINES = {"maschio adulto", "femmina adulta", "anzelli"}
-
 
 def fetch_lines():
     headers = {
@@ -53,55 +41,61 @@ def fetch_lines():
     return [l for l in lines if l]
 
 
+# La pagina non espone "Camoscio"/"Capriolo"/"Maschio adulto" ecc. come testo
+# semplice (probabilmente sono dentro icone), ma stato e percentuale sì, e
+# compaiono sempre in questo ordine fisso — confermato dal contenuto reale
+# osservato. Mappiamo quindi per POSIZIONE invece che per etichetta.
+POSITIONAL_KEYS = [
+    "camoscio_maschio_adulto",
+    "camoscio_femmina_adulta",
+    "camoscio_anzelli",
+    "capriolo_maschio_adulto",
+    "capriolo_femmina_adulta",
+]
+
+
 def parse(lines):
-    items = []
-    current_species = None
+    pairs = []  # lista di (status, percent) nell'ordine di comparsa
     i = 0
     while i < len(lines):
-        low = lines[i].lower()
-        if low in SPECIES_LINES:
-            current_species = low
-        elif current_species and low in CATEGORY_LINES:
-            key = CATEGORY_MAP.get((current_species, low))
-            if key:
-                status, percent = None, None
-                for j in range(i + 1, min(i + 6, len(lines))):
-                    cand = lines[j]
-                    if status is None and cand.upper() in ("APERTO", "CHIUSO"):
-                        status = cand.upper()
-                    m = re.match(r"^(\d{1,3})\s*%$", cand)
-                    if percent is None and m:
-                        percent = int(m.group(1))
-                    if status is not None and percent is not None:
-                        break
-                if status is not None and percent is not None:
-                    items.append({"contingenteKey": key, "status": status, "percent": percent})
+        cand = lines[i]
+        if cand.upper() in ("APERTO", "CHIUSO"):
+            status = cand.upper()
+            percent = None
+            for j in range(i + 1, min(i + 3, len(lines))):
+                m = re.match(r"^(\d{1,3})\s*%$", lines[j])
+                if m:
+                    percent = int(m.group(1))
+                    break
+            if percent is not None:
+                pairs.append((status, percent))
         i += 1
-    return items
+
+    if len(pairs) != len(POSITIONAL_KEYS):
+        return [], pairs  # numero inatteso: lascio decidere al chiamante
+
+    items = [
+        {"contingenteKey": key, "status": status, "percent": percent}
+        for key, (status, percent) in zip(POSITIONAL_KEYS, pairs)
+    ]
+    return items, pairs
 
 
 def main():
     try:
         lines = fetch_lines()
-        items = parse(lines)
+        items, pairs = parse(lines)
     except Exception as e:
         print(f"Errore durante il recupero/parsing della pagina: {e}", file=sys.stderr)
         sys.exit(1)
 
-    expected = set(CATEGORY_MAP.values())
-    found = {it["contingenteKey"] for it in items}
-    missing = expected - found
-    if missing:
-        print(f"Categorie non trovate (la pagina potrebbe aver cambiato struttura): {missing}",
+    if len(items) != len(POSITIONAL_KEYS):
+        print(f"Attese {len(POSITIONAL_KEYS)} coppie stato/percentuale, trovate {len(pairs)}: {pairs}",
               file=sys.stderr)
         print("Non scrivo il file: meglio un dato vecchio dichiarato tale che uno sbagliato.",
               file=sys.stderr)
         print(f"\n--- DIAGNOSTICA: {len(lines)} righe di testo estratte dalla pagina ---",
               file=sys.stderr)
-        has_camoscio = any("camoscio" in l.lower() for l in lines)
-        has_capriolo = any("capriolo" in l.lower() for l in lines)
-        print(f"Contiene la parola 'camoscio' da qualche parte? {has_camoscio}", file=sys.stderr)
-        print(f"Contiene la parola 'capriolo' da qualche parte? {has_capriolo}", file=sys.stderr)
         print("\nPrime 60 righe estratte:", file=sys.stderr)
         for l in lines[:60]:
             print(f"  | {l}", file=sys.stderr)
