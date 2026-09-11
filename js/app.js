@@ -81,6 +81,10 @@
       btn.classList.toggle("active", ht === selectedHunt);
       btn.innerHTML = HUNT_LABELS[ht] + (active ? '<span class="dot"></span>' : "");
     });
+
+    // La scelta "sotto i 400 mslm" riguarda solo gli orari di caccia alta
+    const altitude = document.querySelector(".altitude-toggle");
+    if (altitude) altitude.style.display = selectedHunt === "alta" ? "" : "none";
   }
 
   function renderOggi() {
