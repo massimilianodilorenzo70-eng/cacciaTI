@@ -120,14 +120,22 @@
       return;
     }
 
-    // raggruppa per specie
+    // Le specie restano nell'ordine del regolamento; dentro ogni specie
+    // prima le categorie sbloccate, poi le aperte, poi le chiuse.
+    const openRank = (r) => {
+      const open = r.dateOpen && !r.quotaBlocked && !r.requiresPriorMissing && !r.dailyBlocked;
+      if (!open) return 2;
+      return r.unlockedBy ? 0 : 1;
+    };
     const bySpecies = {};
     for (const r of sectionResults) {
       (bySpecies[r.category.speciesLabel] ||= []).push(r);
     }
     for (const speciesLabel of Object.keys(bySpecies)) {
-      // le categorie appena sbloccate e aperte vanno in cima alla specie
-      const list = bySpecies[speciesLabel].slice().sort((a, b) => isUnlockedOpen(b) - isUnlockedOpen(a));
+      const list = bySpecies[speciesLabel]
+        .map((r, i) => ({ r, i }))
+        .sort((a, b) => (openRank(a.r) - openRank(b.r)) || (a.i - b.i))
+        .map(x => x.r);
       for (const r of list) {
         container.appendChild(renderCatCard(r));
       }
