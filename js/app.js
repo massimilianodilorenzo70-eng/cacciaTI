@@ -400,6 +400,70 @@
       renderOggi();
     });
 
+    document.getElementById("importLogFile").addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        const parsed = JSON.parse(await file.text());
+        if (!Array.isArray(parsed)) throw new Error("il file non contiene un registro abbattimenti");
+
+        const isValid = (k) => k && typeof k.categoryId === "string" && /^\d{4}-\d{2}-\d{2}$/.test(k.date || "");
+        const valid = parsed.filter(isValid);
+        const invalid = parsed.length - valid.length;
+        if (valid.length === 0) throw new Error("nessun abbattimento valido trovato");
+
+        // Unisce al registro attuale saltando i doppioni (stesso id, oppure stessa categoria + data + note)
+        const log = Storage.getLog();
+        const sig = (k) => `${k.categoryId}|${k.date}|${(k.note || "").trim()}`;
+        const ids = new Set(log.map(k => k.id));
+        const sigs = new Set(log.map(sig));
+        const toAdd = [];
+        for (const k of valid) {
+          if ((k.id && ids.has(k.id)) || sigs.has(sig(k))) continue;
+          toAdd.push(k);
+          if (k.id) ids.add(k.id);
+          sigs.add(sig(k));
+        }
+        const duplicates = valid.length - toAdd.length;
+
+        if (toAdd.length === 0) {
+          alert(`Nessun abbattimento nuovo: tutti quelli del file (${duplicates}) sono già nel registro.`);
+          return;
+        }
+
+        const year = String(regData.regulationYear || "");
+        const otherYear = year ? toAdd.filter(k => !k.date.startsWith(year)).length : 0;
+        const unknown = toAdd.filter(k => !regData.categories.some(c => c.id === k.categoryId)).length;
+
+        let msg = `Abbattimenti nel file: ${valid.length}\nNuovi da aggiungere: ${toAdd.length}`;
+        if (duplicates) msg += `\nGià presenti (saltati): ${duplicates}`;
+        if (otherYear) msg += `\n\nATTENZIONE — con date fuori dal ${year}: ${otherYear}. Conterebbero comunque nelle quote di questa stagione.`;
+        if (unknown) msg += `\nCategorie non presenti nel regolamento attuale: ${unknown}`;
+        if (invalid) msg += `\nRighe non valide (ignorate): ${invalid}`;
+        msg += "\n\nAggiungerli al registro?";
+        if (!confirm(msg)) return;
+
+        const now = new Date().toISOString();
+        for (const k of toAdd) {
+          log.push({
+            id: k.id || "k_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7),
+            categoryId: k.categoryId,
+            date: k.date,
+            note: typeof k.note === "string" ? k.note : "",
+            createdAt: typeof k.createdAt === "string" ? k.createdAt : now,
+          });
+        }
+        Storage.saveLog(log);
+        renderRegistro();
+        renderOggi();
+        alert(`Abbattimenti aggiunti al registro: ${toAdd.length}`);
+      } catch (err) {
+        alert("File non valido: " + err.message);
+      } finally {
+        e.target.value = "";
+      }
+    });
+
     document.getElementById("exportLogBtn").addEventListener("click", () => {
       const log = Storage.getLog();
       const blob = new Blob([JSON.stringify(log, null, 2)], { type: "application/json" });
