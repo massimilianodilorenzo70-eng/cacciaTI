@@ -1,0 +1,35 @@
+name: Diagnostica pagina contingente
+
+# Solo avvio manuale: salva nel repo una copia della pagina ufficiale
+# esattamente come la riceve lo script, per capire dove sono i nomi
+# delle categorie (camoscio, capriolo, maschio, femmina, anzelli).
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  salva-pagina:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Scarica la pagina ufficiale
+        run: |
+          mkdir -p debug
+          curl -sSL --max-time 30 \
+            -A "cacciaTI-app/1.0 (uso personale non commerciale; https://github.com/massimilianodilorenzo70-eng/cacciaTI)" \
+            -o debug/pagina_contingente.html \
+            "https://www4.ti.ch/dt/da/ucp/gestione-caccia-alta-camoscio"
+          ls -la debug/
+          test -s debug/pagina_contingente.html
+
+      - name: Salva la copia nel repository
+        run: |
+          git config user.name "cacciaTI-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add debug/pagina_contingente.html
+          git diff --cached --quiet || git commit -m "Diagnostica: copia pagina contingente [bot]"
+          git pull --rebase
+          git push
