@@ -178,9 +178,16 @@
         "camoscio_totale",
         "camoscio_adulti"
       ],
-      "manualCheck": "Valido solo se hai già preso 1 femmina non lattifera ≥2,5 anni OPPURE 1 anzello ≤10 kg (capo sanitario). Controlla tu: condizione non verificata automaticamente.",
-      "note": "Se nella stagione precedente hai preso un maschio adulto senza femmina non lattifera, quest'anno NON hai diritto alla cattura diretta del maschio adulto (regola a cavallo d'anno — l'app non conserva dati di stagioni passate).",
-      "contingenteKey": "camoscio_maschio_adulto"
+      "note": "Regola a cavallo d'anno, da verificare tu: se nella stagione precedente hai preso il maschio adulto il giorno di apertura senza femmina non lattifera, quest'anno non hai diritto al maschio adulto (l'app non conserva dati delle stagioni passate).",
+      "contingenteKey": "camoscio_maschio_adulto",
+      "unlockAnyOf": [
+        "cam_femmina_non_lattifera"
+      ],
+      "unlockManualAnyOf": [
+        "cam_anzello"
+      ],
+      "unlockManualText": "Hai registrato un anzello: se pesava ≤10 kg (capo sanitario) il maschio è sbloccato. Controlla tu: il peso non è registrato nell'app.",
+      "lockedText": "Si sblocca registrando una femmina non lattifera ≥2,5 anni (oppure un anzello ≤10 kg, capo sanitario)."
     },
     {
       "id": "cam_femmina_non_lattifera",
