@@ -373,7 +373,35 @@
     renderOggi();
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("sw.js").catch(() => {});
+      // Se c'era già un service worker, l'arrivo di uno nuovo = nuova versione:
+      // ricarica una sola volta in automatico (niente doppio "aggiorna").
+      const hadController = !!navigator.serviceWorker.controller;
+      let reloading = false;
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (!hadController || reloading) return;
+        reloading = true;
+        window.location.reload();
+      });
+
+      // Mostra nell'intestazione la versione del service worker attivo
+      // (il numero di CACHE_NAME in sw.js: unico punto da aggiornare).
+      navigator.serviceWorker.ready.then((reg) => {
+        if (!reg.active) return;
+        const channel = new MessageChannel();
+        channel.port1.onmessage = (e) => {
+          const m = String(e.data || "").match(/v\d+$/);
+          if (m) document.getElementById("appVersion").textContent = m[0];
+        };
+        reg.active.postMessage({ type: "GET_VERSION" }, [channel.port2]);
+      });
+
+      navigator.serviceWorker.register("sw.js").then((reg) => {
+        // L'app installata spesso viene "ripresa" dallo sfondo senza ricaricarsi:
+        // quando torna in primo piano, controlla se è uscita una versione nuova.
+        document.addEventListener("visibilitychange", () => {
+          if (document.visibilityState === "visible") reg.update().catch(() => {});
+        });
+      }).catch(() => {});
     }
   }
 
