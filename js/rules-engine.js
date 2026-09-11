@@ -81,6 +81,13 @@ const RulesEngine = (() => {
     return log.filter(k => members.includes(k.categoryId)).length;
   }
 
+  // Primo capo registrato (per data) tra le categorie indicate, o null.
+  function firstKillAmong(log, categoryIds) {
+    const kills = log.filter(k => categoryIds.includes(k.categoryId));
+    if (kills.length === 0) return null;
+    return kills.slice().sort((a, b) => (a.date || "").localeCompare(b.date || ""))[0];
+  }
+
   function todayCountByCategories(log, iso, categoryIds) {
     return log.filter(k => k.date === iso && categoryIds.includes(k.categoryId)).length;
   }
@@ -96,6 +103,8 @@ const RulesEngine = (() => {
       quotaBlocked: false,
       quotaReason: null,
       requiresPriorMissing: false,
+      unlockedBy: null,      // capo registrato che ha sbloccato la categoria
+      unlockManual: false,   // sbloccabile, ma con condizione da verificare a mano
       dailyBlocked: false,
       dailyReason: null,
       remainingText: null,
@@ -151,6 +160,20 @@ const RulesEngine = (() => {
         reqId => seasonCountByCategory(log, reqId) === 0
       );
       if (missing.length > 0) {
+        result.requiresPriorMissing = true;
+      } else {
+        result.unlockedBy = firstKillAmong(log, category.requiresPriorThisSeason);
+      }
+    }
+
+    // Sblocco con alternative: basta uno dei capi indicati
+    if (category.unlockAnyOf) {
+      const k = firstKillAmong(log, category.unlockAnyOf);
+      if (k) {
+        result.unlockedBy = k;
+      } else if (category.unlockManualAnyOf && firstKillAmong(log, category.unlockManualAnyOf)) {
+        result.unlockManual = true;
+      } else {
         result.requiresPriorMissing = true;
       }
     }

@@ -122,18 +122,42 @@
       (bySpecies[r.category.speciesLabel] ||= []).push(r);
     }
     for (const speciesLabel of Object.keys(bySpecies)) {
-      for (const r of bySpecies[speciesLabel]) {
+      // le categorie appena sbloccate e aperte vanno in cima alla specie
+      const list = bySpecies[speciesLabel].slice().sort((a, b) => isUnlockedOpen(b) - isUnlockedOpen(a));
+      for (const r of list) {
         container.appendChild(renderCatCard(r));
       }
     }
   }
 
+  function isUnlockedOpen(r) {
+    return !!r.unlockedBy && r.dateOpen && !r.quotaBlocked && !r.requiresPriorMissing && !r.dailyBlocked;
+  }
+
+  function formatDateCH(iso) {
+    const [y, m, d] = (iso || "").split("-");
+    return d ? `${d}.${m}.${y}` : "";
+  }
+
+  function unlockBanner(r) {
+    const k = r.unlockedBy;
+    const src = regData.categories.find(c => c.id === k.categoryId);
+    const what = src ? `${src.speciesLabel.toLowerCase()} – ${src.categoryLabel.toLowerCase()}` : "il capo richiesto";
+    return `<div class="unlock-banner">✓ Sbloccata: hai registrato ${what} il ${formatDateCH(k.date)}</div>`;
+  }
+
   function statusFor(r) {
     if (!r.dateOpen) return { label: "Chiusa", cls: "status-closed" };
-    if (r.requiresPriorMissing) return { label: "Chiusa", cls: "status-closed", sub: "Condizione stagionale non ancora soddisfatta" };
+    if (r.requiresPriorMissing) return { label: "Chiusa", cls: "status-closed", sub: r.category.lockedText || "Condizione stagionale non ancora soddisfatta" };
     if (r.quotaBlocked) return { label: "Chiusa", cls: "status-closed", sub: r.quotaReason };
     if (r.dailyBlocked) return { label: "Chiusa oggi", cls: "status-closed", sub: r.dailyReason };
+    if (r.unlockManual) return { label: "Aperta — verifica", cls: "status-check", sub: r.category.unlockManualText };
     if (r.category.manualCheck) return { label: "Aperta — verifica", cls: "status-check" };
+    if (r.unlockedBy) {
+      return r.nowOpen
+        ? { label: "Sbloccata · aperta ora", cls: "status-unlocked" }
+        : { label: "Sbloccata · aperta oggi", cls: "status-unlocked", sub: "Fuori orario in questo momento" };
+    }
     if (r.nowOpen) return { label: "Aperta ora", cls: "status-open" };
     return { label: "Aperta oggi", cls: "status-open", sub: "Fuori orario in questo momento" };
   }
@@ -141,7 +165,7 @@
   function renderCatCard(r) {
     const st = statusFor(r);
     const card = document.createElement("div");
-    card.className = "cat-card";
+    card.className = isUnlockedOpen(r) ? "cat-card unlocked" : "cat-card";
 
     const canRegister = r.dateOpen && !r.quotaBlocked && !r.requiresPriorMissing && !r.dailyBlocked;
 
@@ -157,6 +181,7 @@
         <span>Orario: ${r.hoursToday}</span>
         ${r.remainingText ? `<span>${r.remainingText}</span>` : ""}
       </div>
+      ${isUnlockedOpen(r) ? unlockBanner(r) : ""}
       ${st.sub ? `<div class="note">${st.sub}</div>` : ""}
       ${r.category.manualCheck ? `<div class="note">${r.category.manualCheck}</div>` : ""}
       ${r.category.note ? `<div class="note">${r.category.note}</div>` : ""}
