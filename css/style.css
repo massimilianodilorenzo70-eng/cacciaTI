@@ -431,6 +431,11 @@ nav.tabbar button.active { color: var(--forest); font-weight: 600; }
 .info-box b { color: var(--ink); }
 
 .btn {
+  display: block;            /* vale anche per <label class="btn"> (importa file) */
+  text-align: center;
+  font-family: var(--sans);
+  line-height: 1.25;
+  cursor: pointer;
   background: var(--forest);
   color: #fff;
   border: none;
