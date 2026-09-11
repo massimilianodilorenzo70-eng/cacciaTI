@@ -72,8 +72,9 @@ header.app-header {
 
 .app-header .app-version {
   font-family: var(--mono);
-  font-size: 10px;
-  opacity: 0.55;
+  font-size: 11px;
+  font-weight: 600;
+  color: #D9B65C;
   align-self: flex-end;
   margin-bottom: 3px;
 }
@@ -279,6 +280,23 @@ main {
 .status-open { background: var(--forest-soft); color: var(--forest); }
 .status-closed { background: var(--rust-soft); color: var(--rust); }
 .status-check { background: var(--gold-soft); color: var(--gold); }
+.status-unlocked { background: var(--forest); color: #FFFFFF; font-weight: 600; }
+
+.cat-card.unlocked {
+  border: 2px solid var(--forest);
+  padding: 10px 11px;
+  box-shadow: 0 0 0 3px var(--forest-soft);
+}
+
+.cat-card .unlock-banner {
+  margin-top: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--forest);
+  background: var(--forest-soft);
+  border-radius: 6px;
+  padding: 7px 9px;
+}
 
 .cat-card .meta-row {
   display: flex;
