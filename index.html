@@ -90,11 +90,13 @@
       nello stesso formato JSON e importalo qui — non serve reinstallare l'app.
     </div>
     <label class="btn secondary" for="importFile">Importa nuovo regolamento (JSON)</label>
-    <input type="file" id="importFile" accept="application/json">
+    <input type="file" id="importFile" accept="application/json,.json">
     <button class="btn danger" id="resetRegBtn">Ripristina regolamento incluso nell'app</button>
 
     <div class="section-title">Esporta / importa il tuo registro</div>
     <button class="btn secondary" id="exportLogBtn">Esporta registro abbattimenti (JSON)</button>
+    <label class="btn secondary" for="importLogFile">Importa registro abbattimenti (JSON)</label>
+    <input type="file" id="importLogFile" accept="application/json,.json">
 
     <div class="section-title">Cosa calcola l'app automaticamente</div>
     <div class="info-box">
