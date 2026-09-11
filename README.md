@@ -8,29 +8,6 @@ i capi già presi dalle quote stagionali.
 Tutto funziona offline e i dati restano solo sul telefono (nessun server,
 nessun account).
 
-## 1. Pubblicare su GitHub Pages
-
-1. Carica **tutto il contenuto di questa cartella** (non la cartella stessa,
-   il suo contenuto) nella root del repository `cacciaTI`, con
-   `git`:
-
-   ```
-   git clone https://github.com/massimilianodilorenzo70-eng/cacciaTI.git
-   # copia qui dentro tutti i file di questa cartella
-   cd cacciaTI
-   git add .
-   git commit -m "cacciaTI v1"
-   git push -u origin main
-   ```
-
-   oppure dalla pagina del repo, "Add file → Upload files", trascinando le
-   cartelle `css/`, `js/`, `data/`, `icons/` e i file `index.html`,
-   `manifest.json`, `sw.js`, `.nojekyll`.
-
-2. Su GitHub: **Settings → Pages** → sotto "Build and deployment", scegli
-   "Deploy from a branch" → branch `main`, cartella `/ (root)` → Save.
-
-3. Dopo 1-2 minuti l'app sarà su:
    `https://massimilianodilorenzo70-eng.github.io/cacciaTI/`
 
 ## 2. Installarla sul telefono Android
