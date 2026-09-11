@@ -383,6 +383,15 @@ input[type="file"] { display: none; }
 }
 .modal-actions .btn { margin-bottom: 0; }
 
+.app-credit {
+  text-align: center;
+  color: var(--ink-soft);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.02em;
+  margin: 20px 0 8px 0;
+}
+
 .empty-state {
   text-align: center;
   color: var(--ink-soft);
