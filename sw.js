@@ -2,7 +2,7 @@
  * Quando aggiorni i file, incrementa CACHE_NAME (es. cacciaTI-v2) così i
  * telefoni scaricano la nuova versione invece di restare sulla vecchia cache. */
 
-const CACHE_NAME = "cacciaTI-v10";
+const CACHE_NAME = "cacciaTI-v11";
 
 const ASSETS = [
   "./",
@@ -20,7 +20,11 @@ const ASSETS = [
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
+    // cache: "reload" evita di riempire la nuova cache con copie vecchie
+    // prese dalla cache HTTP del browser (GitHub Pages le tiene ~10 minuti).
+    caches.open(CACHE_NAME).then((cache) =>
+      cache.addAll(ASSETS.map((url) => new Request(url, { cache: "reload" })))
+    )
   );
   self.skipWaiting();
 });
@@ -34,38 +38,42 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
+// Rete prima, cache solo come ripiego: con connessione si vede sempre
+// l'ultima versione; con segnale assente o debole (bosco, montagna) dopo
+// NETWORK_TIMEOUT_MS si usa la copia salvata, così l'app non resta appesa.
+const NETWORK_TIMEOUT_MS = 3500;
+
+function networkFirst(request) {
+  return new Promise((resolve) => {
+    let settled = false;
+    const useCache = () =>
+      caches.match(request, { ignoreSearch: true }).then((cached) => {
+        if (cached && !settled) { settled = true; resolve(cached); }
+        return cached;
+      });
+
+    const timer = setTimeout(useCache, NETWORK_TIMEOUT_MS);
+
+    fetch(request, { cache: "no-cache" })
+      .then((resp) => {
+        clearTimeout(timer);
+        if (resp && resp.ok) {
+          const copy = resp.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+        }
+        if (!settled) { settled = true; resolve(resp); }
+      })
+      .catch(() => {
+        clearTimeout(timer);
+        useCache().then((cached) => {
+          if (!settled) { settled = true; resolve(cached || Response.error()); }
+        });
+      });
+  });
+}
+
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
-
-  // Il contingente cambia più volte al giorno: prova sempre la rete prima,
-  // usa la cache solo se offline (a differenza del resto dell'app shell).
-  if (event.request.url.includes("contingente_alta.json")) {
-    event.respondWith(
-      fetch(event.request)
-        .then((resp) => {
-          if (resp && resp.ok) {
-            const copy = resp.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-          }
-          return resp;
-        })
-        .catch(() => caches.match(event.request))
-    );
-    return;
-  }
-
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      const fetchPromise = fetch(event.request)
-        .then((networkResp) => {
-          if (networkResp && networkResp.ok) {
-            const copy = networkResp.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-          }
-          return networkResp;
-        })
-        .catch(() => cached);
-      return cached || fetchPromise;
-    })
-  );
+  if (new URL(event.request.url).origin !== self.location.origin) return;
+  event.respondWith(networkFirst(event.request));
 });
