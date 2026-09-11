@@ -1,1 +1,36 @@
+name: Aggiorna contingente caccia alta
 
+on:
+  schedule:
+    # Ogni 4 ore, tutti i giorni. Lo script stesso non scrive nulla se non
+    # trova le categorie attese, quindi girare anche fuori stagione è
+    # innocuo (semplicemente non cambia nulla se la pagina non le mostra).
+    - cron: "0 */4 * * *"
+  workflow_dispatch: {}   # permette di lanciarlo a mano da GitHub
+
+permissions:
+  contents: write
+
+jobs:
+  update-contingente:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Installa dipendenze
+        run: pip install requests beautifulsoup4
+
+      - name: Esegui lo scraper
+        run: python scripts/fetch_contingente.py
+
+      - name: Commit se qualcosa è cambiato
+        run: |
+          git config user.name "cacciaTI-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/contingente_alta.json
+          git diff --cached --quiet || git commit -m "Aggiorna contingente caccia alta [bot]"
+          git push
