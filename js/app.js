@@ -120,6 +120,16 @@
       return;
     }
 
+    // Se nel giorno scelto non c'è nulla di aperto, lo dice chiaramente in cima
+    const anyOpen = sectionResults.some(r =>
+      r.dateOpen && !r.quotaBlocked && !r.requiresPriorMissing && !r.dailyBlocked);
+    if (!anyOpen) {
+      const banner = document.createElement("div");
+      banner.className = "info-box";
+      banner.innerHTML = `<b>Nessuna categoria aperta</b> in ${HUNT_LABELS[selectedHunt].toLowerCase()} il ${formatDateCH(iso)}.`;
+      container.appendChild(banner);
+    }
+
     // Le specie restano nell'ordine del regolamento; dentro ogni specie
     // prima le categorie sbloccate, poi le aperte, poi le chiuse.
     const openRank = (r) => {
@@ -197,7 +207,7 @@
       ${st.sub ? `<div class="note">${st.sub}</div>` : ""}
       ${r.category.manualCheck ? `<div class="note">${r.category.manualCheck}</div>` : ""}
       ${r.category.note ? `<div class="note">${r.category.note}</div>` : ""}
-      ${renderContingenteBox(r.category)}
+      ${r.dateOpen ? renderContingenteBox(r.category) : ""}
       <button class="reg-btn" ${canRegister ? "" : "disabled"}>Registra abbattimento</button>
     `;
     card.querySelector(".reg-btn").addEventListener("click", () => openModal(r.category.id));
