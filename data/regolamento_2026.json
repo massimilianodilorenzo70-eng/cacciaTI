@@ -1,0 +1,1055 @@
+{
+  "regulationYear": 2026,
+  "validFrom": "2026-07-03",
+  "source": "Regolamento sulla caccia e la protezione dei mammiferi e degli uccelli selvatici (RT 922.110), Canton Ticino, stato 3 luglio 2026",
+  "hourProfiles": {
+    "alta_sopra400": [
+      {
+        "from": "2026-09-05",
+        "to": "2026-09-19",
+        "windows": [
+          [
+            "06:00",
+            "20:30"
+          ]
+        ]
+      },
+      {
+        "from": "2026-09-23",
+        "to": "2026-09-27",
+        "windows": [
+          [
+            "06:30",
+            "20:00"
+          ]
+        ]
+      }
+    ],
+    "alta_sotto400": [
+      {
+        "from": "2026-09-05",
+        "to": "2026-09-19",
+        "windows": [
+          [
+            "06:00",
+            "10:00"
+          ],
+          [
+            "16:30",
+            "20:30"
+          ]
+        ]
+      },
+      {
+        "from": "2026-09-23",
+        "to": "2026-09-27",
+        "windows": [
+          [
+            "06:30",
+            "10:00"
+          ],
+          [
+            "16:30",
+            "20:00"
+          ]
+        ]
+      }
+    ],
+    "bassa": [
+      {
+        "from": "2026-10-16",
+        "to": "2026-10-24",
+        "windows": [
+          [
+            "08:00",
+            "18:30"
+          ]
+        ]
+      },
+      {
+        "from": "2026-10-25",
+        "to": "2026-11-30",
+        "windows": [
+          [
+            "07:30",
+            "16:30"
+          ]
+        ]
+      }
+    ],
+    "acquatica": [
+      {
+        "from": "2026-12-15",
+        "to": "2027-01-31",
+        "windows": [
+          [
+            "07:00",
+            "11:00"
+          ],
+          [
+            "15:30",
+            "17:30"
+          ]
+        ]
+      }
+    ]
+  },
+  "groupCaps": {
+    "camoscio_totale": {
+      "max": 3,
+      "label": "Camoscio - totale stagionale"
+    },
+    "camoscio_adulti": {
+      "max": 2,
+      "label": "Camoscio - capi adulti (≥2,5 anni)"
+    },
+    "capriolo_totale": {
+      "max": 2,
+      "label": "Capriolo - totale stagionale"
+    },
+    "leporidi_totale": {
+      "max": 2,
+      "label": "Lepri - totale stagionale (comune + variabile)"
+    }
+  },
+  "dailyRules": {
+    "maxPerDayGroups": [
+      {
+        "members": [
+          "lepre_comune",
+          "lepre_variabile"
+        ],
+        "max": 1,
+        "label": "Non più di un leporide al giorno"
+      }
+    ],
+    "exclusionPairs": [
+      {
+        "a": [
+          "lepre_comune",
+          "lepre_variabile"
+        ],
+        "b": [
+          "fagiano_di_monte",
+          "beccaccia",
+          "fagiano_comune"
+        ],
+        "label": "Lepre incompatibile, lo stesso giorno, con fagiano di monte / beccaccia / fagiano comune"
+      }
+    ]
+  },
+  "categories": [
+    {
+      "id": "cam_maschio_8sett",
+      "speciesKey": "camoscio",
+      "speciesLabel": "Camoscio",
+      "categoryLabel": "Maschio ≥ 2,5 anni (8 settembre)",
+      "huntType": "alta",
+      "windows": [
+        {
+          "from": "2026-09-08",
+          "to": "2026-09-08"
+        }
+      ],
+      "hourProfile": "alta_sopra400",
+      "individualMax": 1,
+      "groups": [
+        "camoscio_totale",
+        "camoscio_adulti"
+      ],
+      "note": "Chi cattura questo capo come 1° camoscio perde il diritto al 3° capo di camoscio (l'anzello)."
+    },
+    {
+      "id": "cam_maschio_alt",
+      "speciesKey": "camoscio",
+      "speciesLabel": "Camoscio",
+      "categoryLabel": "Maschio ≥ 2,5 anni (via alternativa 5-17 sett.)",
+      "huntType": "alta",
+      "windows": [
+        {
+          "from": "2026-09-05",
+          "to": "2026-09-17"
+        }
+      ],
+      "hourProfile": "alta_sopra400",
+      "individualMax": 1,
+      "groups": [
+        "camoscio_totale",
+        "camoscio_adulti"
+      ],
+      "manualCheck": "Valido solo se hai già preso 1 femmina non lattifera ≥2,5 anni OPPURE 1 anzello ≤10 kg (capo sanitario). Controlla tu: condizione non verificata automaticamente.",
+      "note": "Se nella stagione precedente hai preso un maschio adulto senza femmina non lattifera, quest'anno NON hai diritto alla cattura diretta del maschio adulto (regola a cavallo d'anno — l'app non conserva dati di stagioni passate)."
+    },
+    {
+      "id": "cam_femmina_non_lattifera",
+      "speciesKey": "camoscio",
+      "speciesLabel": "Camoscio",
+      "categoryLabel": "Femmina non lattifera ≥ 2,5 anni",
+      "huntType": "alta",
+      "windows": [
+        {
+          "from": "2026-09-05",
+          "to": "2026-09-17"
+        }
+      ],
+      "hourProfile": "alta_sopra400",
+      "individualMax": 2,
+      "groups": [
+        "camoscio_totale",
+        "camoscio_adulti"
+      ]
+    },
+    {
+      "id": "cam_anzello",
+      "speciesKey": "camoscio",
+      "speciesLabel": "Camoscio",
+      "categoryLabel": "Anzello (1,5 anni) M/F",
+      "huntType": "alta",
+      "windows": [
+        {
+          "from": "2026-09-05",
+          "to": "2026-09-17"
+        }
+      ],
+      "hourProfile": "alta_sopra400",
+      "individualMax": 1,
+      "groups": [
+        "camoscio_totale"
+      ],
+      "note": "Se maschio con corna >15 cm: esclude il diritto al maschio adulto ≥2,5 anni (e viceversa) — verifica manualmente."
+    },
+    {
+      "id": "cam_vietato",
+      "speciesKey": "camoscio",
+      "speciesLabel": "Camoscio",
+      "categoryLabel": "Piccoli dell'anno e femmine lattifere",
+      "huntType": "alta",
+      "windows": [],
+      "hourProfile": "alta_sopra400",
+      "note": "Cattura SEMPRE vietata."
+    },
+    {
+      "id": "cap_maschio_8_14sett",
+      "speciesKey": "capriolo",
+      "speciesLabel": "Capriolo",
+      "categoryLabel": "Maschio ≥ 1,5 anni (8 sett. tutto il territorio; 14 sett. a settori)",
+      "huntType": "alta",
+      "windows": [
+        {
+          "from": "2026-09-08",
+          "to": "2026-09-08"
+        },
+        {
+          "from": "2026-09-14",
+          "to": "2026-09-14"
+        }
+      ],
+      "hourProfile": "alta_sopra400",
+      "individualMax": 1,
+      "groups": [
+        "capriolo_totale"
+      ],
+      "note": "14 settembre solo nei settori dove previsto, fino a raggiungimento della quota di Piano."
+    },
+    {
+      "id": "cap_maschio_alt",
+      "speciesKey": "capriolo",
+      "speciesLabel": "Capriolo",
+      "categoryLabel": "Maschio ≥ 1,5 anni (via alternativa 5-17 sett.)",
+      "huntType": "alta",
+      "windows": [
+        {
+          "from": "2026-09-05",
+          "to": "2026-09-17"
+        }
+      ],
+      "hourProfile": "alta_sopra400",
+      "individualMax": 1,
+      "groups": [
+        "capriolo_totale"
+      ],
+      "requiresPriorThisSeason": [
+        "cap_femmina_non_lattifera"
+      ],
+      "note": "Sbloccato automaticamente dopo la cattura di una femmina di capriolo non lattifera ≥1,5 anni in questa stagione."
+    },
+    {
+      "id": "cap_femmina_non_lattifera",
+      "speciesKey": "capriolo",
+      "speciesLabel": "Capriolo",
+      "categoryLabel": "Femmina non lattifera ≥ 1,5 anni",
+      "huntType": "alta",
+      "windows": [
+        {
+          "from": "2026-09-05",
+          "to": "2026-09-17"
+        }
+      ],
+      "hourProfile": "alta_sopra400",
+      "individualMax": 1,
+      "groups": [
+        "capriolo_totale"
+      ],
+      "note": "Fino a raggiungimento della quota di Piano di abbattimento."
+    },
+    {
+      "id": "cervo_maschio_2punte",
+      "speciesKey": "cervo",
+      "speciesLabel": "Cervo",
+      "categoryLabel": "Maschio, almeno 2 punte su un palco",
+      "huntType": "alta",
+      "windows": [
+        {
+          "from": "2026-09-05",
+          "to": "2026-09-19"
+        }
+      ],
+      "hourProfile": "alta_sopra400",
+      "individualMax": 2,
+      "note": "Al massimo 1 dei 2 può essere \"cervo corona\" (3+ punte sopra il mediano su entrambe le aste, ≥60 cm) — cacciabile solo dal 5 al 9 settembre."
+    },
+    {
+      "id": "cervo_terzo_maschio",
+      "speciesKey": "cervo",
+      "speciesLabel": "Cervo",
+      "categoryLabel": "3° maschio, almeno 2 punte (bonus)",
+      "huntType": "alta",
+      "windows": [
+        {
+          "from": "2026-09-05",
+          "to": "2026-09-19"
+        }
+      ],
+      "hourProfile": "alta_sopra400",
+      "individualMax": 1,
+      "requiresPriorThisSeason": [
+        "cervo_femmina_non_lattifera"
+      ],
+      "note": "Sbloccato automaticamente dopo la cattura di una femmina non lattifera. Il \"cervo corona\" resta cacciabile solo dal 5 al 9 settembre, se non già preso."
+    },
+    {
+      "id": "cervo_femmina_non_lattifera",
+      "speciesKey": "cervo",
+      "speciesLabel": "Cervo",
+      "categoryLabel": "Femmina non lattifera",
+      "huntType": "alta",
+      "windows": [
+        {
+          "from": "2026-09-05",
+          "to": "2026-09-19"
+        },
+        {
+          "from": "2026-09-23",
+          "to": "2026-09-27"
+        }
+      ],
+      "hourProfile": "alta_sopra400"
+    },
+    {
+      "id": "cervo_femmina_lattifera",
+      "speciesKey": "cervo",
+      "speciesLabel": "Cervo",
+      "categoryLabel": "Femmina lattifera",
+      "huntType": "alta",
+      "windows": [
+        {
+          "from": "2026-09-18",
+          "to": "2026-09-19"
+        },
+        {
+          "from": "2026-09-23",
+          "to": "2026-09-27"
+        }
+      ],
+      "hourProfile": "alta_sopra400",
+      "individualMax": 1
+    },
+    {
+      "id": "cervo_cerbiatto",
+      "speciesKey": "cervo",
+      "speciesLabel": "Cervo",
+      "categoryLabel": "Cerbiatto (cervo dell'anno)",
+      "huntType": "alta",
+      "windows": [
+        {
+          "from": "2026-09-18",
+          "to": "2026-09-19"
+        },
+        {
+          "from": "2026-09-23",
+          "to": "2026-09-27"
+        }
+      ],
+      "hourProfile": "alta_sopra400"
+    },
+    {
+      "id": "cervo_fusone",
+      "speciesKey": "cervo",
+      "speciesLabel": "Cervo",
+      "categoryLabel": "Maschio palchi senza diramazioni (fusone)",
+      "huntType": "alta",
+      "windows": [
+        {
+          "from": "2026-09-05",
+          "to": "2026-09-07"
+        },
+        {
+          "from": "2026-09-23",
+          "to": "2026-09-24"
+        }
+      ],
+      "hourProfile": "alta_sopra400",
+      "individualMax": 1
+    },
+    {
+      "id": "cinghiale_alta",
+      "speciesKey": "cinghiale",
+      "speciesLabel": "Cinghiale",
+      "categoryLabel": "Nessun limite di sesso/età",
+      "huntType": "alta",
+      "windows": [
+        {
+          "from": "2026-09-05",
+          "to": "2026-09-19"
+        },
+        {
+          "from": "2026-09-23",
+          "to": "2026-09-27"
+        }
+      ],
+      "hourProfile": "alta_sopra400"
+    },
+    {
+      "id": "tasso_alta",
+      "speciesKey": "tasso",
+      "speciesLabel": "Tasso",
+      "categoryLabel": "Nessun limite di sesso/età",
+      "huntType": "alta",
+      "windows": [
+        {
+          "from": "2026-09-05",
+          "to": "2026-09-19"
+        },
+        {
+          "from": "2026-09-23",
+          "to": "2026-09-27"
+        }
+      ],
+      "hourProfile": "alta_sopra400"
+    },
+    {
+      "id": "volpe_alta",
+      "speciesKey": "volpe",
+      "speciesLabel": "Volpe",
+      "categoryLabel": "Nessun limite di sesso/età",
+      "huntType": "alta",
+      "windows": [
+        {
+          "from": "2026-09-05",
+          "to": "2026-09-19"
+        },
+        {
+          "from": "2026-09-23",
+          "to": "2026-09-27"
+        }
+      ],
+      "hourProfile": "alta_sopra400"
+    },
+    {
+      "id": "marmotta",
+      "speciesKey": "marmotta",
+      "speciesLabel": "Marmotta",
+      "categoryLabel": "Nessun limite di sesso/età",
+      "huntType": "alta",
+      "windows": [
+        {
+          "from": "2026-09-09",
+          "to": "2026-09-11"
+        }
+      ],
+      "hourProfile": "alta_sopra400",
+      "individualMax": 2
+    },
+    {
+      "id": "volpe_bassa",
+      "speciesKey": "volpe",
+      "speciesLabel": "Volpe",
+      "categoryLabel": "Nessun limite quantitativo",
+      "huntType": "bassa",
+      "windows": [
+        {
+          "from": "2026-10-16",
+          "to": "2026-11-30"
+        }
+      ],
+      "hourProfile": "bassa",
+      "weekdays": [
+        0,
+        2,
+        3,
+        4,
+        6
+      ],
+      "extraAllowedDates": [
+        "2026-10-16",
+        "2026-11-30"
+      ]
+    },
+    {
+      "id": "faina",
+      "speciesKey": "faina",
+      "speciesLabel": "Faina",
+      "categoryLabel": "Nessun limite quantitativo",
+      "huntType": "bassa",
+      "windows": [
+        {
+          "from": "2026-10-16",
+          "to": "2026-11-30"
+        }
+      ],
+      "hourProfile": "bassa",
+      "weekdays": [
+        0,
+        2,
+        3,
+        4,
+        6
+      ],
+      "extraAllowedDates": [
+        "2026-10-16",
+        "2026-11-30"
+      ]
+    },
+    {
+      "id": "tasso_bassa",
+      "speciesKey": "tasso",
+      "speciesLabel": "Tasso",
+      "categoryLabel": "Nessun limite quantitativo",
+      "huntType": "bassa",
+      "windows": [
+        {
+          "from": "2026-10-16",
+          "to": "2026-11-30"
+        }
+      ],
+      "hourProfile": "bassa",
+      "weekdays": [
+        0,
+        2,
+        3,
+        4,
+        6
+      ],
+      "extraAllowedDates": [
+        "2026-10-16",
+        "2026-11-30"
+      ]
+    },
+    {
+      "id": "coniglio_selvatico",
+      "speciesKey": "coniglio",
+      "speciesLabel": "Coniglio selvatico",
+      "categoryLabel": "Nessun limite quantitativo",
+      "huntType": "bassa",
+      "windows": [
+        {
+          "from": "2026-10-16",
+          "to": "2026-11-30"
+        }
+      ],
+      "hourProfile": "bassa",
+      "weekdays": [
+        0,
+        2,
+        3,
+        4,
+        6
+      ],
+      "extraAllowedDates": [
+        "2026-10-16",
+        "2026-11-30"
+      ]
+    },
+    {
+      "id": "piccione_inselvatichito",
+      "speciesKey": "piccione",
+      "speciesLabel": "Piccione domestico inselvatichito",
+      "categoryLabel": "Nessun limite quantitativo",
+      "huntType": "bassa",
+      "windows": [
+        {
+          "from": "2026-10-16",
+          "to": "2026-11-30"
+        }
+      ],
+      "hourProfile": "bassa",
+      "weekdays": [
+        0,
+        2,
+        3,
+        4,
+        6
+      ],
+      "extraAllowedDates": [
+        "2026-10-16",
+        "2026-11-30"
+      ]
+    },
+    {
+      "id": "colombaccio",
+      "speciesKey": "colombaccio",
+      "speciesLabel": "Colombaccio",
+      "categoryLabel": "Nessun limite quantitativo",
+      "huntType": "bassa",
+      "windows": [
+        {
+          "from": "2026-10-16",
+          "to": "2026-11-30"
+        }
+      ],
+      "hourProfile": "bassa",
+      "weekdays": [
+        0,
+        2,
+        3,
+        4,
+        6
+      ],
+      "extraAllowedDates": [
+        "2026-10-16",
+        "2026-11-30"
+      ]
+    },
+    {
+      "id": "tortora_collare",
+      "speciesKey": "tortora",
+      "speciesLabel": "Tortora dal collare orientale",
+      "categoryLabel": "Nessun limite quantitativo",
+      "huntType": "bassa",
+      "windows": [
+        {
+          "from": "2026-10-16",
+          "to": "2026-11-30"
+        }
+      ],
+      "hourProfile": "bassa",
+      "weekdays": [
+        0,
+        2,
+        3,
+        4,
+        6
+      ],
+      "extraAllowedDates": [
+        "2026-10-16",
+        "2026-11-30"
+      ]
+    },
+    {
+      "id": "ghiandaia",
+      "speciesKey": "ghiandaia",
+      "speciesLabel": "Ghiandaia",
+      "categoryLabel": "Nessun limite quantitativo",
+      "huntType": "bassa",
+      "windows": [
+        {
+          "from": "2026-10-16",
+          "to": "2026-11-30"
+        }
+      ],
+      "hourProfile": "bassa",
+      "weekdays": [
+        0,
+        2,
+        3,
+        4,
+        6
+      ],
+      "extraAllowedDates": [
+        "2026-10-16",
+        "2026-11-30"
+      ]
+    },
+    {
+      "id": "cornacchia_nera",
+      "speciesKey": "cornacchia_nera",
+      "speciesLabel": "Cornacchia nera",
+      "categoryLabel": "Nessun limite quantitativo",
+      "huntType": "bassa",
+      "windows": [
+        {
+          "from": "2026-10-16",
+          "to": "2026-11-30"
+        }
+      ],
+      "hourProfile": "bassa",
+      "weekdays": [
+        0,
+        2,
+        3,
+        4,
+        6
+      ],
+      "extraAllowedDates": [
+        "2026-10-16",
+        "2026-11-30"
+      ]
+    },
+    {
+      "id": "cornacchia_grigia",
+      "speciesKey": "cornacchia_grigia",
+      "speciesLabel": "Cornacchia grigia",
+      "categoryLabel": "Nessun limite quantitativo",
+      "huntType": "bassa",
+      "windows": [
+        {
+          "from": "2026-10-16",
+          "to": "2026-11-30"
+        }
+      ],
+      "hourProfile": "bassa",
+      "weekdays": [
+        0,
+        2,
+        3,
+        4,
+        6
+      ],
+      "extraAllowedDates": [
+        "2026-10-16",
+        "2026-11-30"
+      ]
+    },
+    {
+      "id": "corvo_imperiale_bassa",
+      "speciesKey": "corvo_imperiale",
+      "speciesLabel": "Corvo imperiale",
+      "categoryLabel": "Nessun limite quantitativo",
+      "huntType": "bassa",
+      "windows": [
+        {
+          "from": "2026-10-16",
+          "to": "2026-11-30"
+        }
+      ],
+      "hourProfile": "bassa",
+      "weekdays": [
+        0,
+        2,
+        3,
+        4,
+        6
+      ],
+      "extraAllowedDates": [
+        "2026-10-16",
+        "2026-11-30"
+      ]
+    },
+    {
+      "id": "germano_reale_bassa",
+      "speciesKey": "germano_reale",
+      "speciesLabel": "Germano reale",
+      "categoryLabel": "Nessun limite quantitativo",
+      "huntType": "bassa",
+      "windows": [
+        {
+          "from": "2026-10-16",
+          "to": "2026-11-30"
+        }
+      ],
+      "hourProfile": "bassa",
+      "weekdays": [
+        0,
+        2,
+        3,
+        4,
+        6
+      ],
+      "extraAllowedDates": [
+        "2026-10-16",
+        "2026-11-30"
+      ]
+    },
+    {
+      "id": "cormorano",
+      "speciesKey": "cormorano",
+      "speciesLabel": "Cormorano",
+      "categoryLabel": "Nessun limite quantitativo",
+      "huntType": "bassa",
+      "windows": [
+        {
+          "from": "2026-10-16",
+          "to": "2026-11-30"
+        }
+      ],
+      "hourProfile": "bassa",
+      "weekdays": [
+        0,
+        2,
+        3,
+        4,
+        6
+      ],
+      "extraAllowedDates": [
+        "2026-10-16",
+        "2026-11-30"
+      ]
+    },
+    {
+      "id": "fagiano_comune",
+      "speciesKey": "fagiano_comune",
+      "speciesLabel": "Fagiano comune",
+      "categoryLabel": "Nessun limite quantitativo",
+      "huntType": "bassa",
+      "windows": [
+        {
+          "from": "2026-10-16",
+          "to": "2026-11-30"
+        }
+      ],
+      "hourProfile": "bassa",
+      "weekdays": [
+        0,
+        2,
+        3,
+        4,
+        6
+      ],
+      "extraAllowedDates": [
+        "2026-10-16",
+        "2026-11-30"
+      ],
+      "note": "Incompatibile lo stesso giorno con le lepri (vedi regole giornaliere)."
+    },
+    {
+      "id": "lepre_comune",
+      "speciesKey": "lepre_comune",
+      "speciesLabel": "Lepre comune",
+      "categoryLabel": "Nessun limite di sesso/età",
+      "huntType": "bassa",
+      "windows": [
+        {
+          "dates": [
+            "2026-10-16",
+            "2026-10-18",
+            "2026-10-25",
+            "2026-11-01"
+          ]
+        }
+      ],
+      "hourProfile": "bassa",
+      "individualMax": 1,
+      "groups": [
+        "leporidi_totale"
+      ],
+      "note": "Cacciabile solo il 16, 18, 25 ottobre e 1° novembre. Vietata comunque il giorno di chiusura (30 novembre). Max 1 leporide al giorno; incompatibile lo stesso giorno con fagiano di monte, beccaccia o fagiano comune. Richiede cane da seguita."
+    },
+    {
+      "id": "lepre_variabile",
+      "speciesKey": "lepre_variabile",
+      "speciesLabel": "Lepre variabile",
+      "categoryLabel": "Nessun limite di sesso/età",
+      "huntType": "bassa",
+      "windows": [
+        {
+          "dates": [
+            "2026-10-16",
+            "2026-10-18",
+            "2026-10-25",
+            "2026-11-01",
+            "2026-11-07",
+            "2026-11-08",
+            "2026-11-15",
+            "2026-11-22",
+            "2026-11-29",
+            "2026-11-30"
+          ]
+        }
+      ],
+      "hourProfile": "bassa",
+      "individualMax": 1,
+      "groups": [
+        "leporidi_totale"
+      ],
+      "note": "Max 1 leporide al giorno; incompatibile lo stesso giorno con fagiano di monte, beccaccia o fagiano comune. Richiede cane da seguita."
+    },
+    {
+      "id": "fagiano_di_monte",
+      "speciesKey": "fagiano_di_monte",
+      "speciesLabel": "Fagiano di monte",
+      "categoryLabel": "Solo maschio",
+      "huntType": "bassa",
+      "windows": [
+        {
+          "dates": [
+            "2026-10-16",
+            "2026-10-18",
+            "2026-10-25",
+            "2026-11-01",
+            "2026-11-07",
+            "2026-11-08",
+            "2026-11-15",
+            "2026-11-22",
+            "2026-11-29",
+            "2026-11-30"
+          ]
+        }
+      ],
+      "hourProfile": "bassa",
+      "individualMax": 1,
+      "note": "Cattura della femmina vietata. Richiede cane da ferma; vietato il maschio \"in pianta\". Incompatibile lo stesso giorno con le lepri."
+    },
+    {
+      "id": "beccaccia",
+      "speciesKey": "beccaccia",
+      "speciesLabel": "Beccaccia",
+      "categoryLabel": "Nessun limite di sesso/età",
+      "huntType": "bassa",
+      "windows": [
+        {
+          "from": "2026-10-16",
+          "to": "2026-11-30"
+        }
+      ],
+      "hourProfile": "bassa",
+      "weekdays": [
+        0,
+        2,
+        3,
+        4,
+        6
+      ],
+      "extraAllowedDates": [
+        "2026-10-16",
+        "2026-11-30"
+      ],
+      "individualMax": 15,
+      "note": "Richiede cane da ferma. Incompatibile lo stesso giorno con le lepri."
+    },
+    {
+      "id": "alzavola",
+      "speciesKey": "alzavola",
+      "speciesLabel": "Alzavola",
+      "categoryLabel": "Nessun limite quantitativo",
+      "huntType": "acquatica",
+      "windows": [
+        {
+          "from": "2026-12-15",
+          "to": "2027-01-31"
+        }
+      ],
+      "hourProfile": "acquatica",
+      "excludedDates": [
+        "2026-12-25",
+        "2026-12-26",
+        "2027-01-01",
+        "2027-01-06"
+      ],
+      "excludedWeekdays": [
+        1,
+        3
+      ],
+      "note": "Consentita solo sui laghi Verbano e Ceresio, ad almeno 100 m dalla riva/canneti. Vietato sparare verso terraferma."
+    },
+    {
+      "id": "germano_reale_acqua",
+      "speciesKey": "germano_reale",
+      "speciesLabel": "Germano reale",
+      "categoryLabel": "Nessun limite quantitativo",
+      "huntType": "acquatica",
+      "windows": [
+        {
+          "from": "2026-12-15",
+          "to": "2027-01-31"
+        }
+      ],
+      "hourProfile": "acquatica",
+      "excludedDates": [
+        "2026-12-25",
+        "2026-12-26",
+        "2027-01-01",
+        "2027-01-06"
+      ],
+      "excludedWeekdays": [
+        1,
+        3
+      ],
+      "note": "Consentita solo sui laghi Verbano e Ceresio, ad almeno 100 m dalla riva/canneti. Vietato sparare verso terraferma."
+    },
+    {
+      "id": "moriglione",
+      "speciesKey": "moriglione",
+      "speciesLabel": "Moriglione",
+      "categoryLabel": "Nessun limite quantitativo",
+      "huntType": "acquatica",
+      "windows": [
+        {
+          "from": "2026-12-15",
+          "to": "2027-01-31"
+        }
+      ],
+      "hourProfile": "acquatica",
+      "excludedDates": [
+        "2026-12-25",
+        "2026-12-26",
+        "2027-01-01",
+        "2027-01-06"
+      ],
+      "excludedWeekdays": [
+        1,
+        3
+      ],
+      "note": "Consentita solo sui laghi Verbano e Ceresio, ad almeno 100 m dalla riva/canneti. Vietato sparare verso terraferma."
+    },
+    {
+      "id": "moretta",
+      "speciesKey": "moretta",
+      "speciesLabel": "Moretta",
+      "categoryLabel": "Nessun limite quantitativo",
+      "huntType": "acquatica",
+      "windows": [
+        {
+          "from": "2026-12-15",
+          "to": "2027-01-31"
+        }
+      ],
+      "hourProfile": "acquatica",
+      "excludedDates": [
+        "2026-12-25",
+        "2026-12-26",
+        "2027-01-01",
+        "2027-01-06"
+      ],
+      "excludedWeekdays": [
+        1,
+        3
+      ],
+      "note": "Consentita solo sui laghi Verbano e Ceresio, ad almeno 100 m dalla riva/canneti. Vietato sparare verso terraferma."
+    },
+    {
+      "id": "folaga",
+      "speciesKey": "folaga",
+      "speciesLabel": "Folaga",
+      "categoryLabel": "Nessun limite quantitativo",
+      "huntType": "acquatica",
+      "windows": [
+        {
+          "from": "2026-12-15",
+          "to": "2027-01-31"
+        }
+      ],
+      "hourProfile": "acquatica",
+      "excludedDates": [
+        "2026-12-25",
+        "2026-12-26",
+        "2027-01-01",
+        "2027-01-06"
+      ],
+      "excludedWeekdays": [
+        1,
+        3
+      ],
+      "note": "Consentita solo sui laghi Verbano e Ceresio, ad almeno 100 m dalla riva/canneti. Vietato sparare verso terraferma."
+    }
+  ]
+}

@@ -1,0 +1,312 @@
+/* app.js — controller: carica i dati, gestisce le viste e le interazioni */
+
+(() => {
+  let regData = null;
+  let selectedDate = new Date();
+  let prefs = Storage.getPrefs();
+
+  const HUNT_LABELS = { alta: "Caccia alta", bassa: "Caccia bassa", acquatica: "Caccia acquatica" };
+  const HUNT_ORDER = ["alta", "bassa", "acquatica"];
+
+  // ---------- Caricamento dati ----------
+
+  async function loadRegData() {
+    const custom = Storage.getCustomRegolamento();
+    if (custom) { regData = custom; return; }
+    const res = await fetch("data/regolamento_2026.json");
+    regData = await res.json();
+  }
+
+  // ---------- Vista OGGI ----------
+
+  function currentHuntTypeIsActive(huntType, evalResults) {
+    return evalResults.some(r => r.category.huntType === huntType && r.dateOpen);
+  }
+
+  function renderOggi() {
+    const container = document.getElementById("sectionsContainer");
+    container.innerHTML = "";
+
+    const iso = RulesEngine.toISO(selectedDate);
+    const now = RulesEngine.toISO(new Date()) === iso ? RulesEngine.nowHHMM(new Date()) : null;
+    const log = Storage.getLog();
+    const results = RulesEngine.evaluateAll(regData, log, selectedDate, now, prefs);
+
+    const query = (document.getElementById("searchInput").value || "").trim().toLowerCase();
+
+    // ordina: sezione col periodo attivo oggi per prima
+    const order = [...HUNT_ORDER].sort((a, b) => {
+      const aActive = currentHuntTypeIsActive(a, results) ? 0 : 1;
+      const bActive = currentHuntTypeIsActive(b, results) ? 0 : 1;
+      return aActive - bActive;
+    });
+
+    for (const huntType of order) {
+      let sectionResults = results.filter(r =>
+        r.category.huntType === huntType && r.category.windows && r.category.windows.length > 0
+      );
+      if (query) {
+        sectionResults = sectionResults.filter(r =>
+          r.category.speciesLabel.toLowerCase().includes(query) ||
+          r.category.categoryLabel.toLowerCase().includes(query)
+        );
+      }
+      if (sectionResults.length === 0) continue;
+
+      const isActive = currentHuntTypeIsActive(huntType, results);
+      const section = document.createElement("div");
+      section.className = "hunt-section";
+      section.innerHTML = `<h2>${HUNT_LABELS[huntType]} ${isActive ? '<span class="badge-active">in corso oggi</span>' : ""}</h2>`;
+
+      // raggruppa per specie
+      const bySpecies = {};
+      for (const r of sectionResults) {
+        (bySpecies[r.category.speciesLabel] ||= []).push(r);
+      }
+
+      for (const speciesLabel of Object.keys(bySpecies)) {
+        for (const r of bySpecies[speciesLabel]) {
+          section.appendChild(renderCatCard(r));
+        }
+      }
+      container.appendChild(section);
+    }
+
+    if (container.innerHTML === "") {
+      container.innerHTML = `<div class="empty-state">Nessuna specie corrisponde alla ricerca.</div>`;
+    }
+  }
+
+  function statusFor(r) {
+    if (!r.dateOpen) return { label: "Chiusa", cls: "status-closed" };
+    if (r.requiresPriorMissing) return { label: "Chiusa", cls: "status-closed", sub: "Condizione stagionale non ancora soddisfatta" };
+    if (r.quotaBlocked) return { label: "Chiusa", cls: "status-closed", sub: r.quotaReason };
+    if (r.dailyBlocked) return { label: "Chiusa oggi", cls: "status-closed", sub: r.dailyReason };
+    if (r.category.manualCheck) return { label: "Aperta — verifica", cls: "status-check" };
+    if (r.nowOpen) return { label: "Aperta ora", cls: "status-open" };
+    return { label: "Aperta oggi", cls: "status-open", sub: "Fuori orario in questo momento" };
+  }
+
+  function renderCatCard(r) {
+    const st = statusFor(r);
+    const card = document.createElement("div");
+    card.className = "cat-card";
+
+    const canRegister = r.dateOpen && !r.quotaBlocked && !r.requiresPriorMissing && !r.dailyBlocked;
+
+    card.innerHTML = `
+      <div class="row1">
+        <div class="titles">
+          <div class="species">${r.category.speciesLabel}</div>
+          <div class="category">${r.category.categoryLabel}</div>
+        </div>
+        <span class="status-pill ${st.cls}">${st.label}</span>
+      </div>
+      <div class="meta-row">
+        <span>Orario: ${r.hoursToday}</span>
+        ${r.remainingText ? `<span>${r.remainingText}</span>` : ""}
+      </div>
+      ${st.sub ? `<div class="note">${st.sub}</div>` : ""}
+      ${r.category.manualCheck ? `<div class="note">${r.category.manualCheck}</div>` : ""}
+      ${r.category.note ? `<div class="note">${r.category.note}</div>` : ""}
+      <button class="reg-btn" ${canRegister ? "" : "disabled"}>Registra abbattimento</button>
+    `;
+    card.querySelector(".reg-btn").addEventListener("click", () => openModal(r.category.id));
+    return card;
+  }
+
+  // ---------- Vista REGISTRO ----------
+
+  function renderRegistro() {
+    const capsBox = document.getElementById("capsSummary");
+    const log = Storage.getLog();
+    capsBox.innerHTML = "";
+    for (const [groupId, cap] of Object.entries(regData.groupCaps)) {
+      const count = RulesEngine.seasonCountByGroup(log, regData.categories, groupId);
+      const chip = document.createElement("span");
+      chip.className = "cap-chip";
+      chip.textContent = `${cap.label}: ${count}/${cap.max}`;
+      capsBox.appendChild(chip);
+    }
+
+    const listEl = document.getElementById("logList");
+    listEl.innerHTML = "";
+    const sorted = [...log].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
+    if (sorted.length === 0) {
+      listEl.innerHTML = `<div class="empty-state">Nessun abbattimento registrato.</div>`;
+      return;
+    }
+    for (const k of sorted) {
+      const cat = regData.categories.find(c => c.id === k.categoryId);
+      const item = document.createElement("div");
+      item.className = "log-item";
+      item.innerHTML = `
+        <div class="info">
+          <div class="date">${k.date}</div>
+          <div class="sp">${cat ? cat.speciesLabel : k.categoryId}</div>
+          <div class="cat">${cat ? cat.categoryLabel : ""}${k.note ? " — " + k.note : ""}</div>
+        </div>
+        <button class="del">Elimina</button>
+      `;
+      item.querySelector(".del").addEventListener("click", () => {
+        if (confirm("Eliminare questo abbattimento dal registro?")) {
+          Storage.deleteKill(k.id);
+          renderRegistro();
+          renderOggi();
+        }
+      });
+      listEl.appendChild(item);
+    }
+  }
+
+  // ---------- Vista REGOLAMENTO ----------
+
+  function renderRegolamento() {
+    const box = document.getElementById("regInfoBox");
+    const custom = Storage.getCustomRegolamento();
+    box.innerHTML = `
+      <b>Anno regolamento:</b> ${regData.regulationYear}${custom ? " (importato manualmente)" : " (incluso nell'app)"}<br>
+      <b>Valido dal:</b> ${regData.validFrom}<br>
+      <b>Fonte:</b> ${regData.source}
+    `;
+  }
+
+  // ---------- Modale registrazione ----------
+
+  function populateModalCategories(preselectId) {
+    const sel = document.getElementById("modalCategory");
+    sel.innerHTML = "";
+    for (const huntType of HUNT_ORDER) {
+      const group = document.createElement("optgroup");
+      group.label = HUNT_LABELS[huntType];
+      for (const c of regData.categories) {
+        if (c.huntType !== huntType || !c.windows || c.windows.length === 0) continue;
+        const opt = document.createElement("option");
+        opt.value = c.id;
+        opt.textContent = `${c.speciesLabel} — ${c.categoryLabel}`;
+        group.appendChild(opt);
+      }
+      sel.appendChild(group);
+    }
+    if (preselectId) sel.value = preselectId;
+  }
+
+  function openModal(preselectId) {
+    populateModalCategories(preselectId);
+    document.getElementById("modalDate").value = RulesEngine.toISO(selectedDate);
+    document.getElementById("modalNote").value = "";
+    document.getElementById("modalBackdrop").classList.add("active");
+  }
+
+  function closeModal() {
+    document.getElementById("modalBackdrop").classList.remove("active");
+  }
+
+  function saveModal() {
+    const categoryId = document.getElementById("modalCategory").value;
+    const date = document.getElementById("modalDate").value;
+    const note = document.getElementById("modalNote").value.trim();
+    if (!categoryId || !date) return;
+    Storage.addKill({ categoryId, date, note });
+    closeModal();
+    renderOggi();
+    renderRegistro();
+  }
+
+  // ---------- Navigazione ----------
+
+  function switchView(name) {
+    document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+    document.getElementById("view-" + name).classList.add("active");
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.dataset.view === name));
+    if (name === "oggi") renderOggi();
+    if (name === "registro") renderRegistro();
+    if (name === "regolamento") renderRegolamento();
+  }
+
+  // ---------- Init ----------
+
+  async function init() {
+    await loadRegData();
+
+    const dateInput = document.getElementById("dateInput");
+    dateInput.value = RulesEngine.toISO(selectedDate);
+    dateInput.addEventListener("change", () => {
+      if (dateInput.value) {
+        selectedDate = RulesEngine.parseISO(dateInput.value);
+        renderOggi();
+      }
+    });
+
+    document.getElementById("todayBtn").addEventListener("click", () => {
+      selectedDate = new Date();
+      dateInput.value = RulesEngine.toISO(selectedDate);
+      renderOggi();
+    });
+
+    document.getElementById("altitudeToggle").checked = !!prefs.altitudeBelow400;
+    document.getElementById("altitudeToggle").addEventListener("change", (e) => {
+      prefs.altitudeBelow400 = e.target.checked;
+      Storage.savePrefs(prefs);
+      renderOggi();
+    });
+
+    document.getElementById("searchInput").addEventListener("input", renderOggi);
+
+    document.querySelectorAll(".tab-btn").forEach(b => {
+      b.addEventListener("click", () => switchView(b.dataset.view));
+    });
+
+    document.getElementById("fabAdd").addEventListener("click", () => openModal(null));
+    document.getElementById("modalCancel").addEventListener("click", closeModal);
+    document.getElementById("modalSave").addEventListener("click", saveModal);
+    document.getElementById("modalBackdrop").addEventListener("click", (e) => {
+      if (e.target.id === "modalBackdrop") closeModal();
+    });
+
+    document.getElementById("importFile").addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const parsed = JSON.parse(text);
+        if (!parsed.categories || !parsed.hourProfiles) throw new Error("formato non valido");
+        Storage.setCustomRegolamento(parsed);
+        regData = parsed;
+        alert("Regolamento importato correttamente.");
+        renderRegolamento();
+        renderOggi();
+      } catch (err) {
+        alert("File non valido: " + err.message);
+      }
+      e.target.value = "";
+    });
+
+    document.getElementById("resetRegBtn").addEventListener("click", async () => {
+      if (!confirm("Ripristinare il regolamento incluso nell'app?")) return;
+      Storage.clearCustomRegolamento();
+      await loadRegData();
+      renderRegolamento();
+      renderOggi();
+    });
+
+    document.getElementById("exportLogBtn").addEventListener("click", () => {
+      const log = Storage.getLog();
+      const blob = new Blob([JSON.stringify(log, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `cacciaTI_registro_${RulesEngine.toISO(new Date())}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    renderOggi();
+
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("sw.js").catch(() => {});
+    }
+  }
+
+  init();
+})();

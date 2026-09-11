@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>cacciaTI</title>
+<meta name="theme-color" content="#253A21">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="app-header">
+  <div class="top-row">
+    <h1>cacciaTI</h1>
+    <span class="ref">RT 922.110</span>
+  </div>
+  <div class="date-row" id="dateRow">
+    <input type="date" id="dateInput">
+    <button class="today-btn" id="todayBtn">Oggi</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- VIEW: OGGI -->
+  <section id="view-oggi" class="view active">
+    <label class="altitude-toggle">
+      <input type="checkbox" id="altitudeToggle">
+      Mi trovo sotto i 400 mslm (cambia gli orari di caccia alta)
+    </label>
+
+    <div class="search-row">
+      <input type="text" id="searchInput" placeholder="Cerca specie…">
+    </div>
+
+    <div id="sectionsContainer"><!-- popolato da app.js --></div>
+  </section>
+
+  <!-- VIEW: REGISTRO -->
+  <section id="view-registro" class="view">
+    <div class="summary-caps" id="capsSummary"></div>
+    <div id="logList"></div>
+  </section>
+
+  <!-- VIEW: REGOLAMENTO -->
+  <section id="view-regolamento" class="view">
+    <div class="info-box" id="regInfoBox"></div>
+
+    <div class="section-title">Aggiorna il regolamento</div>
+    <div class="info-box">
+      Quando il Cantone pubblica l'aggiornamento annuale, chiedi a Claude di convertirlo
+      nello stesso formato JSON e importalo qui — non serve reinstallare l'app.
+    </div>
+    <label class="btn secondary" for="importFile">Importa nuovo regolamento (JSON)</label>
+    <input type="file" id="importFile" accept="application/json">
+    <button class="btn danger" id="resetRegBtn">Ripristina regolamento incluso nell'app</button>
+
+    <div class="section-title">Esporta / importa il tuo registro</div>
+    <button class="btn secondary" id="exportLogBtn">Esporta registro abbattimenti (JSON)</button>
+
+    <div class="section-title">Cosa calcola l'app automaticamente</div>
+    <div class="info-box">
+      <b>Automatico:</b> periodo, giorni della settimana, orari, quote numeriche singole e di
+      gruppo, sblocchi che dipendono da un'unica cattura fatta in questa stagione, limiti e
+      incompatibilità giornaliere (lepri/fagiano di monte/beccaccia).<br><br>
+      <b>Da verificare tu:</b> le regole "a cavallo d'anno" (es. penalità camoscio sulla stagione
+      successiva) e le esclusioni reciproche su misure delle corna — l'app non conserva dati di
+      stagioni passate e te lo segnala con un'etichetta gialla "da verificare".<br><br>
+      Questa app è un aiuto personale, non sostituisce il regolamento ufficiale né le indicazioni
+      dell'Ufficio della caccia e della pesca.
+    </div>
+  </section>
+
+</main>
+
+<button class="fab" id="fabAdd">+</button>
+
+<nav class="tabbar">
+  <button class="tab-btn active" data-view="oggi"><span class="icon">◎</span>Oggi</button>
+  <button class="tab-btn" data-view="registro"><span class="icon">▤</span>Registro</button>
+  <button class="tab-btn" data-view="regolamento"><span class="icon">§</span>Regolamento</button>
+</nav>
+
+<!-- MODAL: registra abbattimento -->
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal-sheet">
+    <h3>Registra abbattimento</h3>
+    <label for="modalCategory">Specie / categoria</label>
+    <select id="modalCategory"></select>
+
+    <label for="modalDate">Data</label>
+    <input type="date" id="modalDate">
+
+    <label for="modalNote">Note (facoltativo)</label>
+    <input type="text" id="modalNote" placeholder="es. località, foglio di controllo…">
+
+    <div class="modal-actions">
+      <button class="btn secondary" id="modalCancel">Annulla</button>
+      <button class="btn" id="modalSave">Salva</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/rules-engine.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
