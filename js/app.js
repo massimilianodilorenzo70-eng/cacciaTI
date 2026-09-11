@@ -389,7 +389,7 @@
         if (!reg.active) return;
         const channel = new MessageChannel();
         channel.port1.onmessage = (e) => {
-          const m = String(e.data || "").match(/v\d+$/);
+          const m = String(e.data || "").match(/v\d+(\.\d+)*$/);
           if (m) document.getElementById("appVersion").textContent = m[0];
         };
         reg.active.postMessage({ type: "GET_VERSION" }, [channel.port2]);
