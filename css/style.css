@@ -47,12 +47,21 @@ header.app-header {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
+  flex-wrap: wrap;
+  row-gap: 2px;
 }
 
 .app-header h1 {
   margin: 0;
   font-size: 20px;
   letter-spacing: 0.02em;
+}
+
+.app-header .author-line {
+  font-size: 11px;
+  font-weight: 400;
+  opacity: 0.65;
+  margin-top: 2px;
 }
 
 .app-header .ref {
@@ -91,6 +100,43 @@ main {
   padding: 14px 14px 24px 14px;
   max-width: 640px;
   margin: 0 auto;
+}
+
+.hunt-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.hunt-tabs .hunt-tab {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  border-radius: 8px;
+  padding: 9px 4px;
+  font-size: 13px;
+  font-weight: 600;
+  position: relative;
+}
+
+.hunt-tabs .hunt-tab.active {
+  background: var(--forest);
+  border-color: var(--forest);
+  color: #fff;
+}
+
+.hunt-tabs .hunt-tab .dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--gold);
+  margin-left: 5px;
+}
+
+.hunt-tabs .hunt-tab.active .dot {
+  background: #fff;
 }
 
 .altitude-toggle {
