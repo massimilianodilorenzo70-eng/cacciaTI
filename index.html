@@ -17,6 +17,7 @@
     <h1>cacciaTI</h1>
     <span class="ref">RT 922.110</span>
   </div>
+  <div class="author-line">Massimiliano Di Lorenzo</div>
   <div class="date-row" id="dateRow">
     <input type="date" id="dateInput">
     <button class="today-btn" id="todayBtn">Oggi</button>
@@ -27,6 +28,12 @@
 
   <!-- VIEW: OGGI -->
   <section id="view-oggi" class="view active">
+    <div class="hunt-tabs" id="huntTabs">
+      <button class="hunt-tab" data-hunt="alta">Caccia alta</button>
+      <button class="hunt-tab" data-hunt="bassa">Caccia bassa</button>
+      <button class="hunt-tab" data-hunt="acquatica">Caccia acquatica</button>
+    </div>
+
     <label class="altitude-toggle">
       <input type="checkbox" id="altitudeToggle">
       Mi trovo sotto i 400 mslm (cambia gli orari di caccia alta)
