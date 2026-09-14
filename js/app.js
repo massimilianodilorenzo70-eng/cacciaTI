@@ -168,6 +168,21 @@
     return `<div class="unlock-banner">✓ Sbloccata: hai registrato ${what} il ${formatDateCH(k.date)}</div>`;
   }
 
+  // Dove si può cacciare questa specie (art. 44 del regolamento)
+  function renderZoneBox(category) {
+    const z = (regData.zones || {})[category.speciesLabel.toLowerCase()];
+    if (!z) return "";
+    const righe = [];
+    if (z.chiuso) righe.push(`<div class="zona-chiuso">${z.chiuso}</div>`);
+    if (z.aperto) righe.push(`<div><b>Aperto:</b> ${z.aperto}</div>`);
+    if (z.condizioni) righe.push(`<div><b>Condizioni:</b> ${z.condizioni}</div>`);
+    if (righe.length === 0) return "";
+    return `<details class="zona-box">
+      <summary>Dove si può cacciare${z.chiuso ? " — attenzione, zone chiuse" : ""}</summary>
+      ${righe.join("")}
+    </details>`;
+  }
+
   function statusFor(r) {
     if (!r.dateOpen) return { label: "Chiusa", cls: "status-closed" };
     if (r.requiresPriorMissing) return { label: "Chiusa", cls: "status-closed", sub: r.category.lockedText || "Condizione stagionale non ancora soddisfatta" };
@@ -203,6 +218,7 @@
         <span>Orario: ${r.hoursToday}</span>
         ${r.remainingText ? `<span>${r.remainingText}</span>` : ""}
       </div>
+      ${renderZoneBox(r.category)}
       ${isUnlockedOpen(r) ? unlockBanner(r) : ""}
       ${st.sub ? `<div class="note">${st.sub}</div>` : ""}
       ${r.category.manualCheck ? `<div class="note">${r.category.manualCheck}</div>` : ""}
