@@ -243,7 +243,7 @@
       "id": "cap_maschio_8_14sett",
       "speciesKey": "capriolo",
       "speciesLabel": "Capriolo",
-      "categoryLabel": "Maschio ≥ 1,5 anni (8 sett. tutto il territorio; 14 sett. a settori)",
+      "categoryLabel": "Maschio ≥ 1,5 anni (8 sett. ovunque; 14 sett. solo in alcuni settori)",
       "huntType": "alta",
       "windows": [
         {
@@ -260,7 +260,7 @@
       "groups": [
         "capriolo_totale"
       ],
-      "note": "14 settembre solo nei settori dove previsto, fino a raggiungimento della quota di Piano.",
+      "note": "Il 14 settembre è un giorno EVENTUALE: l'Ufficio della caccia e della pesca decide se aprirlo e in quali settori (comparti del Cantone), fino al raggiungimento della quota di Piano. Verifica sul sito ufficiale o al numero UCP la sera prima dalle 16:00.",
       "contingenteKey": "capriolo_maschio_adulto"
     },
     {
@@ -1065,5 +1065,46 @@
       ],
       "note": "Consentita solo sui laghi Verbano e Ceresio, ad almeno 100 m dalla riva/canneti. Vietato sparare verso terraferma."
     }
-  ]
+  ],
+  "zones": {
+    "_fonte": "Art. 44 del Regolamento sulla caccia (RT 922.110), stato 3 luglio 2026",
+    "camoscio": {
+      "aperto": "Distretti di Leventina, Blenio (esclusa la zona del piano), Riviera (esclusa la zona del piano), Bellinzona (esclusa la zona del piano), Locarno (escluso il Comune di Gambarogno), Vallemaggia e Lugano (escluso il territorio a sud del ponte-diga di Melide e il comparto a destra dell'autostrada A2), fino al raggiungimento dei Piani di abbattimento."
+    },
+    "capriolo": {
+      "chiuso": "CHIUSO nei distretti di Leventina e Blenio.",
+      "aperto": "Distretti di Riviera, Bellinzona, Locarno e Vallemaggia; Lugano escluso il Comune di Brusino Arsizio; Mendrisio solo sul territorio a sinistra dell'autostrada (direzione nord-sud).",
+      "condizioni": "Nella zona del piano aperta alla caccia al cervo dei distretti di Riviera e Bellinzona: solo da postazione fissa ad almeno 2 m dal suolo, il lunedì, martedì, giovedì e venerdì."
+    },
+    "cervo": {
+      "aperto": "Tutti i distretti: Leventina, Blenio, Riviera, Bellinzona, Locarno, Lugano, Mendrisio e Vallemaggia.",
+      "condizioni": "Nelle zone del piano di Blenio, Riviera e Bellinzona: solo da postazione fissa ad almeno 2 m dal suolo, il lunedì, martedì, giovedì e venerdì. Escluse le bandite N. 64 Legiuna (Blenio) e N. 48 Piano di Magadino (Bellinzona)."
+    },
+    "cinghiale": {
+      "aperto": "Tutto il territorio cantonale.",
+      "condizioni": "Nella zona del piano aperta alla caccia al cervo dei distretti di Blenio, Riviera e Bellinzona: solo da postazione fissa ad almeno 2 m dal suolo, il lunedì, martedì, giovedì e venerdì."
+    },
+    "marmotta": {
+      "chiuso": "CHIUSA nei distretti di Bellinzona, Lugano e Mendrisio.",
+      "aperto": "Resto del territorio cantonale. Nel distretto di Locarno solo in Valle Verzasca a nord dei confini comunali di Mergoscia e Vogorno, sopra i 1'400 mslm."
+    },
+    "volpe": {
+      "aperto": "Tutto il territorio cantonale aperto alla caccia."
+    },
+    "tasso": {
+      "aperto": "Tutto il territorio cantonale aperto alla caccia."
+    },
+    "fagiano di monte": {
+      "chiuso": "CHIUSA nei Comuni di Capriasca, Ponte Capriasca, Lugano, Isone e Comunanza Monteceneri-Cadenazzo (Valle di Caneggio/Corte di Campo), Gambarogno, Monteceneri e Mezzovico-Vira."
+    },
+    "lepre comune": {
+      "chiuso": "CHIUSA nei Comuni di Avegno Gordevio, Maggia e Cevio al di sotto dei 700 mslm."
+    },
+    "lepre variabile": {
+      "chiuso": "CHIUSA nei Comuni di Capriasca, Ponte Capriasca, Lugano, Isone e Comunanza Monteceneri-Cadenazzo (Valle di Caneggio/Corte di Campo), Gambarogno, Monteceneri e Mezzovico-Vira, Bellinzona/S. Antonio, Bellinzona/Pianezzo e Arbedo-Castione."
+    },
+    "_caccia_alta": "In tutta la caccia alta, nel distretto di Bellinzona la caccia è chiusa nell'area delimitata da autostrada A2, strada cantonale e argine, tra i ponti Monte Carasso-Bellinzona e Arbedo-Gorduno.",
+    "_caccia_bassa": "Caccia bassa: permessa su tutto il territorio cantonale, salvo le eccezioni indicate per singola specie.",
+    "_caccia_acquatica": "Caccia acquatica: permessa sui laghi Verbano e Ceresio ad almeno 100 m dalla riva e dai canneti. Vietati gli spari in direzione della terraferma."
+  }
 }
