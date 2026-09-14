@@ -75,7 +75,7 @@
   }
 
   function renderHuntTabs(results) {
-    document.querySelectorAll(".hunt-tab").forEach(btn => {
+    document.querySelectorAll("#huntTabs .hunt-tab").forEach(btn => {
       const ht = btn.dataset.hunt;
       const active = currentHuntTypeIsActive(ht, results);
       btn.classList.toggle("active", ht === selectedHunt);
@@ -268,10 +268,97 @@
           Storage.deleteKill(k.id);
           renderRegistro();
           renderOggi();
+          if (!document.getElementById("registroStatistiche").classList.contains("hidden")) renderStatistiche();
         }
       });
       listEl.appendChild(item);
     }
+  }
+
+  // ---------- Sottotab Registro: Elenco / Statistiche ----------
+
+  function setupRegistroSubtabs() {
+    document.querySelectorAll("#registroSubtabs .subtab").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("#registroSubtabs .subtab").forEach(
+          (b) => b.classList.toggle("active", b === btn));
+        const wantStats = btn.dataset.sub === "statistiche";
+        document.getElementById("registroElenco").classList.toggle("hidden", wantStats);
+        document.getElementById("registroStatistiche").classList.toggle("hidden", !wantStats);
+        if (wantStats) renderStatistiche();
+      });
+    });
+  }
+
+  // ---------- Vista REGISTRO: statistiche stagionali ----------
+
+  function renderStatistiche() {
+    const panel = document.getElementById("registroStatistiche");
+    const log = Storage.getLog();
+    const year = String(regData.regulationYear || "");
+    const season = year ? log.filter(k => k.date.startsWith(year)) : log;
+    const outOfSeason = log.length - season.length;
+
+    if (season.length === 0) {
+      panel.innerHTML = `<div class="empty-state">Nessun abbattimento registrato` +
+        `${year ? " per la stagione " + year : ""}.</div>`;
+      return;
+    }
+
+    const catById = new Map(regData.categories.map(c => [c.id, c]));
+    const bySpecies = new Map();   // speciesLabel -> conteggio
+    const byHunt = new Map();      // huntType -> conteggio
+    const byDate = new Map();      // data -> conteggio
+
+    for (const k of season) {
+      const cat = catById.get(k.categoryId);
+      const sp = cat ? cat.speciesLabel : k.categoryId;
+      const ht = cat ? cat.huntType : null;
+      bySpecies.set(sp, (bySpecies.get(sp) || 0) + 1);
+      if (ht) byHunt.set(ht, (byHunt.get(ht) || 0) + 1);
+      byDate.set(k.date, (byDate.get(k.date) || 0) + 1);
+    }
+
+    const speciesSorted = [...bySpecies.entries()].sort((a, b) => b[1] - a[1]);
+    const maxSpeciesCount = speciesSorted[0][1];
+    const huntSorted = [...byHunt.entries()].sort((a, b) => b[1] - a[1]);
+    const dateSorted = [...byDate.entries()].sort((a, b) => b[1] - a[1] || b[0].localeCompare(a[0]));
+    const datesAsc = [...byDate.keys()].sort();
+    const bestDay = dateSorted[0];
+
+    const bar = (label, count, max) => `
+      <div class="stat-bar-row">
+        <div class="stat-bar-label">${label}</div>
+        <div class="stat-bar-track"><div class="stat-bar-fill" style="width:${Math.max(6, Math.round(count / max * 100))}%"></div></div>
+        <div class="stat-bar-count">${count}</div>
+      </div>`;
+
+    panel.innerHTML = `
+      <div class="stats-highlights">
+        <div class="stat-box"><div class="num">${season.length}</div><div class="lbl">cap${season.length === 1 ? "o" : "i"} totali</div></div>
+        <div class="stat-box"><div class="num">${bySpecies.size}</div><div class="lbl">specie diverse</div></div>
+        <div class="stat-box"><div class="num">${byDate.size}</div><div class="lbl">giorni di caccia</div></div>
+      </div>
+
+      <div class="section-title">Per specie</div>
+      <div class="stats-bars">
+        ${speciesSorted.map(([sp, count]) => bar(sp, count, maxSpeciesCount)).join("")}
+      </div>
+
+      ${huntSorted.length > 1 ? `
+      <div class="section-title">Per tipo di caccia</div>
+      <div class="stats-bars">
+        ${huntSorted.map(([ht, count]) => bar(HUNT_LABELS[ht] || ht, count, season.length)).join("")}
+      </div>` : ""}
+
+      <div class="section-title">Cronologia</div>
+      <div class="info-box">
+        <b>Primo abbattimento:</b> ${formatDateCH(datesAsc[0])}<br>
+        <b>Ultimo abbattimento:</b> ${formatDateCH(datesAsc[datesAsc.length - 1])}<br>
+        <b>Giorno più fruttuoso:</b> ${formatDateCH(bestDay[0])} (${bestDay[1]} cap${bestDay[1] === 1 ? "o" : "i"})
+      </div>
+      ${outOfSeason ? `<div class="note">Escluse dal conteggio ${outOfSeason} voci con data fuori dalla stagione ${year}.</div>` : ""}
+    `;
   }
 
   // ---------- Vista REGOLAMENTO ----------
@@ -327,6 +414,7 @@
     const note = document.getElementById("modalNote").value.trim();
     if (!categoryId || !date) return;
     Storage.addKill({ categoryId, date, note });
+    if (!document.getElementById("registroStatistiche").classList.contains("hidden")) renderStatistiche();
     closeModal();
     renderOggi();
     renderRegistro();
@@ -558,6 +646,7 @@
         Storage.saveLog(log);
         renderRegistro();
         renderOggi();
+        if (!document.getElementById("registroStatistiche").classList.contains("hidden")) renderStatistiche();
         alert(`Abbattimenti aggiunti al registro: ${toAdd.length}`);
       } catch (err) {
         alert("File non valido: " + err.message);
@@ -565,6 +654,8 @@
         e.target.value = "";
       }
     });
+
+    setupRegistroSubtabs();
 
     document.getElementById("exportLogBtn").addEventListener("click", () => {
       const log = Storage.getLog();
