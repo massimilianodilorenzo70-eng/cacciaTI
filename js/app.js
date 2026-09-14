@@ -301,7 +301,9 @@
 
     if (season.length === 0) {
       panel.innerHTML = `<div class="empty-state">Nessun abbattimento registrato` +
-        `${year ? " per la stagione " + year : ""}.</div>`;
+        `${year ? " per la stagione " + year : ""}.</div>` +
+        `<div class="privacy-note">🔒 Questi dati restano solo sul tuo telefono: non vengono inviati né ` +
+        `condivisi in alcun modo con l'Ufficio della caccia e della pesca né con altri.</div>`;
       return;
     }
 
@@ -358,6 +360,11 @@
         <b>Giorno più fruttuoso:</b> ${formatDateCH(bestDay[0])} (${bestDay[1]} cap${bestDay[1] === 1 ? "o" : "i"})
       </div>
       ${outOfSeason ? `<div class="note">Escluse dal conteggio ${outOfSeason} voci con data fuori dalla stagione ${year}.</div>` : ""}
+
+      <div class="privacy-note">
+        🔒 Questi dati restano solo sul tuo telefono: non vengono inviati né condivisi in alcun
+        modo con l'Ufficio della caccia e della pesca né con altri.
+      </div>
     `;
   }
 
