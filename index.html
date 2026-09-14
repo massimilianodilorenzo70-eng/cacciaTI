@@ -8,6 +8,9 @@
 <meta name="theme-color" content="#253A21">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="cacciaTI">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -121,6 +124,19 @@
 </main>
 
 <button class="fab" id="fabAdd">+</button>
+
+<!-- INVITO A INSTALLARE L'APP -->
+<div class="install-banner hidden" id="installBanner" role="dialog" aria-label="Installa cacciaTI">
+  <img src="icons/icon-192.png" alt="" class="install-icon">
+  <div class="install-text">
+    <b>Installa cacciaTI sul telefono</b>
+    <span id="installHint">Si apre come un'app dalla schermata Home, anche senza campo.</span>
+  </div>
+  <div class="install-actions">
+    <button class="install-btn" id="installBtn" hidden>Installa</button>
+    <button class="install-later" id="installLater">Non ora</button>
+  </div>
+</div>
 
 <nav class="tabbar">
   <button class="tab-btn active" data-view="oggi"><span class="icon">◎</span>Oggi</button>
