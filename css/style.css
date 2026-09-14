@@ -484,6 +484,17 @@ nav.tabbar button.active { color: var(--forest); font-weight: 600; }
   color: var(--ink-soft);
 }
 
+.privacy-note {
+  margin-top: 16px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--ink-soft);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+}
+
 .summary-caps {
   display: flex;
   flex-wrap: wrap;
