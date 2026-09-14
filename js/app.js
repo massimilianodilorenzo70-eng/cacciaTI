@@ -8,6 +8,26 @@
   let contingenteData = null; // dati ufficiali camoscio/capriolo, se disponibili
 
   const HUNT_LABELS = { alta: "Caccia alta", bassa: "Caccia bassa", acquatica: "Caccia acquatica" };
+
+  // Cronologia versioni — dalla più recente alla più vecchia.
+  // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
+  const CHANGELOG = [
+    { v: "2.6", text: "Aggiunta questa cronologia degli aggiornamenti; la voce di menu è stata rinominata da \u00abRegolamento\u00bb a \u00abInfo\u00bb." },
+    { v: "2.5", text: "Il contingente ufficiale cambia colore (verde, arancio o rosso) in base a quanto ne resta, come sul sito del Cantone." },
+    { v: "2.4", text: "L'avviso \u00abresta solo sul telefono\u00bb compare anche nella finestra di registrazione di un abbattimento." },
+    { v: "2.3", text: "Aggiunto l'avviso che i dati restano solo sul telefono, nella sezione Statistiche." },
+    { v: "2.2", text: "Nuova sezione Statistiche nel Registro catture: capi totali, per specie, per tipo di caccia, cronologia della stagione." },
+    { v: "2.1", text: "Aggiunte le zone di caccia per ogni specie (dove è aperto o chiuso) e chiarito cosa significa \u00aba settori\u00bb per il capriolo." },
+    { v: "2.0", text: "L'app propone di installarsi sulla schermata Home, sia su Android sia su iPhone." },
+    { v: "1.9", text: "Il contingente non si mostra più sulle categorie chiuse per data; avviso quando in un giorno non c'è nulla di aperto." },
+    { v: "1.8", text: "Si può importare il registro abbattimenti da un file esportato in precedenza." },
+    { v: "1.7", text: "Corretto l'allineamento dei pulsanti nella scheda Regolamento." },
+    { v: "1.6", text: "Nella schermata Oggi, ogni specie mostra prima le categorie aperte e poi quelle chiuse." },
+    { v: "1.4", text: "La voce \u00absotto i 400 mslm\u00bb compare solo con la caccia alta selezionata." },
+    { v: "1.3", text: "Il pulsante \u00ab+\u00bb per registrare un abbattimento mostra solo le specie del tipo di caccia selezionato." },
+    { v: "1.2", text: "Registrando una femmina non lattifera, il maschio corrispondente si sblocca in automatico e viene messo in evidenza." },
+    { v: "1.1", text: "Numero di versione nell'intestazione; l'app si aggiorna da sola, senza dover ricaricare due volte." },
+  ];
   const HUNT_ORDER = ["alta", "bassa", "acquatica"];
 
   // ---------- Caricamento dati ----------
@@ -377,7 +397,17 @@
 
   // ---------- Vista REGOLAMENTO ----------
 
+  function renderChangelog() {
+    const el = document.getElementById("changelogList");
+    if (!el || el.dataset.rendered) return;
+    el.dataset.rendered = "1";
+    el.innerHTML = CHANGELOG.map(e => `
+      <div class="changelog-row"><b>v${e.v}</b> — ${e.text}</div>
+    `).join("");
+  }
+
   function renderRegolamento() {
+    renderChangelog();
     const box = document.getElementById("regInfoBox");
     const custom = Storage.getCustomRegolamento();
     box.innerHTML = `
