@@ -329,11 +329,87 @@
 
   // ---------- Init ----------
 
+  // ---------- Invito a installare l'app ----------
+  // Android/Chrome: usa il prompt nativo del browser (evento beforeinstallprompt).
+  // iPhone/iPad: Safari non ha un prompt, quindi mostra come fare a mano.
+  // Non compare se l'app è già installata; "Non ora" lo nasconde per 14 giorni.
+
+  const KEY_INSTALL_SNOOZE = "cacciaTI_install_snooze_until";
+  const INSTALL_SNOOZE_DAYS = 14;
+  let deferredInstall = null;
+  let installWanted = false;
+
+  function isStandalone() {
+    return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+  }
+
+  function isIOS() {
+    return /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  }
+
+  function installSnoozed() {
+    return Date.now() < Number(localStorage.getItem(KEY_INSTALL_SNOOZE) || 0);
+  }
+
+  function hideInstallBanner() {
+    document.getElementById("installBanner").classList.add("hidden");
+  }
+
+  function showInstallBanner() {
+    installWanted = true;
+    if (isStandalone() || installSnoozed()) return;
+    if (!Storage.hasAckedDisclaimer()) return; // prima la manleva, poi l'invito
+    document.getElementById("installBanner").classList.remove("hidden");
+  }
+
+  function setupInstallPrompt() {
+    const btn = document.getElementById("installBtn");
+
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();          // al posto della barra del browser mostriamo il nostro invito
+      deferredInstall = e;
+      btn.hidden = false;
+      showInstallBanner();
+    });
+
+    window.addEventListener("appinstalled", () => {
+      deferredInstall = null;
+      hideInstallBanner();
+    });
+
+    if (isIOS() && !isStandalone()) {
+      document.getElementById("installHint").textContent =
+        "Tocca Condividi (il quadrato con la freccia in su) e poi «Aggiungi alla schermata Home».";
+      btn.hidden = true;
+      setTimeout(showInstallBanner, 1200);
+    }
+
+    btn.addEventListener("click", async () => {
+      if (!deferredInstall) return;
+      deferredInstall.prompt();
+      const choice = await deferredInstall.userChoice;
+      deferredInstall = null;
+      hideInstallBanner();
+      if (!choice || choice.outcome !== "accepted") {
+        localStorage.setItem(KEY_INSTALL_SNOOZE, String(Date.now() + INSTALL_SNOOZE_DAYS * 86400000));
+      }
+    });
+
+    document.getElementById("installLater").addEventListener("click", () => {
+      localStorage.setItem(KEY_INSTALL_SNOOZE, String(Date.now() + INSTALL_SNOOZE_DAYS * 86400000));
+      hideInstallBanner();
+    });
+  }
+
   async function init() {
+    setupInstallPrompt(); // subito, per non perdere l'evento del browser
+
     if (!Storage.hasAckedDisclaimer()) {
       document.getElementById("disclaimerAck").addEventListener("click", () => {
         Storage.setAckedDisclaimer();
         document.getElementById("disclaimerGate").classList.add("hidden");
+        if (installWanted) showInstallBanner();
       });
     } else {
       document.getElementById("disclaimerGate").classList.add("hidden");
