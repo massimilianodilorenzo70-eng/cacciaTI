@@ -1,743 +1,714 @@
-:root {
-  --bg: #EDEDE3;
-  --surface: #F8F7F1;
-  --line: #CBC4AC;
-  --ink: #22271B;
-  --ink-soft: #565A44;
-  --forest: #2E4A29;
-  --forest-soft: #E1E9D9;
-  --rust: #8B3A2C;
-  --rust-soft: #F2E0D8;
-  --gold: #93711F;
-  --gold-soft: #F0E6C7;
-  --header-bg: #253A21;
-  --header-ink: #F6F4EA;
-  --radius: 10px;
-  --mono: "SFMono-Regular", Consolas, Menlo, monospace;
-  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-}
-
-* { box-sizing: border-box; }
-
-html, body {
-  margin: 0;
-  padding: 0;
-  background: var(--bg);
-  color: var(--ink);
-  font-family: var(--sans);
-  -webkit-tap-highlight-color: transparent;
-}
-
-body {
-  padding-bottom: calc(64px + env(safe-area-inset-bottom));
-  min-height: 100vh;
-}
-
-header.app-header {
-  background: var(--header-bg);
-  color: var(--header-ink);
-  padding: 14px 16px calc(14px + env(safe-area-inset-top)) 16px;
-  padding-top: max(14px, env(safe-area-inset-top));
-  position: sticky;
-  top: 0;
-  z-index: 20;
-}
-
-.app-header .top-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  row-gap: 2px;
-}
-
-.app-header h1 {
-  margin: 0;
-  font-size: 20px;
-  letter-spacing: 0.02em;
-}
-
-.app-header .brand {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.app-header .brand-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 7px;
-  flex-shrink: 0;
-}
-
-.app-header .app-version {
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 600;
-  color: #D9B65C;
-  align-self: flex-end;
-  margin-bottom: 3px;
-}
-
-.app-header .author-line {
-  font-size: 11px;
-  font-weight: 400;
-  color: #D9B65C;
-  margin-top: 2px;
-}
-
-.app-header .ref {
-  font-family: var(--mono);
-  font-size: 11px;
-  opacity: 0.7;
-}
-
-.app-header .date-row {
-  margin-top: 8px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.app-header .date-row input[type="date"] {
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.25);
-  color: var(--header-ink);
-  border-radius: 8px;
-  padding: 6px 8px;
-  font-family: var(--sans);
-  font-size: 14px;
-}
-
-.app-header .today-btn {
-  background: transparent;
-  border: 1px solid rgba(255,255,255,0.3);
-  color: var(--header-ink);
-  border-radius: 8px;
-  padding: 6px 10px;
-  font-size: 13px;
-}
-
-main {
-  padding: 14px 14px 24px 14px;
-  max-width: 640px;
-  margin: 0 auto;
-}
-
-.disclaimer-gate {
-  position: fixed;
-  inset: 0;
-  background: var(--header-bg);
-  z-index: 50;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-
-.disclaimer-gate.hidden { display: none; }
-
-.disclaimer-card {
-  background: var(--surface);
-  border-radius: 14px;
-  padding: 22px 20px;
-  max-width: 420px;
-  max-height: 88vh;
-  overflow-y: auto;
-  color: var(--ink);
-}
-
-.disclaimer-card h2 {
-  margin: 0 0 12px 0;
-  font-size: 18px;
-}
-
-.disclaimer-card p {
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--ink-soft);
-  margin: 0 0 12px 0;
-}
-
-.disclaimer-card .btn {
-  margin-top: 6px;
-  margin-bottom: 0;
-}
-
-.hunt-tabs {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 12px;
-}
-
-.hunt-tabs .subtab,
-.hunt-tabs .hunt-tab {
-  flex: 1;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  color: var(--ink-soft);
-  border-radius: 8px;
-  padding: 9px 4px;
-  font-size: 13px;
-  font-weight: 600;
-  position: relative;
-}
-
-.hunt-tabs .subtab.active,
-.hunt-tabs .hunt-tab.active {
-  background: var(--forest);
-  border-color: var(--forest);
-  color: #fff;
-}
-
-.hunt-tabs .hunt-tab .dot {
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--gold);
-  margin-left: 5px;
-}
-
-.hunt-tabs .hunt-tab.active .dot {
-  background: #fff;
-}
-
-.altitude-toggle {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 10px 12px;
-  margin-bottom: 14px;
-  font-size: 13.5px;
-  color: var(--ink-soft);
-}
-
-.altitude-toggle input { width: 18px; height: 18px; }
-
-.hunt-section {
-  margin-bottom: 22px;
-}
-
-.hunt-section h2 {
-  font-size: 14px;
-  text-transform: none;
-  letter-spacing: 0.01em;
-  color: var(--ink-soft);
-  border-bottom: 1px solid var(--line);
-  padding-bottom: 6px;
-  margin: 0 0 10px 0;
-  display: flex;
-  justify-content: space-between;
-}
-
-.hunt-section h2 .badge-active {
-  font-family: var(--mono);
-  font-size: 11px;
-  background: var(--forest-soft);
-  color: var(--forest);
-  padding: 2px 7px;
-  border-radius: 20px;
-}
-
-.cat-card {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 11px 12px;
-  margin-bottom: 8px;
-}
-
-.cat-card .row1 {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 8px;
-}
-
-.cat-card .titles { flex: 1; min-width: 0; }
-
-.cat-card .species {
-  font-weight: 600;
-  font-size: 15px;
-}
-
-.cat-card .category {
-  font-size: 13px;
-  color: var(--ink-soft);
-  margin-top: 1px;
-}
-
-.status-pill {
-  font-size: 11.5px;
-  font-family: var(--mono);
-  white-space: nowrap;
-  padding: 3px 8px;
-  border-radius: 20px;
-  flex-shrink: 0;
-}
-.status-open { background: var(--forest-soft); color: var(--forest); }
-.status-closed { background: var(--rust-soft); color: var(--rust); }
-.status-check { background: var(--gold-soft); color: var(--gold); }
-.status-unlocked { background: var(--forest); color: #FFFFFF; font-weight: 600; }
-
-.cat-card.unlocked {
-  border: 2px solid var(--forest);
-  padding: 10px 11px;
-  box-shadow: 0 0 0 3px var(--forest-soft);
-}
-
-.cat-card .unlock-banner {
-  margin-top: 7px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--forest);
-  background: var(--forest-soft);
-  border-radius: 6px;
-  padding: 7px 9px;
-}
-
-.cat-card .meta-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 7px;
-  font-size: 12px;
-  color: var(--ink-soft);
-  font-family: var(--mono);
-}
-
-.cat-card .note {
-  margin-top: 7px;
-  font-size: 12.5px;
-  color: var(--gold);
-  background: var(--gold-soft);
-  border-radius: 6px;
-  padding: 6px 8px;
-  line-height: 1.35;
-}
-
-.cat-card .zona-box {
-  margin-top: 7px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 6px 9px;
-  font-size: 12.5px;
-  line-height: 1.4;
-  color: var(--ink-soft);
-}
-.cat-card .zona-box summary {
-  font-weight: 600;
-  color: var(--ink);
-  cursor: pointer;
-}
-.cat-card .zona-box > div { margin-top: 5px; }
-.cat-card .zona-box .zona-chiuso {
-  color: var(--rust);
-  background: var(--rust-soft);
-  border-radius: 5px;
-  padding: 5px 7px;
-  font-weight: 600;
-}
-
-.cat-card .reg-btn {
-  margin-top: 8px;
-  border: 1px solid var(--forest);
-  color: var(--forest);
-  background: transparent;
-  border-radius: 7px;
-  padding: 6px 10px;
-  font-size: 13px;
-}
-.cat-card .reg-btn:disabled {
-  opacity: 0.35;
-}
-
-nav.tabbar {
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
-  background: var(--surface);
-  border-top: 1px solid var(--line);
-  display: flex;
-  padding-bottom: env(safe-area-inset-bottom);
-  z-index: 20;
-}
-
-nav.tabbar button {
-  flex: 1;
-  background: none;
-  border: none;
-  padding: 10px 0 8px 0;
-  font-size: 12px;
-  color: var(--ink-soft);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-}
-
-nav.tabbar button .icon { font-size: 19px; }
-
-nav.tabbar button.active { color: var(--forest); font-weight: 600; }
-
-.view { display: none; }
-.view.active { display: block; }
-
-.hidden { display: none !important; }
-
-.fab {
-  position: fixed;
-  right: 18px;
-  bottom: calc(74px + env(safe-area-inset-bottom));
-  width: 54px; height: 54px;
-  border-radius: 50%;
-  background: var(--forest);
-  color: #fff;
-  border: none;
-  font-size: 26px;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.25);
-  z-index: 19;
-}
-
-.log-item {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 10px 12px;
-  margin-bottom: 8px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-}
-
-.log-item .info .date { font-family: var(--mono); font-size: 12px; color: var(--ink-soft); }
-.log-item .info .sp { font-weight: 600; font-size: 14.5px; margin-top: 1px; }
-.log-item .info .cat { font-size: 12.5px; color: var(--ink-soft); }
-.log-item button.del {
-  background: none; border: 1px solid var(--rust); color: var(--rust);
-  border-radius: 6px; padding: 5px 9px; font-size: 12px;
-}
-
-.stats-highlights {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
-}
-.stat-box {
-  flex: 1;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 12px 8px;
-  text-align: center;
-}
-.stat-box .num {
-  font-family: var(--mono);
-  font-size: 24px;
-  font-weight: 700;
-  color: var(--forest);
-}
-.stat-box .lbl {
-  font-size: 11.5px;
-  color: var(--ink-soft);
-  margin-top: 2px;
-}
-
-.stats-bars { margin-bottom: 8px; }
-.stat-bar-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-.stat-bar-label {
-  width: 40%;
-  flex-shrink: 0;
-  font-size: 13px;
-  color: var(--ink);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.stat-bar-track {
-  flex: 1;
-  height: 10px;
-  background: var(--line);
-  border-radius: 5px;
-  overflow: hidden;
-}
-.stat-bar-fill {
-  height: 100%;
-  background: var(--forest);
-  border-radius: 5px;
-}
-.stat-bar-count {
-  width: 22px;
-  flex-shrink: 0;
-  text-align: right;
-  font-family: var(--mono);
-  font-size: 12.5px;
-  color: var(--ink-soft);
-}
-
-.privacy-note {
-  margin-top: 16px;
-  font-size: 12px;
-  line-height: 1.4;
-  color: var(--ink-soft);
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 10px 12px;
-}
-
-.summary-caps {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 16px;
-}
-.summary-caps .cap-chip {
-  font-family: var(--mono);
-  font-size: 11.5px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 20px;
-  padding: 5px 10px;
-  color: var(--ink-soft);
-}
-
-.section-title {
-  font-size: 15px;
-  font-weight: 600;
-  margin: 18px 0 8px 0;
-}
-
-.info-box {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 12px 14px;
-  font-size: 13.5px;
-  line-height: 1.5;
-  color: var(--ink-soft);
-  margin-bottom: 14px;
-}
-
-.info-box b { color: var(--ink); }
-
-.btn {
-  display: block;            /* vale anche per <label class="btn"> (importa file) */
-  text-align: center;
-  font-family: var(--sans);
-  line-height: 1.25;
-  cursor: pointer;
-  background: var(--forest);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-size: 14px;
-  width: 100%;
-  margin-bottom: 8px;
-}
-.btn.secondary {
-  background: transparent;
-  border: 1px solid var(--line);
-  color: var(--ink);
-}
-.btn.danger {
-  background: transparent;
-  border: 1px solid var(--rust);
-  color: var(--rust);
-}
-
-input[type="file"] { display: none; }
-
-.search-row {
-  margin-bottom: 12px;
-}
-.search-row input {
-  width: 100%;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 9px 10px;
-  font-size: 14px;
-  background: var(--surface);
-  color: var(--ink);
-}
-
-/* Modal */
-.modal-backdrop {
-  position: fixed; inset: 0;
-  background: rgba(20,24,15,0.45);
-  display: none;
-  align-items: flex-end;
-  z-index: 30;
-}
-.modal-backdrop.active { display: flex; }
-.modal-sheet {
-  background: var(--bg);
-  width: 100%;
-  border-radius: 16px 16px 0 0;
-  padding: 18px 16px calc(20px + env(safe-area-inset-bottom)) 16px;
-  max-height: 85vh;
-  overflow-y: auto;
-}
-.modal-sheet h3 { margin: 0 0 12px 0; font-size: 16px; }
-.modal-sheet label {
-  display: block;
-  font-size: 12.5px;
-  color: var(--ink-soft);
-  margin: 10px 0 4px 0;
-}
-.modal-sheet select,
-.modal-sheet input[type="date"],
-.modal-sheet input[type="text"] {
-  width: 100%;
-  padding: 9px 10px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  font-size: 14px;
-  background: var(--surface);
-  color: var(--ink);
-}
-.modal-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 16px;
-}
-.modal-actions .btn { margin-bottom: 0; }
-
-.app-credit {
-  text-align: center;
-  color: var(--ink-soft);
-  font-family: var(--mono);
-  font-size: 11.5px;
-  letter-spacing: 0.02em;
-  margin: 20px 0 8px 0;
-}
-
-.contingente-box {
-  margin-top: 8px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 8px 10px;
-  font-size: 12.5px;
-}
-
-.contingente-box .cline {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-}
-
-.contingente-box .cstatus {
-  font-family: var(--mono);
-  font-weight: 600;
-}
-.contingente-box .cstatus.aperto { color: var(--forest); }
-.contingente-box .cstatus.chiuso { color: var(--rust); }
-
-.contingente-box .cbar {
-  height: 5px;
-  border-radius: 3px;
-  background: var(--line);
-  margin: 6px 0 5px 0;
-  overflow: hidden;
-}
-.contingente-box .cbar-fill {
-  height: 100%;
-  background: var(--forest);
-}
-.contingente-box .cbar-fill.chiuso { background: var(--rust); }
-
-.contingente-box .csource {
-  color: var(--ink-soft);
-  font-size: 11px;
-}
-
-.contingente-box.stale {
-  border-color: var(--gold);
-  background: var(--gold-soft);
-}
-.contingente-box.stale .csource { color: var(--gold); }
-
-.install-banner {
-  position: fixed;
-  left: 10px;
-  right: 10px;
-  bottom: calc(72px + env(safe-area-inset-bottom));
-  max-width: 620px;
-  margin: 0 auto;
-  z-index: 25;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--header-bg);
-  color: var(--header-ink);
-  border-radius: 12px;
-  padding: 12px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
-}
-.install-banner.hidden { display: none; }
-
-.install-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 9px;
-  flex-shrink: 0;
-}
-
-.install-text {
-  flex: 1;
-  min-width: 0;
-  font-size: 13px;
-  line-height: 1.35;
-}
-.install-text b {
-  display: block;
-  font-size: 14px;
-  margin-bottom: 2px;
-}
-.install-text span { color: rgba(246,244,234,0.82); }
-
-.install-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  flex-shrink: 0;
-}
-.install-btn {
-  background: #D9B65C;
-  color: var(--header-bg);
-  border: none;
-  border-radius: 7px;
-  padding: 8px 14px;
-  font-family: var(--sans);
-  font-size: 13px;
-  font-weight: 600;
-}
-.install-later {
-  background: transparent;
-  color: var(--header-ink);
-  border: 1px solid rgba(255,255,255,0.3);
-  border-radius: 7px;
-  padding: 6px 10px;
-  font-family: var(--sans);
-  font-size: 12px;
-}
-
-.empty-state {
-  text-align: center;
-  color: var(--ink-soft);
-  padding: 40px 20px;
-  font-size: 14px;
-}
-
-::-webkit-scrollbar { width: 0; height: 0; }
+/* app.js — controller: carica i dati, gestisce le viste e le interazioni */
+
+(() => {
+  let regData = null;
+  let selectedDate = new Date();
+  let prefs = Storage.getPrefs();
+  let selectedHunt = null; // 'alta' | 'bassa' | 'acquatica' — scelto dall'utente o dedotto alla prima apertura
+  let contingenteData = null; // dati ufficiali camoscio/capriolo, se disponibili
+
+  const HUNT_LABELS = { alta: "Caccia alta", bassa: "Caccia bassa", acquatica: "Caccia acquatica" };
+  const HUNT_ORDER = ["alta", "bassa", "acquatica"];
+
+  // ---------- Caricamento dati ----------
+
+  async function loadRegData() {
+    const custom = Storage.getCustomRegolamento();
+    if (custom) { regData = custom; return; }
+    const res = await fetch("data/regolamento_2026.json");
+    regData = await res.json();
+  }
+
+  async function loadContingenteData() {
+    try {
+      const res = await fetch("data/contingente_alta.json", { cache: "no-store" });
+      if (!res.ok) { contingenteData = null; return; }
+      contingenteData = await res.json();
+    } catch (e) {
+      contingenteData = null;
+    }
+  }
+
+  function contingenteFor(key) {
+    if (!contingenteData || !contingenteData.items) return null;
+    return contingenteData.items.find(it => it.contingenteKey === key) || null;
+  }
+
+  function renderContingenteBox(category) {
+    if (!category.contingenteKey) return "";
+    const item = contingenteFor(category.contingenteKey);
+    if (!item) {
+      return `
+        <div class="contingente-box stale">
+          <div class="cline"><span>Contingente ufficiale</span><span>non disponibile</span></div>
+          <div class="csource">Verifica sul
+            <a href="${(contingenteData && contingenteData.source) || "https://www4.ti.ch/dt/da/ucp/gestione-caccia-alta-camoscio"}" target="_blank" rel="noopener">sito ufficiale</a>
+          </div>
+        </div>`;
+    }
+    const fetchedAt = new Date(contingenteData.fetchedAt);
+    const hoursSince = (Date.now() - fetchedAt.getTime()) / 3_600_000;
+    const isStale = hoursSince > 48 || isNaN(hoursSince);
+    const statusCls = item.status === "APERTO" ? "aperto" : "chiuso";
+    const timeLabel = isNaN(fetchedAt.getTime())
+      ? ""
+      : fetchedAt.toLocaleString("it-CH", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+    return `
+      <div class="contingente-box ${isStale ? "stale" : ""}">
+        <div class="cline">
+          <span>Contingente ufficiale</span>
+          <span class="cstatus ${statusCls.toLowerCase()}">${item.status} · ${item.percent}%</span>
+        </div>
+        <div class="cbar"><div class="cbar-fill ${statusCls === "chiuso" ? "chiuso" : ""}" style="width:${Math.min(item.percent, 100)}%"></div></div>
+        <div class="csource">
+          ${isStale ? "Dato non aggiornato di recente — verifica sul " : "Fonte: "}
+          <a href="${contingenteData.source}" target="_blank" rel="noopener">${isStale ? "sito ufficiale" : contingenteData.sourceLabel}</a>
+          ${timeLabel ? ` · letto il ${timeLabel}` : ""}
+        </div>
+      </div>`;
+  }
+
+  // ---------- Vista OGGI ----------
+
+  function currentHuntTypeIsActive(huntType, evalResults) {
+    return evalResults.some(r => r.category.huntType === huntType && r.dateOpen);
+  }
+
+  function renderHuntTabs(results) {
+    document.querySelectorAll("#huntTabs .hunt-tab").forEach(btn => {
+      const ht = btn.dataset.hunt;
+      const active = currentHuntTypeIsActive(ht, results);
+      btn.classList.toggle("active", ht === selectedHunt);
+      btn.innerHTML = HUNT_LABELS[ht] + (active ? '<span class="dot"></span>' : "");
+    });
+
+    // La scelta "sotto i 400 mslm" riguarda solo gli orari di caccia alta
+    const altitude = document.querySelector(".altitude-toggle");
+    if (altitude) altitude.style.display = selectedHunt === "alta" ? "" : "none";
+  }
+
+  function renderOggi() {
+    const container = document.getElementById("sectionsContainer");
+    container.innerHTML = "";
+
+    const iso = RulesEngine.toISO(selectedDate);
+    const now = RulesEngine.toISO(new Date()) === iso ? RulesEngine.nowHHMM(new Date()) : null;
+    const log = Storage.getLog();
+    const results = RulesEngine.evaluateAll(regData, log, selectedDate, now, prefs);
+
+    if (selectedHunt === null) {
+      // alla primissima apertura, seleziona la caccia effettivamente in corso oggi, se c'è
+      selectedHunt = HUNT_ORDER.find(ht => currentHuntTypeIsActive(ht, results)) || "alta";
+    }
+
+    renderHuntTabs(results);
+
+    const query = (document.getElementById("searchInput").value || "").trim().toLowerCase();
+
+    let sectionResults = results.filter(r =>
+      r.category.huntType === selectedHunt && r.category.windows && r.category.windows.length > 0
+    );
+    if (query) {
+      sectionResults = sectionResults.filter(r =>
+        r.category.speciesLabel.toLowerCase().includes(query) ||
+        r.category.categoryLabel.toLowerCase().includes(query)
+      );
+    }
+
+    if (sectionResults.length === 0) {
+      container.innerHTML = `<div class="empty-state">Nessuna specie corrisponde alla ricerca.</div>`;
+      return;
+    }
+
+    // Se nel giorno scelto non c'è nulla di aperto, lo dice chiaramente in cima
+    const anyOpen = sectionResults.some(r =>
+      r.dateOpen && !r.quotaBlocked && !r.requiresPriorMissing && !r.dailyBlocked);
+    if (!anyOpen) {
+      const banner = document.createElement("div");
+      banner.className = "info-box";
+      banner.innerHTML = `<b>Nessuna categoria aperta</b> in ${HUNT_LABELS[selectedHunt].toLowerCase()} il ${formatDateCH(iso)}.`;
+      container.appendChild(banner);
+    }
+
+    // Le specie restano nell'ordine del regolamento; dentro ogni specie
+    // prima le categorie sbloccate, poi le aperte, poi le chiuse.
+    const openRank = (r) => {
+      const open = r.dateOpen && !r.quotaBlocked && !r.requiresPriorMissing && !r.dailyBlocked;
+      if (!open) return 2;
+      return r.unlockedBy ? 0 : 1;
+    };
+    const bySpecies = {};
+    for (const r of sectionResults) {
+      (bySpecies[r.category.speciesLabel] ||= []).push(r);
+    }
+    for (const speciesLabel of Object.keys(bySpecies)) {
+      const list = bySpecies[speciesLabel]
+        .map((r, i) => ({ r, i }))
+        .sort((a, b) => (openRank(a.r) - openRank(b.r)) || (a.i - b.i))
+        .map(x => x.r);
+      for (const r of list) {
+        container.appendChild(renderCatCard(r));
+      }
+    }
+  }
+
+  function isUnlockedOpen(r) {
+    return !!r.unlockedBy && r.dateOpen && !r.quotaBlocked && !r.requiresPriorMissing && !r.dailyBlocked;
+  }
+
+  function formatDateCH(iso) {
+    const [y, m, d] = (iso || "").split("-");
+    return d ? `${d}.${m}.${y}` : "";
+  }
+
+  function unlockBanner(r) {
+    const k = r.unlockedBy;
+    const src = regData.categories.find(c => c.id === k.categoryId);
+    const what = src ? `${src.speciesLabel.toLowerCase()} – ${src.categoryLabel.toLowerCase()}` : "il capo richiesto";
+    return `<div class="unlock-banner">✓ Sbloccata: hai registrato ${what} il ${formatDateCH(k.date)}</div>`;
+  }
+
+  // Dove si può cacciare questa specie (art. 44 del regolamento)
+  function renderZoneBox(category) {
+    const z = (regData.zones || {})[category.speciesLabel.toLowerCase()];
+    if (!z) return "";
+    const righe = [];
+    if (z.chiuso) righe.push(`<div class="zona-chiuso">${z.chiuso}</div>`);
+    if (z.aperto) righe.push(`<div><b>Aperto:</b> ${z.aperto}</div>`);
+    if (z.condizioni) righe.push(`<div><b>Condizioni:</b> ${z.condizioni}</div>`);
+    if (righe.length === 0) return "";
+    return `<details class="zona-box">
+      <summary>Dove si può cacciare${z.chiuso ? " — attenzione, zone chiuse" : ""}</summary>
+      ${righe.join("")}
+    </details>`;
+  }
+
+  function statusFor(r) {
+    if (!r.dateOpen) return { label: "Chiusa", cls: "status-closed" };
+    if (r.requiresPriorMissing) return { label: "Chiusa", cls: "status-closed", sub: r.category.lockedText || "Condizione stagionale non ancora soddisfatta" };
+    if (r.quotaBlocked) return { label: "Chiusa", cls: "status-closed", sub: r.quotaReason };
+    if (r.dailyBlocked) return { label: "Chiusa oggi", cls: "status-closed", sub: r.dailyReason };
+    if (r.unlockManual) return { label: "Aperta — verifica", cls: "status-check", sub: r.category.unlockManualText };
+    if (r.category.manualCheck) return { label: "Aperta — verifica", cls: "status-check" };
+    if (r.unlockedBy) {
+      return r.nowOpen
+        ? { label: "Sbloccata · aperta ora", cls: "status-unlocked" }
+        : { label: "Sbloccata · aperta oggi", cls: "status-unlocked", sub: "Fuori orario in questo momento" };
+    }
+    if (r.nowOpen) return { label: "Aperta ora", cls: "status-open" };
+    return { label: "Aperta oggi", cls: "status-open", sub: "Fuori orario in questo momento" };
+  }
+
+  function renderCatCard(r) {
+    const st = statusFor(r);
+    const card = document.createElement("div");
+    card.className = isUnlockedOpen(r) ? "cat-card unlocked" : "cat-card";
+
+    const canRegister = r.dateOpen && !r.quotaBlocked && !r.requiresPriorMissing && !r.dailyBlocked;
+
+    card.innerHTML = `
+      <div class="row1">
+        <div class="titles">
+          <div class="species">${r.category.speciesLabel}</div>
+          <div class="category">${r.category.categoryLabel}</div>
+        </div>
+        <span class="status-pill ${st.cls}">${st.label}</span>
+      </div>
+      <div class="meta-row">
+        <span>Orario: ${r.hoursToday}</span>
+        ${r.remainingText ? `<span>${r.remainingText}</span>` : ""}
+      </div>
+      ${renderZoneBox(r.category)}
+      ${isUnlockedOpen(r) ? unlockBanner(r) : ""}
+      ${st.sub ? `<div class="note">${st.sub}</div>` : ""}
+      ${r.category.manualCheck ? `<div class="note">${r.category.manualCheck}</div>` : ""}
+      ${r.category.note ? `<div class="note">${r.category.note}</div>` : ""}
+      ${r.dateOpen ? renderContingenteBox(r.category) : ""}
+      <button class="reg-btn" ${canRegister ? "" : "disabled"}>Registra abbattimento</button>
+    `;
+    card.querySelector(".reg-btn").addEventListener("click", () => openModal(r.category.id));
+    return card;
+  }
+
+  // ---------- Vista REGISTRO ----------
+
+  function renderRegistro() {
+    const capsBox = document.getElementById("capsSummary");
+    const log = Storage.getLog();
+    capsBox.innerHTML = "";
+    for (const [groupId, cap] of Object.entries(regData.groupCaps)) {
+      const count = RulesEngine.seasonCountByGroup(log, regData.categories, groupId);
+      const chip = document.createElement("span");
+      chip.className = "cap-chip";
+      chip.textContent = `${cap.label}: ${count}/${cap.max}`;
+      capsBox.appendChild(chip);
+    }
+
+    const listEl = document.getElementById("logList");
+    listEl.innerHTML = "";
+    const sorted = [...log].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
+    if (sorted.length === 0) {
+      listEl.innerHTML = `<div class="empty-state">Nessun abbattimento registrato.</div>`;
+      return;
+    }
+    for (const k of sorted) {
+      const cat = regData.categories.find(c => c.id === k.categoryId);
+      const item = document.createElement("div");
+      item.className = "log-item";
+      item.innerHTML = `
+        <div class="info">
+          <div class="date">${k.date}</div>
+          <div class="sp">${cat ? cat.speciesLabel : k.categoryId}</div>
+          <div class="cat">${cat ? cat.categoryLabel : ""}${k.note ? " — " + k.note : ""}</div>
+        </div>
+        <button class="del">Elimina</button>
+      `;
+      item.querySelector(".del").addEventListener("click", () => {
+        if (confirm("Eliminare questo abbattimento dal registro?")) {
+          Storage.deleteKill(k.id);
+          renderRegistro();
+          renderOggi();
+          if (!document.getElementById("registroStatistiche").classList.contains("hidden")) renderStatistiche();
+        }
+      });
+      listEl.appendChild(item);
+    }
+  }
+
+  // ---------- Sottotab Registro: Elenco / Statistiche ----------
+
+  function setupRegistroSubtabs() {
+    document.querySelectorAll("#registroSubtabs .subtab").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("#registroSubtabs .subtab").forEach(
+          (b) => b.classList.toggle("active", b === btn));
+        const wantStats = btn.dataset.sub === "statistiche";
+        document.getElementById("registroElenco").classList.toggle("hidden", wantStats);
+        document.getElementById("registroStatistiche").classList.toggle("hidden", !wantStats);
+        if (wantStats) renderStatistiche();
+      });
+    });
+  }
+
+  // ---------- Vista REGISTRO: statistiche stagionali ----------
+
+  function renderStatistiche() {
+    const panel = document.getElementById("registroStatistiche");
+    const log = Storage.getLog();
+    const year = String(regData.regulationYear || "");
+    const season = year ? log.filter(k => k.date.startsWith(year)) : log;
+    const outOfSeason = log.length - season.length;
+
+    if (season.length === 0) {
+      panel.innerHTML = `<div class="empty-state">Nessun abbattimento registrato` +
+        `${year ? " per la stagione " + year : ""}.</div>` +
+        `<div class="privacy-note">🔒 Questi dati restano solo sul tuo telefono: non vengono inviati né ` +
+        `condivisi in alcun modo con l'Ufficio della caccia e della pesca né con altri.</div>`;
+      return;
+    }
+
+    const catById = new Map(regData.categories.map(c => [c.id, c]));
+    const bySpecies = new Map();   // speciesLabel -> conteggio
+    const byHunt = new Map();      // huntType -> conteggio
+    const byDate = new Map();      // data -> conteggio
+
+    for (const k of season) {
+      const cat = catById.get(k.categoryId);
+      const sp = cat ? cat.speciesLabel : k.categoryId;
+      const ht = cat ? cat.huntType : null;
+      bySpecies.set(sp, (bySpecies.get(sp) || 0) + 1);
+      if (ht) byHunt.set(ht, (byHunt.get(ht) || 0) + 1);
+      byDate.set(k.date, (byDate.get(k.date) || 0) + 1);
+    }
+
+    const speciesSorted = [...bySpecies.entries()].sort((a, b) => b[1] - a[1]);
+    const maxSpeciesCount = speciesSorted[0][1];
+    const huntSorted = [...byHunt.entries()].sort((a, b) => b[1] - a[1]);
+    const dateSorted = [...byDate.entries()].sort((a, b) => b[1] - a[1] || b[0].localeCompare(a[0]));
+    const datesAsc = [...byDate.keys()].sort();
+    const bestDay = dateSorted[0];
+
+    const bar = (label, count, max) => `
+      <div class="stat-bar-row">
+        <div class="stat-bar-label">${label}</div>
+        <div class="stat-bar-track"><div class="stat-bar-fill" style="width:${Math.max(6, Math.round(count / max * 100))}%"></div></div>
+        <div class="stat-bar-count">${count}</div>
+      </div>`;
+
+    panel.innerHTML = `
+      <div class="stats-highlights">
+        <div class="stat-box"><div class="num">${season.length}</div><div class="lbl">cap${season.length === 1 ? "o" : "i"} totali</div></div>
+        <div class="stat-box"><div class="num">${bySpecies.size}</div><div class="lbl">specie diverse</div></div>
+        <div class="stat-box"><div class="num">${byDate.size}</div><div class="lbl">giorni di caccia</div></div>
+      </div>
+
+      <div class="section-title">Per specie</div>
+      <div class="stats-bars">
+        ${speciesSorted.map(([sp, count]) => bar(sp, count, maxSpeciesCount)).join("")}
+      </div>
+
+      ${huntSorted.length > 1 ? `
+      <div class="section-title">Per tipo di caccia</div>
+      <div class="stats-bars">
+        ${huntSorted.map(([ht, count]) => bar(HUNT_LABELS[ht] || ht, count, season.length)).join("")}
+      </div>` : ""}
+
+      <div class="section-title">Cronologia</div>
+      <div class="info-box">
+        <b>Primo abbattimento:</b> ${formatDateCH(datesAsc[0])}<br>
+        <b>Ultimo abbattimento:</b> ${formatDateCH(datesAsc[datesAsc.length - 1])}<br>
+        <b>Giorno più fruttuoso:</b> ${formatDateCH(bestDay[0])} (${bestDay[1]} cap${bestDay[1] === 1 ? "o" : "i"})
+      </div>
+      ${outOfSeason ? `<div class="note">Escluse dal conteggio ${outOfSeason} voci con data fuori dalla stagione ${year}.</div>` : ""}
+
+      <div class="privacy-note">
+        🔒 Questi dati restano solo sul tuo telefono: non vengono inviati né condivisi in alcun
+        modo con l'Ufficio della caccia e della pesca né con altri.
+      </div>
+    `;
+  }
+
+  // ---------- Vista REGOLAMENTO ----------
+
+  function renderRegolamento() {
+    const box = document.getElementById("regInfoBox");
+    const custom = Storage.getCustomRegolamento();
+    box.innerHTML = `
+      <b>Anno regolamento:</b> ${regData.regulationYear}${custom ? " (importato manualmente)" : " (incluso nell'app)"}<br>
+      <b>Valido dal:</b> ${regData.validFrom}<br>
+      <b>Fonte:</b> ${regData.source}
+    `;
+  }
+
+  // ---------- Modale registrazione ----------
+
+  function populateModalCategories(preselectId) {
+    const sel = document.getElementById("modalCategory");
+    sel.innerHTML = "";
+
+    // Solo le specie del tipo di caccia selezionato in alto
+    // (se si parte da una scheda, vale il tipo di caccia di quella categoria).
+    const pre = preselectId ? regData.categories.find(c => c.id === preselectId) : null;
+    const huntType = (pre && pre.huntType) || selectedHunt || "alta";
+
+    document.querySelector("#modalBackdrop h3").textContent =
+      `Registra abbattimento — ${HUNT_LABELS[huntType] || ""}`;
+
+    for (const c of regData.categories) {
+      if (c.huntType !== huntType || !c.windows || c.windows.length === 0) continue;
+      const opt = document.createElement("option");
+      opt.value = c.id;
+      opt.textContent = `${c.speciesLabel} — ${c.categoryLabel}`;
+      sel.appendChild(opt);
+    }
+    if (preselectId) sel.value = preselectId;
+  }
+
+  function openModal(preselectId) {
+    populateModalCategories(preselectId);
+    document.getElementById("modalDate").value = RulesEngine.toISO(selectedDate);
+    document.getElementById("modalNote").value = "";
+    document.getElementById("modalBackdrop").classList.add("active");
+  }
+
+  function closeModal() {
+    document.getElementById("modalBackdrop").classList.remove("active");
+  }
+
+  function saveModal() {
+    const categoryId = document.getElementById("modalCategory").value;
+    const date = document.getElementById("modalDate").value;
+    const note = document.getElementById("modalNote").value.trim();
+    if (!categoryId || !date) return;
+    Storage.addKill({ categoryId, date, note });
+    if (!document.getElementById("registroStatistiche").classList.contains("hidden")) renderStatistiche();
+    closeModal();
+    renderOggi();
+    renderRegistro();
+  }
+
+  // ---------- Navigazione ----------
+
+  function switchView(name) {
+    document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+    document.getElementById("view-" + name).classList.add("active");
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.dataset.view === name));
+    if (name === "oggi") renderOggi();
+    if (name === "registro") renderRegistro();
+    if (name === "regolamento") renderRegolamento();
+  }
+
+  // ---------- Init ----------
+
+  // ---------- Invito a installare l'app ----------
+  // Android/Chrome: usa il prompt nativo del browser (evento beforeinstallprompt).
+  // iPhone/iPad: Safari non ha un prompt, quindi mostra come fare a mano.
+  // Non compare se l'app è già installata; "Non ora" lo nasconde per 14 giorni.
+
+  const KEY_INSTALL_SNOOZE = "cacciaTI_install_snooze_until";
+  const INSTALL_SNOOZE_DAYS = 14;
+  let deferredInstall = null;
+  let installWanted = false;
+
+  function isStandalone() {
+    return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+  }
+
+  function isIOS() {
+    return /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  }
+
+  function installSnoozed() {
+    return Date.now() < Number(localStorage.getItem(KEY_INSTALL_SNOOZE) || 0);
+  }
+
+  function hideInstallBanner() {
+    document.getElementById("installBanner").classList.add("hidden");
+  }
+
+  function showInstallBanner() {
+    installWanted = true;
+    if (isStandalone() || installSnoozed()) return;
+    if (!Storage.hasAckedDisclaimer()) return; // prima la manleva, poi l'invito
+    document.getElementById("installBanner").classList.remove("hidden");
+  }
+
+  function setupInstallPrompt() {
+    const btn = document.getElementById("installBtn");
+
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();          // al posto della barra del browser mostriamo il nostro invito
+      deferredInstall = e;
+      btn.hidden = false;
+      showInstallBanner();
+    });
+
+    window.addEventListener("appinstalled", () => {
+      deferredInstall = null;
+      hideInstallBanner();
+    });
+
+    if (isIOS() && !isStandalone()) {
+      document.getElementById("installHint").textContent =
+        "Tocca Condividi (il quadrato con la freccia in su) e poi «Aggiungi alla schermata Home».";
+      btn.hidden = true;
+      setTimeout(showInstallBanner, 1200);
+    }
+
+    btn.addEventListener("click", async () => {
+      if (!deferredInstall) return;
+      deferredInstall.prompt();
+      const choice = await deferredInstall.userChoice;
+      deferredInstall = null;
+      hideInstallBanner();
+      if (!choice || choice.outcome !== "accepted") {
+        localStorage.setItem(KEY_INSTALL_SNOOZE, String(Date.now() + INSTALL_SNOOZE_DAYS * 86400000));
+      }
+    });
+
+    document.getElementById("installLater").addEventListener("click", () => {
+      localStorage.setItem(KEY_INSTALL_SNOOZE, String(Date.now() + INSTALL_SNOOZE_DAYS * 86400000));
+      hideInstallBanner();
+    });
+  }
+
+  async function init() {
+    setupInstallPrompt(); // subito, per non perdere l'evento del browser
+
+    if (!Storage.hasAckedDisclaimer()) {
+      document.getElementById("disclaimerAck").addEventListener("click", () => {
+        Storage.setAckedDisclaimer();
+        document.getElementById("disclaimerGate").classList.add("hidden");
+        if (installWanted) showInstallBanner();
+      });
+    } else {
+      document.getElementById("disclaimerGate").classList.add("hidden");
+    }
+
+    await loadRegData();
+    loadContingenteData().then(renderOggi); // aggiorna la vista quando arriva (non blocca l'avvio)
+
+    const dateInput = document.getElementById("dateInput");
+    dateInput.value = RulesEngine.toISO(selectedDate);
+    dateInput.addEventListener("change", () => {
+      if (dateInput.value) {
+        selectedDate = RulesEngine.parseISO(dateInput.value);
+        renderOggi();
+      }
+    });
+
+    document.getElementById("todayBtn").addEventListener("click", () => {
+      selectedDate = new Date();
+      dateInput.value = RulesEngine.toISO(selectedDate);
+      renderOggi();
+    });
+
+    document.getElementById("altitudeToggle").checked = !!prefs.altitudeBelow400;
+    document.getElementById("altitudeToggle").addEventListener("change", (e) => {
+      prefs.altitudeBelow400 = e.target.checked;
+      Storage.savePrefs(prefs);
+      renderOggi();
+    });
+
+    document.getElementById("searchInput").addEventListener("input", renderOggi);
+
+    document.getElementById("huntTabs").addEventListener("click", (e) => {
+      const btn = e.target.closest(".hunt-tab");
+      if (!btn) return;
+      selectedHunt = btn.dataset.hunt;
+      renderOggi();
+    });
+
+    document.querySelectorAll(".tab-btn").forEach(b => {
+      b.addEventListener("click", () => switchView(b.dataset.view));
+    });
+
+    document.getElementById("fabAdd").addEventListener("click", () => openModal(null));
+    document.getElementById("modalCancel").addEventListener("click", closeModal);
+    document.getElementById("modalSave").addEventListener("click", saveModal);
+    document.getElementById("modalBackdrop").addEventListener("click", (e) => {
+      if (e.target.id === "modalBackdrop") closeModal();
+    });
+
+    document.getElementById("importFile").addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const parsed = JSON.parse(text);
+        if (!parsed.categories || !parsed.hourProfiles) throw new Error("formato non valido");
+        Storage.setCustomRegolamento(parsed);
+        regData = parsed;
+        alert("Regolamento importato correttamente.");
+        renderRegolamento();
+        renderOggi();
+      } catch (err) {
+        alert("File non valido: " + err.message);
+      }
+      e.target.value = "";
+    });
+
+    document.getElementById("resetRegBtn").addEventListener("click", async () => {
+      if (!confirm("Ripristinare il regolamento incluso nell'app?")) return;
+      Storage.clearCustomRegolamento();
+      await loadRegData();
+      renderRegolamento();
+      renderOggi();
+    });
+
+    document.getElementById("importLogFile").addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        const parsed = JSON.parse(await file.text());
+        if (!Array.isArray(parsed)) throw new Error("il file non contiene un registro abbattimenti");
+
+        const isValid = (k) => k && typeof k.categoryId === "string" && /^\d{4}-\d{2}-\d{2}$/.test(k.date || "");
+        const valid = parsed.filter(isValid);
+        const invalid = parsed.length - valid.length;
+        if (valid.length === 0) throw new Error("nessun abbattimento valido trovato");
+
+        // Unisce al registro attuale saltando i doppioni (stesso id, oppure stessa categoria + data + note)
+        const log = Storage.getLog();
+        const sig = (k) => `${k.categoryId}|${k.date}|${(k.note || "").trim()}`;
+        const ids = new Set(log.map(k => k.id));
+        const sigs = new Set(log.map(sig));
+        const toAdd = [];
+        for (const k of valid) {
+          if ((k.id && ids.has(k.id)) || sigs.has(sig(k))) continue;
+          toAdd.push(k);
+          if (k.id) ids.add(k.id);
+          sigs.add(sig(k));
+        }
+        const duplicates = valid.length - toAdd.length;
+
+        if (toAdd.length === 0) {
+          alert(`Nessun abbattimento nuovo: tutti quelli del file (${duplicates}) sono già nel registro.`);
+          return;
+        }
+
+        const year = String(regData.regulationYear || "");
+        const otherYear = year ? toAdd.filter(k => !k.date.startsWith(year)).length : 0;
+        const unknown = toAdd.filter(k => !regData.categories.some(c => c.id === k.categoryId)).length;
+
+        let msg = `Abbattimenti nel file: ${valid.length}\nNuovi da aggiungere: ${toAdd.length}`;
+        if (duplicates) msg += `\nGià presenti (saltati): ${duplicates}`;
+        if (otherYear) msg += `\n\nATTENZIONE — con date fuori dal ${year}: ${otherYear}. Conterebbero comunque nelle quote di questa stagione.`;
+        if (unknown) msg += `\nCategorie non presenti nel regolamento attuale: ${unknown}`;
+        if (invalid) msg += `\nRighe non valide (ignorate): ${invalid}`;
+        msg += "\n\nAggiungerli al registro?";
+        if (!confirm(msg)) return;
+
+        const now = new Date().toISOString();
+        for (const k of toAdd) {
+          log.push({
+            id: k.id || "k_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7),
+            categoryId: k.categoryId,
+            date: k.date,
+            note: typeof k.note === "string" ? k.note : "",
+            createdAt: typeof k.createdAt === "string" ? k.createdAt : now,
+          });
+        }
+        Storage.saveLog(log);
+        renderRegistro();
+        renderOggi();
+        if (!document.getElementById("registroStatistiche").classList.contains("hidden")) renderStatistiche();
+        alert(`Abbattimenti aggiunti al registro: ${toAdd.length}`);
+      } catch (err) {
+        alert("File non valido: " + err.message);
+      } finally {
+        e.target.value = "";
+      }
+    });
+
+    setupRegistroSubtabs();
+
+    document.getElementById("exportLogBtn").addEventListener("click", () => {
+      const log = Storage.getLog();
+      const blob = new Blob([JSON.stringify(log, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `cacciaTI_registro_${RulesEngine.toISO(new Date())}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    renderOggi();
+
+    if ("serviceWorker" in navigator) {
+      // Se c'era già un service worker, l'arrivo di uno nuovo = nuova versione:
+      // ricarica una sola volta in automatico (niente doppio "aggiorna").
+      const hadController = !!navigator.serviceWorker.controller;
+      let reloading = false;
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (!hadController || reloading) return;
+        reloading = true;
+        window.location.reload();
+      });
+
+      // Mostra nell'intestazione la versione del service worker attivo
+      // (il numero di CACHE_NAME in sw.js: unico punto da aggiornare).
+      navigator.serviceWorker.ready.then((reg) => {
+        if (!reg.active) return;
+        const channel = new MessageChannel();
+        channel.port1.onmessage = (e) => {
+          const m = String(e.data || "").match(/v\d+(\.\d+)*$/);
+          if (m) document.getElementById("appVersion").textContent = m[0];
+        };
+        reg.active.postMessage({ type: "GET_VERSION" }, [channel.port2]);
+      });
+
+      navigator.serviceWorker.register("sw.js").then((reg) => {
+        // L'app installata spesso viene "ripresa" dallo sfondo senza ricaricarsi:
+        // quando torna in primo piano, controlla se è uscita una versione nuova.
+        document.addEventListener("visibilitychange", () => {
+          if (document.visibilityState === "visible") reg.update().catch(() => {});
+        });
+      }).catch(() => {});
+    }
+  }
+
+  init();
+})();
