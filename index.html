@@ -79,8 +79,17 @@
 
   <!-- VIEW: REGISTRO -->
   <section id="view-registro" class="view">
-    <div class="summary-caps" id="capsSummary"></div>
-    <div id="logList"></div>
+    <div class="hunt-tabs" id="registroSubtabs">
+      <button class="subtab active" data-sub="elenco">Elenco</button>
+      <button class="subtab" data-sub="statistiche">Statistiche</button>
+    </div>
+
+    <div id="registroElenco">
+      <div class="summary-caps" id="capsSummary"></div>
+      <div id="logList"></div>
+    </div>
+
+    <div id="registroStatistiche" class="hidden"></div>
   </section>
 
   <!-- VIEW: REGOLAMENTO -->
