@@ -641,7 +641,9 @@ input[type="file"] { display: none; }
   font-family: var(--mono);
   font-weight: 600;
 }
-.contingente-box .cstatus.aperto { color: var(--forest); }
+.contingente-box .cstatus.livello-alto { color: var(--forest); }
+.contingente-box .cstatus.livello-medio { color: var(--gold); }
+.contingente-box .cstatus.livello-basso,
 .contingente-box .cstatus.chiuso { color: var(--rust); }
 
 .contingente-box .cbar {
@@ -655,6 +657,8 @@ input[type="file"] { display: none; }
   height: 100%;
   background: var(--forest);
 }
+.contingente-box .cbar-fill.livello-medio { background: var(--gold); }
+.contingente-box .cbar-fill.livello-basso,
 .contingente-box .cbar-fill.chiuso { background: var(--rust); }
 
 .contingente-box .csource {
