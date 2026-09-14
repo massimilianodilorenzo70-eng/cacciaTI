@@ -50,6 +50,13 @@
     const hoursSince = (Date.now() - fetchedAt.getTime()) / 3_600_000;
     const isStale = hoursSince > 48 || isNaN(hoursSince);
     const statusCls = item.status === "APERTO" ? "aperto" : "chiuso";
+    // Colore graduale come sul sito ufficiale: la barra passa da verde ad
+    // arancio a rosso mano a mano che il contingente si avvicina all'esaurimento
+    // (qui interpretato come "percentuale rimasta" — più è basso, più si è vicini alla chiusura).
+    const livelloCls = item.status !== "APERTO" ? ""
+      : item.percent > 60 ? "livello-alto"
+      : item.percent > 25 ? "livello-medio"
+      : "livello-basso";
     const timeLabel = isNaN(fetchedAt.getTime())
       ? ""
       : fetchedAt.toLocaleString("it-CH", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
@@ -57,9 +64,9 @@
       <div class="contingente-box ${isStale ? "stale" : ""}">
         <div class="cline">
           <span>Contingente ufficiale</span>
-          <span class="cstatus ${statusCls.toLowerCase()}">${item.status} · ${item.percent}%</span>
+          <span class="cstatus ${statusCls.toLowerCase()} ${livelloCls}">${item.status} · ${item.percent}%</span>
         </div>
-        <div class="cbar"><div class="cbar-fill ${statusCls === "chiuso" ? "chiuso" : ""}" style="width:${Math.min(item.percent, 100)}%"></div></div>
+        <div class="cbar"><div class="cbar-fill ${statusCls === "chiuso" ? "chiuso" : livelloCls}" style="width:${Math.min(item.percent, 100)}%"></div></div>
         <div class="csource">
           ${isStale ? "Dato non aggiornato di recente — verifica sul " : "Fonte: "}
           <a href="${contingenteData.source}" target="_blank" rel="noopener">${isStale ? "sito ufficiale" : contingenteData.sourceLabel}</a>
