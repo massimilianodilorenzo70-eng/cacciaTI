@@ -170,6 +170,7 @@ main {
   margin-bottom: 12px;
 }
 
+.hunt-tabs .subtab,
 .hunt-tabs .hunt-tab {
   flex: 1;
   background: var(--surface);
@@ -182,6 +183,7 @@ main {
   position: relative;
 }
 
+.hunt-tabs .subtab.active,
 .hunt-tabs .hunt-tab.active {
   background: var(--forest);
   border-color: var(--forest);
@@ -384,6 +386,8 @@ nav.tabbar button.active { color: var(--forest); font-weight: 600; }
 .view { display: none; }
 .view.active { display: block; }
 
+.hidden { display: none !important; }
+
 .fab {
   position: fixed;
   right: 18px;
@@ -416,6 +420,68 @@ nav.tabbar button.active { color: var(--forest); font-weight: 600; }
 .log-item button.del {
   background: none; border: 1px solid var(--rust); color: var(--rust);
   border-radius: 6px; padding: 5px 9px; font-size: 12px;
+}
+
+.stats-highlights {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.stat-box {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px 8px;
+  text-align: center;
+}
+.stat-box .num {
+  font-family: var(--mono);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--forest);
+}
+.stat-box .lbl {
+  font-size: 11.5px;
+  color: var(--ink-soft);
+  margin-top: 2px;
+}
+
+.stats-bars { margin-bottom: 8px; }
+.stat-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.stat-bar-label {
+  width: 40%;
+  flex-shrink: 0;
+  font-size: 13px;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.stat-bar-track {
+  flex: 1;
+  height: 10px;
+  background: var(--line);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.stat-bar-fill {
+  height: 100%;
+  background: var(--forest);
+  border-radius: 5px;
+}
+.stat-bar-count {
+  width: 22px;
+  flex-shrink: 0;
+  text-align: right;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--ink-soft);
 }
 
 .summary-caps {
