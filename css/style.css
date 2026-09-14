@@ -318,6 +318,29 @@ main {
   line-height: 1.35;
 }
 
+.cat-card .zona-box {
+  margin-top: 7px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 9px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--ink-soft);
+}
+.cat-card .zona-box summary {
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+}
+.cat-card .zona-box > div { margin-top: 5px; }
+.cat-card .zona-box .zona-chiuso {
+  color: var(--rust);
+  background: var(--rust-soft);
+  border-radius: 5px;
+  padding: 5px 7px;
+  font-weight: 600;
+}
+
 .cat-card .reg-btn {
   margin-top: 8px;
   border: 1px solid var(--forest);
