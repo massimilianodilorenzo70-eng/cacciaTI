@@ -12,6 +12,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.1", text: "Aggiunta una sezione SOS (icona rossa in alto): invia un SMS con le coordinate GPS al 1414 (Rega) o chiama direttamente. Funziona solo con copertura di rete." },
     { v: "3.0", text: "Nella scheda Info, \u00abCosa calcola l'app\u00bb ora è il primo box, subito visibile aprendo la scheda." },
     { v: "2.9", text: "Il contingente ufficiale CHIUSO ora prevale sempre sulla scheda, anche se il regolamento direbbe che \u00e8 ancora aperta. Aggiunto anche un riepilogo \u00abAperto ora\u00bb con tutto ci\u00f2 che \u00e8 cacciabile in questo momento, in qualsiasi tipo di caccia." },
     { v: "2.8", text: "La voce di menu \u00abOggi\u00bb è stata rinominata in \u00abGiornata\u00bb, perché resta sulla data scelta anche cambiando scheda." },
@@ -361,6 +362,74 @@
       });
       listEl.appendChild(item);
     }
+  }
+
+  // ---------- SOS: posizione GPS + SMS/chiamata al 1414 ----------
+
+  function setupSOS() {
+    const backdrop = document.getElementById("sosBackdrop");
+    const status = document.getElementById("sosStatus");
+
+    const showStatus = (text, cls) => {
+      status.textContent = text;
+      status.className = "sos-status" + (cls ? " " + cls : "");
+    };
+
+    document.getElementById("sosOpenBtn").addEventListener("click", () => {
+      showStatus("", "");
+      backdrop.classList.add("active");
+    });
+    document.getElementById("sosClose").addEventListener("click", () => {
+      backdrop.classList.remove("active");
+    });
+
+    function getPosition() {
+      return new Promise((resolve, reject) => {
+        if (!("geolocation" in navigator)) {
+          reject(new Error("Questo telefono/browser non supporta la localizzazione."));
+          return;
+        }
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true, timeout: 20000, maximumAge: 0,
+        });
+      });
+    }
+
+    function geoErrorText(err) {
+      if (err.code === err.PERMISSION_DENIED) {
+        return "Permesso di localizzazione negato. Abilitalo nelle impostazioni del telefono per usare questa funzione.";
+      }
+      if (err.code === err.TIMEOUT) {
+        return "Non riesco a ottenere la posizione in tempo (segnale GPS debole). Riprova, oppure chiama direttamente.";
+      }
+      return "Non riesco a ottenere la posizione. Riprova, oppure chiama direttamente.";
+    }
+
+    document.getElementById("sosSmsBtn").addEventListener("click", async () => {
+      showStatus("Ricerca della posizione GPS in corso…", "");
+      try {
+        const pos = await getPosition();
+        const lat = pos.coords.latitude.toFixed(5);
+        const lon = pos.coords.longitude.toFixed(5);
+        const acc = Math.round(pos.coords.accuracy);
+        const alt = pos.coords.altitude != null ? Math.round(pos.coords.altitude) : null;
+        const now = new Date();
+        const ora = now.toLocaleString("it-CH", { dateStyle: "short", timeStyle: "short" });
+
+        let testo = `EMERGENZA. Ho bisogno di soccorso. Posizione: ${lat}, ${lon}`;
+        if (alt != null) testo += ` (quota indicativa ${alt} m)`;
+        testo += `. Precisione GPS: circa ${acc} m. Ora: ${ora}.`;
+
+        showStatus("Posizione trovata. Si apre ora l'app Messaggi: controlla il testo e invialo tu.", "ok");
+        window.location.href = `sms:1414?body=${encodeURIComponent(testo)}`;
+      } catch (err) {
+        showStatus(geoErrorText(err), "err");
+      }
+    });
+
+    document.getElementById("sosCallBtn").addEventListener("click", () => {
+      window.location.href = "tel:1414";
+    });
   }
 
   // ---------- Sottotab Registro: Elenco / Statistiche ----------
@@ -761,6 +830,7 @@
     });
 
     setupRegistroSubtabs();
+    setupSOS();
 
     document.getElementById("exportLogBtn").addEventListener("click", () => {
       const log = Storage.getLog();
