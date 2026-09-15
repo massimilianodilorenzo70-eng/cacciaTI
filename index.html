@@ -171,6 +171,17 @@
   <button class="tab-btn" data-view="regolamento"><span class="icon">ℹ</span>Info</button>
 </nav>
 
+<!-- MODAL: conferma / avviso (sostituisce confirm() e alert() del browser) -->
+<div class="modal-backdrop" id="confirmBackdrop">
+  <div class="modal-sheet confirm-sheet">
+    <div class="confirm-message" id="confirmMessage"></div>
+    <div class="modal-actions">
+      <button class="btn secondary" id="confirmCancelBtn">Annulla</button>
+      <button class="btn" id="confirmOkBtn">Ok</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: emergenza SOS -->
 <div class="modal-backdrop" id="sosBackdrop">
   <div class="modal-sheet sos-sheet">
