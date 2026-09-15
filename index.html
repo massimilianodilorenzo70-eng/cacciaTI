@@ -50,7 +50,10 @@
       <h1>cacciaTI</h1>
       <span class="app-version" id="appVersion"></span>
     </div>
-    <span class="ref">RT 922.110</span>
+    <div class="header-right">
+      <span class="ref">RT 922.110</span>
+      <button class="sos-btn" id="sosOpenBtn" aria-label="Emergenza">SOS</button>
+    </div>
   </div>
   <div class="author-line">Massimiliano Di Lorenzo</div>
   <div class="date-row" id="dateRow">
@@ -168,6 +171,37 @@
   <button class="tab-btn" data-view="regolamento"><span class="icon">ℹ</span>Info</button>
 </nav>
 
+<!-- MODAL: emergenza SOS -->
+<div class="modal-backdrop" id="sosBackdrop">
+  <div class="modal-sheet sos-sheet">
+    <h3>🆘 Emergenza</h3>
+    <div class="sos-warning">
+      Queste funzioni dipendono dalla copertura di rete. Senza campo, nessuna delle due può
+      partire. In un'emergenza reale, prova comunque: in Svizzera i telefoni tentano le
+      chiamate d'emergenza anche con segnale minimo o di un altro operatore.
+    </div>
+
+    <button class="btn sos-action" id="sosSmsBtn">Invia SMS con la mia posizione al 1414</button>
+    <div class="sos-note">
+      Prepara un SMS con le tue coordinate GPS, già indirizzato al 1414 (Rega). Serve poco
+      segnale: la Rega stessa consiglia l'SMS come riserva quando la chiamata non passa.
+      Sei tu a inviarlo dall'app Messaggi.
+    </div>
+
+    <button class="btn secondary sos-action" id="sosCallBtn">Chiama il 1414 (Rega)</button>
+    <div class="sos-note">
+      Apre la chiamata al numero della Rega. Serve una copertura sufficiente per una
+      telefonata, quindi più campo rispetto a un SMS.
+    </div>
+
+    <div class="sos-status" id="sosStatus"></div>
+
+    <div class="modal-actions">
+      <button class="btn secondary" id="sosClose">Chiudi</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: registra abbattimento -->
 <div class="modal-backdrop" id="modalBackdrop">
   <div class="modal-sheet">
@@ -195,6 +229,6 @@
 
 <script src="js/rules-engine.js"></script>
 <script src="js/storage.js"></script>
-<script src="js/app.js"></script>
+<script src="js/app_test.js"></script>
 </body>
 </html>
