@@ -12,7 +12,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
-    { v: "3.2", text: "I messaggi di conferma (es. eliminare un abbattimento) ora usano una finestra propria dell'app, senza più mostrare il nome del sito prima del testo." },
+    { v: "3.2", text: "I messaggi di conferma (es. eliminare un abbattimento) ora usano una finestra propria dell'app, senza più mostrare il nome del sito prima del testo. Aggiunto un conteggio anonimo che distingue le aperture dall'icona (app installata) da quelle nel browser." },
     { v: "3.1", text: "Aggiunta una sezione SOS (icona rossa in alto): invia un SMS con le coordinate GPS al 1414 (Rega) o chiama direttamente. Funziona solo con copertura di rete." },
     { v: "3.0", text: "Nella scheda Info, \u00abCosa calcola l'app\u00bb ora è il primo box, subito visibile aprendo la scheda." },
     { v: "2.9", text: "Il contingente ufficiale CHIUSO ora prevale sempre sulla scheda, anche se il regolamento direbbe che \u00e8 ancora aperta. Aggiunto anche un riepilogo \u00abAperto ora\u00bb con tutto ci\u00f2 che \u00e8 cacciabile in questo momento, in qualsiasi tipo di caccia." },
@@ -727,8 +727,23 @@
     });
   }
 
+  // Segnala a GoatCounter se l'app è aperta dall'icona (installata) o dal
+  // browser, con due "pagine" finte. Nel pannello: la riga /app-installata,
+  // guardata su mese/anno, indica quanto viene usata l'app installata.
+  // Conta le aperture, non le persone: per le persone distinte guarda la
+  // colonna "visitatori unici" di quella riga.
+  function segnalaModalitaUso() {
+    if (typeof window.goatcounter === "undefined" || !window.goatcounter.count) return;
+    const path = isStandalone() ? "/app-installata" : "/nel-browser";
+    // piccolo ritardo: lascia caricare lo script del contatore
+    setTimeout(() => {
+      try { window.goatcounter.count({ path, title: path, event: false }); } catch (e) {}
+    }, 1500);
+  }
+
   async function init() {
     setupInstallPrompt(); // subito, per non perdere l'evento del browser
+    segnalaModalitaUso();
 
     if (!Storage.hasAckedDisclaimer()) {
       document.getElementById("disclaimerAck").addEventListener("click", () => {
