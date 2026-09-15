@@ -103,22 +103,6 @@
 
   <!-- VIEW: REGOLAMENTO -->
   <section id="view-regolamento" class="view">
-    <div class="info-box" id="regInfoBox"></div>
-
-    <div class="section-title">Aggiorna il regolamento</div>
-    <div class="info-box">
-      Quando il Cantone pubblica l'aggiornamento annuale, fai convertire il nuovo regolamento
-      nello stesso formato JSON e importalo qui — non serve reinstallare l'app.
-    </div>
-    <label class="btn secondary" for="importFile">Importa nuovo regolamento (JSON)</label>
-    <input type="file" id="importFile" accept="application/json,.json">
-    <button class="btn danger" id="resetRegBtn">Ripristina regolamento incluso nell'app</button>
-
-    <div class="section-title">Esporta / importa il tuo registro</div>
-    <button class="btn secondary" id="exportLogBtn">Esporta registro abbattimenti (JSON)</button>
-    <label class="btn secondary" for="importLogFile">Importa registro abbattimenti (JSON)</label>
-    <input type="file" id="importLogFile" accept="application/json,.json">
-
     <div class="section-title">Cosa calcola l'app automaticamente</div>
     <div class="info-box">
       <b>Automatico:</b> periodo, giorni della settimana, orari, quote numeriche singole e di
@@ -135,6 +119,22 @@
       dell'Ufficio stesso, che restano l'unico riferimento vincolante: in caso di dubbio, consulta
       sempre quelli prima di agire.
     </div>
+
+    <div class="info-box" id="regInfoBox"></div>
+
+    <div class="section-title">Aggiorna il regolamento</div>
+    <div class="info-box">
+      Quando il Cantone pubblica l'aggiornamento annuale, fai convertire il nuovo regolamento
+      nello stesso formato JSON e importalo qui — non serve reinstallare l'app.
+    </div>
+    <label class="btn secondary" for="importFile">Importa nuovo regolamento (JSON)</label>
+    <input type="file" id="importFile" accept="application/json,.json">
+    <button class="btn danger" id="resetRegBtn">Ripristina regolamento incluso nell'app</button>
+
+    <div class="section-title">Esporta / importa il tuo registro</div>
+    <button class="btn secondary" id="exportLogBtn">Esporta registro abbattimenti (JSON)</button>
+    <label class="btn secondary" for="importLogFile">Importa registro abbattimenti (JSON)</label>
+    <input type="file" id="importLogFile" accept="application/json,.json">
 
     <div class="section-title">Cronologia aggiornamenti</div>
     <details class="changelog-box">
