@@ -12,6 +12,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "2.9", text: "Il contingente ufficiale CHIUSO ora prevale sempre sulla scheda, anche se il regolamento direbbe che \u00e8 ancora aperta. Aggiunto anche un riepilogo \u00abAperto ora\u00bb con tutto ci\u00f2 che \u00e8 cacciabile in questo momento, in qualsiasi tipo di caccia." },
     { v: "2.8", text: "La voce di menu \u00abOggi\u00bb è stata rinominata in \u00abGiornata\u00bb, perché resta sulla data scelta anche cambiando scheda." },
     { v: "2.7", text: "Aggiunto un contatore anonimo delle aperture dell'app, senza alcun dato personale, per sapere quante volte viene usata." },
     { v: "2.6", text: "Aggiunta questa cronologia degli aggiornamenti; la voce di menu è stata rinominata da \u00abRegolamento\u00bb a \u00abInfo\u00bb." },
@@ -49,6 +50,22 @@
     } catch (e) {
       contingenteData = null;
     }
+  }
+
+  // Vero se il contingente ufficiale di questa categoria risulta CHIUSO sul sito
+  // del Cantone: in tal caso prevale sempre sulle date del regolamento, anche se
+  // secondo quelle la categoria sarebbe ancora aperta.
+  function contingenteChiuso(category) {
+    if (!category.contingenteKey) return false;
+    const item = contingenteFor(category.contingenteKey);
+    return !!item && item.status !== "APERTO";
+  }
+
+  // Unico punto che decide se una categoria è davvero aperta in questo momento:
+  // regolamento + registro personale + contingente ufficiale, tutti d'accordo.
+  function isOpenNow(r) {
+    return r.dateOpen && !r.quotaBlocked && !r.requiresPriorMissing && !r.dailyBlocked
+      && !contingenteChiuso(r.category);
   }
 
   function contingenteFor(key) {
@@ -103,6 +120,41 @@
     return evalResults.some(r => r.category.huntType === huntType && r.dateOpen);
   }
 
+  // Riepilogo di tutto ciò che è aperto ORA (in questo istante), in qualsiasi
+  // tipo di caccia — utile per un colpo d'occhio senza girare tra le tre schede.
+  function renderApertoOra(results, isToday) {
+    const list = document.getElementById("apertoOraList");
+    const summary = document.getElementById("apertoOraSummary");
+    if (!list || !summary) return;
+
+    if (!isToday) {
+      summary.textContent = "Aperto ora — vale solo per la data di oggi";
+      list.innerHTML = `<div class="aperto-ora-empty">Stai guardando un'altra data. Tocca «Oggi» in alto per vedere cosa è aperto in questo momento.</div>`;
+      return;
+    }
+
+    const aperte = results.filter(r =>
+      r.category.windows && r.category.windows.length > 0 && r.nowOpen && isOpenNow(r));
+
+    summary.textContent = aperte.length === 0 ? "Aperto ora — nessuna al momento" : `Aperto ora (${aperte.length})`;
+
+    if (aperte.length === 0) {
+      list.innerHTML = `<div class="aperto-ora-empty">Nessuna specie è cacciabile in questo preciso momento.</div>`;
+      return;
+    }
+
+    const perTipo = {};
+    for (const r of aperte) {
+      (perTipo[r.category.huntType] ||= []).push(r);
+    }
+    list.innerHTML = HUNT_ORDER.filter(ht => perTipo[ht]).map(ht => `
+      <div class="aperto-ora-group">
+        <div class="aperto-ora-tipo">${HUNT_LABELS[ht]}</div>
+        ${perTipo[ht].map(r => `<div class="aperto-ora-riga">${r.category.speciesLabel} — ${r.category.categoryLabel}</div>`).join("")}
+      </div>
+    `).join("");
+  }
+
   function renderHuntTabs(results) {
     document.querySelectorAll("#huntTabs .hunt-tab").forEach(btn => {
       const ht = btn.dataset.hunt;
@@ -124,6 +176,8 @@
     const now = RulesEngine.toISO(new Date()) === iso ? RulesEngine.nowHHMM(new Date()) : null;
     const log = Storage.getLog();
     const results = RulesEngine.evaluateAll(regData, log, selectedDate, now, prefs);
+
+    renderApertoOra(results, now !== null);
 
     if (selectedHunt === null) {
       // alla primissima apertura, seleziona la caccia effettivamente in corso oggi, se c'è
@@ -150,8 +204,7 @@
     }
 
     // Se nel giorno scelto non c'è nulla di aperto, lo dice chiaramente in cima
-    const anyOpen = sectionResults.some(r =>
-      r.dateOpen && !r.quotaBlocked && !r.requiresPriorMissing && !r.dailyBlocked);
+    const anyOpen = sectionResults.some(isOpenNow);
     if (!anyOpen) {
       const banner = document.createElement("div");
       banner.className = "info-box";
@@ -162,8 +215,7 @@
     // Le specie restano nell'ordine del regolamento; dentro ogni specie
     // prima le categorie sbloccate, poi le aperte, poi le chiuse.
     const openRank = (r) => {
-      const open = r.dateOpen && !r.quotaBlocked && !r.requiresPriorMissing && !r.dailyBlocked;
-      if (!open) return 2;
+      if (!isOpenNow(r)) return 2;
       return r.unlockedBy ? 0 : 1;
     };
     const bySpecies = {};
@@ -182,7 +234,7 @@
   }
 
   function isUnlockedOpen(r) {
-    return !!r.unlockedBy && r.dateOpen && !r.quotaBlocked && !r.requiresPriorMissing && !r.dailyBlocked;
+    return !!r.unlockedBy && isOpenNow(r);
   }
 
   function formatDateCH(iso) {
@@ -213,6 +265,12 @@
   }
 
   function statusFor(r) {
+    // Il contingente ufficiale chiuso prevale su tutto il resto: anche se il
+    // regolamento direbbe che è ancora aperta, sul terreno non lo è più.
+    if (contingenteChiuso(r.category)) {
+      return { label: "Chiusa (contingente ufficiale)", cls: "status-closed",
+        sub: "Il contingente ufficiale di questa categoria risulta chiuso sul sito del Cantone." };
+    }
     if (!r.dateOpen) return { label: "Chiusa", cls: "status-closed" };
     if (r.requiresPriorMissing) return { label: "Chiusa", cls: "status-closed", sub: r.category.lockedText || "Condizione stagionale non ancora soddisfatta" };
     if (r.quotaBlocked) return { label: "Chiusa", cls: "status-closed", sub: r.quotaReason };
@@ -233,7 +291,7 @@
     const card = document.createElement("div");
     card.className = isUnlockedOpen(r) ? "cat-card unlocked" : "cat-card";
 
-    const canRegister = r.dateOpen && !r.quotaBlocked && !r.requiresPriorMissing && !r.dailyBlocked;
+    const canRegister = isOpenNow(r);
 
     card.innerHTML = `
       <div class="row1">
