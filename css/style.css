@@ -86,6 +86,53 @@ header.app-header {
   margin-top: 2px;
 }
 
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sos-btn {
+  background: var(--rust);
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  padding: 5px 10px;
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.sos-sheet h3 { color: var(--rust); }
+
+.sos-warning {
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--rust);
+  background: var(--rust-soft);
+  border-radius: 8px;
+  padding: 9px 11px;
+  margin-bottom: 14px;
+}
+
+.sos-action { margin-top: 4px; }
+
+.sos-note {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--ink-soft);
+  margin: 6px 0 14px 0;
+}
+
+.sos-status {
+  font-size: 13px;
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+.sos-status.err { color: var(--rust); }
+.sos-status.ok { color: var(--forest); }
+
 .app-header .ref {
   font-family: var(--mono);
   font-size: 11px;
