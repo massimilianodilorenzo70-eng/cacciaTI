@@ -150,7 +150,7 @@
     list.innerHTML = HUNT_ORDER.filter(ht => perTipo[ht]).map(ht => `
       <div class="aperto-ora-group">
         <div class="aperto-ora-tipo">${HUNT_LABELS[ht]}</div>
-        ${perTipo[ht].map(r => `<div class="aperto-ora-riga">${r.category.speciesLabel} — ${r.category.categoryLabel}</div>`).join("")}
+        ${perTipo[ht].map(r => `<div class="aperto-ora-riga">${r.category.speciesLabel} — ${r.category.categoryLabel}${r.unlockManual ? ' <span class="aperto-ora-verifica">(da verificare)</span>' : ""}</div>`).join("")}
       </div>
     `).join("");
   }
