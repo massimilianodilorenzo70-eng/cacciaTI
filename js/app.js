@@ -12,6 +12,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.2", text: "I messaggi di conferma (es. eliminare un abbattimento) ora usano una finestra propria dell'app, senza più mostrare il nome del sito prima del testo." },
     { v: "3.1", text: "Aggiunta una sezione SOS (icona rossa in alto): invia un SMS con le coordinate GPS al 1414 (Rega) o chiama direttamente. Funziona solo con copertura di rete." },
     { v: "3.0", text: "Nella scheda Info, \u00abCosa calcola l'app\u00bb ora è il primo box, subito visibile aprendo la scheda." },
     { v: "2.9", text: "Il contingente ufficiale CHIUSO ora prevale sempre sulla scheda, anche se il regolamento direbbe che \u00e8 ancora aperta. Aggiunto anche un riepilogo \u00abAperto ora\u00bb con tutto ci\u00f2 che \u00e8 cacciabile in questo momento, in qualsiasi tipo di caccia." },
@@ -352,8 +353,8 @@
         </div>
         <button class="del">Elimina</button>
       `;
-      item.querySelector(".del").addEventListener("click", () => {
-        if (confirm("Eliminare questo abbattimento dal registro?")) {
+      item.querySelector(".del").addEventListener("click", async () => {
+        if (await showConfirm("Eliminare questo abbattimento dal registro?")) {
           Storage.deleteKill(k.id);
           renderRegistro();
           renderOggi();
@@ -362,6 +363,52 @@
       });
       listEl.appendChild(item);
     }
+  }
+
+  // ---------- Finestre di conferma/avviso personalizzate ----------
+  // Sostituiscono confirm()/alert() del browser, che mostrano sempre il nome
+  // del sito prima del messaggio ("massimilianodilorenzo70-eng.github.io dice").
+  // Con una finestra nostra il testo è pulito e coerente con il resto dell'app.
+
+  function showConfirm(message) {
+    return new Promise((resolve) => {
+      const backdrop = document.getElementById("confirmBackdrop");
+      document.getElementById("confirmMessage").textContent = message;
+      const cancelBtn = document.getElementById("confirmCancelBtn");
+      const okBtn = document.getElementById("confirmOkBtn");
+      cancelBtn.hidden = false;
+      backdrop.classList.add("active");
+
+      function onOk() { cleanup(true); }
+      function onCancel() { cleanup(false); }
+      function cleanup(result) {
+        backdrop.classList.remove("active");
+        okBtn.removeEventListener("click", onOk);
+        cancelBtn.removeEventListener("click", onCancel);
+        resolve(result);
+      }
+      okBtn.addEventListener("click", onOk);
+      cancelBtn.addEventListener("click", onCancel);
+    });
+  }
+
+  function showAlert(message) {
+    return new Promise((resolve) => {
+      const backdrop = document.getElementById("confirmBackdrop");
+      document.getElementById("confirmMessage").textContent = message;
+      const cancelBtn = document.getElementById("confirmCancelBtn");
+      const okBtn = document.getElementById("confirmOkBtn");
+      cancelBtn.hidden = true;
+      backdrop.classList.add("active");
+
+      function onOk() {
+        backdrop.classList.remove("active");
+        okBtn.removeEventListener("click", onOk);
+        cancelBtn.hidden = false; // ripristina per il prossimo showConfirm
+        resolve();
+      }
+      okBtn.addEventListener("click", onOk);
+    });
   }
 
   // ---------- SOS: posizione GPS + SMS/chiamata al 1414 ----------
@@ -747,17 +794,17 @@
         if (!parsed.categories || !parsed.hourProfiles) throw new Error("formato non valido");
         Storage.setCustomRegolamento(parsed);
         regData = parsed;
-        alert("Regolamento importato correttamente.");
+        await showAlert("Regolamento importato correttamente.");
         renderRegolamento();
         renderOggi();
       } catch (err) {
-        alert("File non valido: " + err.message);
+        await showAlert("File non valido: " + err.message);
       }
       e.target.value = "";
     });
 
     document.getElementById("resetRegBtn").addEventListener("click", async () => {
-      if (!confirm("Ripristinare il regolamento incluso nell'app?")) return;
+      if (!(await showConfirm("Ripristinare il regolamento incluso nell'app?"))) return;
       Storage.clearCustomRegolamento();
       await loadRegData();
       renderRegolamento();
@@ -791,7 +838,7 @@
         const duplicates = valid.length - toAdd.length;
 
         if (toAdd.length === 0) {
-          alert(`Nessun abbattimento nuovo: tutti quelli del file (${duplicates}) sono già nel registro.`);
+          await showAlert(`Nessun abbattimento nuovo: tutti quelli del file (${duplicates}) sono già nel registro.`);
           return;
         }
 
@@ -805,7 +852,7 @@
         if (unknown) msg += `\nCategorie non presenti nel regolamento attuale: ${unknown}`;
         if (invalid) msg += `\nRighe non valide (ignorate): ${invalid}`;
         msg += "\n\nAggiungerli al registro?";
-        if (!confirm(msg)) return;
+        if (!(await showConfirm(msg))) return;
 
         const now = new Date().toISOString();
         for (const k of toAdd) {
@@ -821,9 +868,9 @@
         renderRegistro();
         renderOggi();
         if (!document.getElementById("registroStatistiche").classList.contains("hidden")) renderStatistiche();
-        alert(`Abbattimenti aggiunti al registro: ${toAdd.length}`);
+        await showAlert(`Abbattimenti aggiunti al registro: ${toAdd.length}`);
       } catch (err) {
-        alert("File non valido: " + err.message);
+        await showAlert("File non valido: " + err.message);
       } finally {
         e.target.value = "";
       }
