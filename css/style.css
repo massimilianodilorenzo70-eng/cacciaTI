@@ -106,6 +106,13 @@ header.app-header {
 
 .sos-sheet h3 { color: var(--rust); }
 
+.confirm-message {
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--ink);
+  white-space: pre-line;
+}
+
 .sos-warning {
   font-size: 12.5px;
   line-height: 1.4;
