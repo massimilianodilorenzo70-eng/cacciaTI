@@ -12,6 +12,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.5", text: "Nella schermata Giornata, una specie completamente chiusa nella data scelta non viene più mostrata (resta visibile solo cercandola nella casella di ricerca)." },
     { v: "3.4", text: "L'invito a installare l'app spiega ora anche che così i dati della stagione restano più al sicuro nel tempo. Aggiunta la richiesta di conservazione permanente dei dati, e nelle Statistiche due grafici: l'andamento della stagione e il confronto con le stagioni precedenti (quando ci sono capi di più di un anno nel registro)." },
     { v: "3.3", text: "Riscritta la spiegazione iniziale nella scheda Info, per descrivere meglio tutto ciò che l'app fa oggi (Aperto ora, zone, contingente, SOS, registro)." },
     { v: "3.2", text: "I messaggi di conferma (es. eliminare un abbattimento) ora usano una finestra propria dell'app, senza più mostrare il nome del sito prima del testo. Aggiunto un conteggio anonimo che distingue le aperture dall'icona (app installata) da quelle nel browser." },
@@ -228,7 +229,14 @@
       (bySpecies[r.category.speciesLabel] ||= []).push(r);
     }
     for (const speciesLabel of Object.keys(bySpecies)) {
-      const list = bySpecies[speciesLabel]
+      const speciesList = bySpecies[speciesLabel];
+      // Specie completamente chiusa in questa data (nessuna categoria aperta,
+      // né sbloccata né "da verificare"): non la mostro, per non riempire la
+      // pagina di schede tutte "Chiusa". Durante una ricerca invece resta
+      // visibile comunque, perché lì l'intento è cercare proprio quella specie.
+      if (!query && !speciesList.some(isOpenNow)) continue;
+
+      const list = speciesList
         .map((r, i) => ({ r, i }))
         .sort((a, b) => (openRank(a.r) - openRank(b.r)) || (a.i - b.i))
         .map(x => x.r);
