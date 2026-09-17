@@ -352,8 +352,22 @@
       listEl.innerHTML = `<div class="empty-state">Nessun abbattimento registrato.</div>`;
       return;
     }
+    const guns = Storage.getGuns();
     for (const k of sorted) {
       const cat = regData.categories.find(c => c.id === k.categoryId);
+
+      // Dettagli facoltativi (arma, munizione, peso), mostrati solo se presenti.
+      const righeDettagli = [];
+      if (k.gunId) {
+        const gun = guns.find(g => g.id === k.gunId);
+        righeDettagli.push(`<div><b>Arma:</b> ${gun ? (gun.name ? gun.name + " — " : "") + descrizioneFucile(gun) : "(eliminata dall'elenco)"}</div>`);
+      }
+      if (k.ammoType) righeDettagli.push(`<div><b>Munizione:</b> ${k.ammoType}</div>`);
+      if (k.bulletWeight) righeDettagli.push(`<div><b>Peso palla:</b> ${k.bulletWeight} ${k.bulletWeightUnit === "gr" ? "grani" : "grammi"}</div>`);
+      const dettagli = righeDettagli.length > 0
+        ? `<details class="log-extra"><summary>Arma e munizione</summary>${righeDettagli.join("")}</details>`
+        : "";
+
       const item = document.createElement("div");
       item.className = "log-item";
       item.innerHTML = `
@@ -361,6 +375,7 @@
           <div class="date">${k.date}</div>
           <div class="sp">${cat ? cat.speciesLabel : k.categoryId}</div>
           <div class="cat">${cat ? cat.categoryLabel : ""}${k.note ? " — " + k.note : ""}</div>
+          ${dettagli}
         </div>
         <button class="del">Elimina</button>
       `;
