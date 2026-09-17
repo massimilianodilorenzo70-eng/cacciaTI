@@ -503,7 +503,7 @@
     if (!el) return;
     const guns = Storage.getGuns();
     if (guns.length === 0) {
-      el.innerHTML = `<div class="empty-state">Nessun fucile registrato.</div>`;
+      el.innerHTML = `<div class="empty-state-compact">Nessun fucile registrato.</div>`;
       return;
     }
     el.innerHTML = guns.map(g => `
