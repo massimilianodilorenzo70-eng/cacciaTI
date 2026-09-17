@@ -527,11 +527,12 @@
     return document.querySelector("#gunBarrelTabs .subtab.active").dataset.barrel;
   }
 
-  function openGunModal() {
+  function openGunModal(tipoPreferito) {
+    const barrel = tipoPreferito || "rigata";
     document.getElementById("gunName").value = "";
-    document.querySelectorAll("#gunBarrelTabs .subtab").forEach(b => b.classList.toggle("active", b.dataset.barrel === "rigata"));
-    document.getElementById("gunRigataFields").hidden = false;
-    document.getElementById("gunLisciaFields").hidden = true;
+    document.querySelectorAll("#gunBarrelTabs .subtab").forEach(b => b.classList.toggle("active", b.dataset.barrel === barrel));
+    document.getElementById("gunRigataFields").hidden = barrel !== "rigata";
+    document.getElementById("gunLisciaFields").hidden = barrel === "rigata";
     document.getElementById("gunCaliber").value = "7x57";
     document.getElementById("gunCaliberAltro").hidden = true;
     document.getElementById("gunCaliberAltro").value = "";
@@ -558,7 +559,7 @@
   }
 
   function setupGuns() {
-    document.getElementById("addGunBtn").addEventListener("click", openGunModal);
+    document.getElementById("addGunBtn").addEventListener("click", () => openGunModal());
     document.getElementById("gunModalCancel").addEventListener("click", () => {
       document.getElementById("gunModalBackdrop").classList.remove("active");
     });
@@ -606,12 +607,19 @@
   }
 
   // Popola il menu "Arma usata" nel modulo di registrazione con i fucili salvati.
-  function popolaSelectArmi() {
+  // In caccia alta si usano armi a canna rigata; in caccia bassa e acquatica
+  // a canna liscia. Il menu mostra solo i fucili pertinenti al tipo scelto.
+  function fucileAdattoAHuntType(gun, huntType) {
+    return huntType === "alta" ? gun.tipoCanna !== "liscia" : gun.tipoCanna === "liscia";
+  }
+
+  function popolaSelectArmi(huntType) {
     const sel = document.getElementById("modalGun");
     if (!sel) return;
-    const guns = Storage.getGuns();
+    const guns = Storage.getGuns().filter(g => fucileAdattoAHuntType(g, huntType));
     sel.innerHTML = `<option value="">— non indicata —</option>` +
       guns.map(g => `<option value="${g.id}">${g.name ? g.name + " — " : ""}${descrizioneFucile(g)}</option>`).join("");
+    return guns;
   }
 
   function aggiornaAvvisoCalibroModal() {
@@ -938,14 +946,18 @@
 
   // ---------- Modale registrazione ----------
 
+  function huntTypeDelModulo(preselectId) {
+    const pre = preselectId ? regData.categories.find(c => c.id === preselectId) : null;
+    return (pre && pre.huntType) || selectedHunt || "alta";
+  }
+
   function populateModalCategories(preselectId) {
     const sel = document.getElementById("modalCategory");
     sel.innerHTML = "";
 
     // Solo le specie del tipo di caccia selezionato in alto
     // (se si parte da una scheda, vale il tipo di caccia di quella categoria).
-    const pre = preselectId ? regData.categories.find(c => c.id === preselectId) : null;
-    const huntType = (pre && pre.huntType) || selectedHunt || "alta";
+    const huntType = huntTypeDelModulo(preselectId);
 
     document.querySelector("#modalBackdrop h3").textContent =
       `Registra abbattimento — ${HUNT_LABELS[huntType] || ""}`;
@@ -964,13 +976,17 @@
     populateModalCategories(preselectId);
     document.getElementById("modalDate").value = RulesEngine.toISO(selectedDate);
     document.getElementById("modalNote").value = "";
-    popolaSelectArmi();
+    const huntType = huntTypeDelModulo(preselectId);
+    const gunsAdatti = popolaSelectArmi(huntType);
     document.getElementById("modalGun").value = "";
     document.getElementById("modalGunCaliberWarning").hidden = true;
 
-    const hasGuns = Storage.getGuns().length > 0;
+    const hasGuns = gunsAdatti.length > 0;
     document.getElementById("modalGunFieldWrap").hidden = !hasGuns;
     document.getElementById("modalGunSuggest").hidden = hasGuns;
+    document.getElementById("modalGunSuggest").textContent = huntType === "alta"
+      ? "Non hai ancora registrato un fucile a canna rigata. Aggiungine uno per trovarlo pronto qui la prossima volta."
+      : "Non hai ancora registrato un fucile a canna liscia. Aggiungine uno per trovarlo pronto qui la prossima volta.";
     document.getElementById("modalGunManageLink").textContent =
       hasGuns ? "Gestisci i miei fucili →" : "+ Aggiungi il tuo primo fucile →";
 
@@ -1169,11 +1185,13 @@
 
     document.getElementById("modalGun").addEventListener("change", aggiornaAvvisoCalibroModal);
     document.getElementById("modalGunManageLink").addEventListener("click", () => {
-      const hasGuns = Storage.getGuns().length > 0;
+      const huntType = huntTypeDelModulo(document.getElementById("modalCategory").value);
+      const hasGuns = Storage.getGuns().some(g => fucileAdattoAHuntType(g, huntType));
       closeModal();
       switchView("regolamento");
       document.getElementById("gunsSection").scrollIntoView({ block: "start" });
-      if (!hasGuns) openGunModal(); // nessun fucile ancora: apre subito il modulo per aggiungerne uno
+      // nessun fucile adatto ancora: apre subito il modulo, già sul tipo di canna giusto
+      if (!hasGuns) openGunModal(huntType === "alta" ? "rigata" : "liscia");
     });
     document.getElementById("modalCancel").addEventListener("click", closeModal);
     document.getElementById("modalSave").addEventListener("click", saveModal);
