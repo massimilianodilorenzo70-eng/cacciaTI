@@ -337,22 +337,24 @@
     <div class="modal-link" id="modalGunManageLink">Gestisci i miei fucili →</div>
     <div class="note" id="modalGunCaliberWarning" hidden></div>
 
-    <label for="modalAmmoType">Munizione (facoltativo)</label>
-    <select id="modalAmmoType">
-      <option value="">— non indicata —</option>
-      <option value="Piombo — espansiva">Piombo — espansiva</option>
-      <option value="Senza piombo — rame">Senza piombo — rame</option>
-      <option value="Blindata">Blindata</option>
-      <option value="Altro">Altro</option>
-    </select>
-
-    <label for="modalBulletWeight">Peso della palla (facoltativo)</label>
-    <div class="weight-row">
-      <input type="number" id="modalBulletWeight" min="0" step="0.1" placeholder="es. 10.5">
-      <select id="modalBulletWeightUnit">
-        <option value="g">grammi</option>
-        <option value="gr">grani</option>
+    <div id="modalBulletFields">
+      <label for="modalAmmoType">Munizione (facoltativo)</label>
+      <select id="modalAmmoType">
+        <option value="">— non indicata —</option>
+        <option value="Piombo — espansiva">Piombo — espansiva</option>
+        <option value="Senza piombo — rame">Senza piombo — rame</option>
+        <option value="Blindata">Blindata</option>
+        <option value="Altro">Altro</option>
       </select>
+
+      <label for="modalBulletWeight">Peso della palla (facoltativo)</label>
+      <div class="weight-row">
+        <input type="number" id="modalBulletWeight" min="0" step="0.1" placeholder="es. 10.5">
+        <select id="modalBulletWeightUnit">
+          <option value="g">grammi</option>
+          <option value="gr">grani</option>
+        </select>
+      </div>
     </div>
 
     <div class="privacy-note">
