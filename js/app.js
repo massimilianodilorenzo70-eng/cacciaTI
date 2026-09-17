@@ -1154,8 +1154,11 @@
 
     document.getElementById("modalGun").addEventListener("change", aggiornaAvvisoCalibroModal);
     document.getElementById("modalGunManageLink").addEventListener("click", () => {
+      const hasGuns = Storage.getGuns().length > 0;
       closeModal();
       switchView("regolamento");
+      document.getElementById("gunsSection").scrollIntoView({ block: "start" });
+      if (!hasGuns) openGunModal(); // nessun fucile ancora: apre subito il modulo per aggiungerne uno
     });
     document.getElementById("modalCancel").addEventListener("click", closeModal);
     document.getElementById("modalSave").addEventListener("click", saveModal);
