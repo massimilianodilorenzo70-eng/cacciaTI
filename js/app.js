@@ -12,6 +12,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.8", text: "Nuova scheda \u00abImpostazioni\u00bb (icona a ingranaggio): regolamento in vigore, aggiornamento del regolamento, esporta/importa registro e i miei fucili sono ora qui invece che in Info, che resta per le sole letture (cosa fa l'app, cronologia aggiornamenti)." },
     { v: "3.7", text: "Nel modulo di registrazione, l'arma usata mostra ora solo i fucili adatti al tipo di caccia (canna rigata in caccia alta, canna liscia in bassa e acquatica). I campi munizione e peso della palla, che valgono solo per la carabina, compaiono solo in caccia alta." },
     { v: "3.6", text: "Nuova sezione \u00abI miei fucili\u00bb in Info: registra arma e calibro una volta sola, sia a canna rigata (con avviso se sotto i 7 mm / .270\" previsti dalla legge) sia a canna liscia \u2014 sovrapposto, doppietta o semiautomatico, calibro da 12 a 20 (con avviso se fuori range). In fase di registrazione di un abbattimento puoi indicare l'arma usata, il tipo di munizione e il peso della palla (grani o grammi), tutto facoltativo. Le statistiche mostrano anche il riepilogo per arma." },
     { v: "3.5", text: "Nella schermata Giornata, una specie completamente chiusa nella data scelta non viene più mostrata (resta visibile solo cercandola nella casella di ricerca)." },
@@ -934,8 +935,11 @@
     `).join("");
   }
 
-  function renderRegolamento() {
+  function renderInfo() {
     renderChangelog();
+  }
+
+  function renderImpostazioni() {
     const box = document.getElementById("regInfoBox");
     const custom = Storage.getCustomRegolamento();
     box.innerHTML = `
@@ -943,6 +947,7 @@
       <b>Valido dal:</b> ${regData.validFrom}<br>
       <b>Fonte:</b> ${regData.source}
     `;
+    renderGunsList();
   }
 
   // ---------- Modale registrazione ----------
@@ -1033,7 +1038,8 @@
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.dataset.view === name));
     if (name === "oggi") renderOggi();
     if (name === "registro") renderRegistro();
-    if (name === "regolamento") renderRegolamento();
+    if (name === "impostazioni") renderImpostazioni();
+    if (name === "regolamento") renderInfo();
   }
 
   // ---------- Init ----------
@@ -1196,7 +1202,7 @@
       const huntType = huntTypeDelModulo(document.getElementById("modalCategory").value);
       const hasGuns = Storage.getGuns().some(g => fucileAdattoAHuntType(g, huntType));
       closeModal();
-      switchView("regolamento");
+      switchView("impostazioni");
       document.getElementById("gunsSection").scrollIntoView({ block: "start" });
       // nessun fucile adatto ancora: apre subito il modulo, già sul tipo di canna giusto
       if (!hasGuns) openGunModal(huntType === "alta" ? "rigata" : "liscia");
