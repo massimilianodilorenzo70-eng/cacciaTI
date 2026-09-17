@@ -164,7 +164,7 @@
     <label class="btn secondary" for="importLogFile">Importa registro abbattimenti (JSON)</label>
     <input type="file" id="importLogFile" accept="application/json,.json">
 
-    <div class="section-title">I miei fucili</div>
+    <div class="section-title" id="gunsSection">I miei fucili</div>
     <div class="info-box">
       Registrali una volta sola: alla registrazione di un abbattimento li trovi già pronti in
       un menu breve, invece di scrivere ogni volta arma e calibro.
@@ -332,7 +332,7 @@
       <select id="modalGun"></select>
     </div>
     <div class="note" id="modalGunSuggest" hidden>
-      🔫 Non hai ancora registrato un fucile. Aggiungine uno per trovarlo pronto qui la prossima volta.
+      <b>Non hai ancora registrato un fucile.</b> Aggiungine uno per trovarlo pronto qui la prossima volta.
     </div>
     <div class="modal-link" id="modalGunManageLink">Gestisci i miei fucili →</div>
     <div class="note" id="modalGunCaliberWarning" hidden></div>
