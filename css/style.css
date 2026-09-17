@@ -776,6 +776,37 @@ input[type="file"] { display: none; }
   margin: 20px 0 8px 0;
 }
 
+.modal-link {
+  font-size: 13px;
+  color: var(--forest);
+  font-weight: 600;
+  margin: 2px 0 10px 0;
+  cursor: pointer;
+}
+
+.weight-row {
+  display: flex;
+  gap: 8px;
+}
+.weight-row input[type="number"] {
+  flex: 1;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 14px;
+  background: var(--surface);
+  color: var(--ink);
+}
+.weight-row select {
+  width: 110px;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 14px;
+  background: var(--surface);
+  color: var(--ink);
+}
+
 .contingente-box {
   margin-top: 8px;
   border: 1px solid var(--line);
