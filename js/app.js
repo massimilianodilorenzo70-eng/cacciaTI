@@ -12,6 +12,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.6", text: "Nuova sezione \u00abI miei fucili\u00bb in Info: registra arma e calibro una volta sola, sia a canna rigata (con avviso se sotto i 7 mm / .270\" previsti dalla legge) sia a canna liscia \u2014 sovrapposto, doppietta o semiautomatico, calibro da 12 a 20 (con avviso se fuori range). In fase di registrazione di un abbattimento puoi indicare l'arma usata, il tipo di munizione e il peso della palla (grani o grammi), tutto facoltativo. Le statistiche mostrano anche il riepilogo per arma." },
     { v: "3.5", text: "Nella schermata Giornata, una specie completamente chiusa nella data scelta non viene più mostrata (resta visibile solo cercandola nella casella di ricerca)." },
     { v: "3.4", text: "L'invito a installare l'app spiega ora anche che così i dati della stagione restano più al sicuro nel tempo. Aggiunta la richiesta di conservazione permanente dei dati, e nelle Statistiche due grafici: l'andamento della stagione e il confronto con le stagioni precedenti (quando ci sono capi di più di un anno nel registro)." },
     { v: "3.3", text: "Riscritta la spiegazione iniziale nella scheda Info, per descrivere meglio tutto ciò che l'app fa oggi (Aperto ora, zone, contingente, SOS, registro)." },
@@ -375,6 +376,63 @@
     }
   }
 
+  // ---------- Calibro minimo legale (7 mm / .270 pollici, art. 18 Legge sulla caccia TI) ----------
+  // Verifica automatica solo quando il testo del calibro permette di stimare
+  // un valore in millimetri; se non ci riesce non inventa nulla e non avvisa,
+  // lascia solo il promemoria fisso del limite legale.
+
+  const SOGLIA_CALIBRO_MM = 6.8; // un po' sotto 7 per non segnalare per errore il .270 Win (6,858 mm)
+  const GAUGE_MIN = 12; // canna liscia: art. 18 Legge sulla caccia TI, "calibro 12 al massimo e 20 al minimo"
+  const GAUGE_MAX = 20;
+
+  function stimaCalibroInMm(testo) {
+    if (!testo) return null;
+    const m = testo.match(/(\d+(?:[.,]\d+)?)/);
+    if (!m) return null;
+    const n = parseFloat(m[1].replace(",", "."));
+    if (!isFinite(n) || n <= 0) return null;
+    if (n < 1) return n * 25.4;         // es. ".270" -> pollici
+    if (n >= 100) return (n / 1000) * 25.4; // es. "300" (Win Mag) -> .300" -> pollici
+    return n;                            // es. "7", "8", "9.3" -> già in mm
+  }
+
+  function calibroSottoMinimo(testoCalibro) {
+    const mm = stimaCalibroInMm(testoCalibro);
+    return mm !== null && mm < SOGLIA_CALIBRO_MM;
+  }
+
+  function stimaGauge(testo) {
+    if (!testo) return null;
+    const m = testo.match(/(\d+)/);
+    if (!m) return null;
+    const n = parseInt(m[1], 10);
+    return isFinite(n) && n > 0 ? n : null;
+  }
+
+  function gaugeFuoriRange(testoGauge) {
+    const g = stimaGauge(testoGauge);
+    return g !== null && (g < GAUGE_MIN || g > GAUGE_MAX);
+  }
+
+  // Vero se il calibro del fucile (rigato o liscio) risulta fuori dai limiti
+  // legali ticinesi. Unico punto usato sia nel modulo "Aggiungi fucile" sia
+  // in quello di registrazione, così il criterio resta identico ovunque.
+  function calibroNonValido(gun) {
+    return gun.tipoCanna === "liscia" ? gaugeFuoriRange(gun.caliber) : calibroSottoMinimo(gun.caliber);
+  }
+
+  function testoAvvisoCalibro(gun) {
+    return gun.tipoCanna === "liscia"
+      ? `Attenzione: il calibro ${gun.caliber} risulta fuori dal range ammesso per la canna liscia in ` +
+        `Ticino (da ${GAUGE_MIN} a ${GAUGE_MAX}, art. 18 Legge sulla caccia). Verifica tu prima di usarlo.`
+      : `Attenzione: il calibro ${gun.caliber} risulta sotto il minimo legale per la canna rigata in ` +
+        `Ticino (7 mm o 270 millesimi di pollice, art. 18 Legge sulla caccia). Verifica tu prima di usarlo.`;
+  }
+
+  function descrizioneFucile(g) {
+    return g.tipoCanna === "liscia" ? `${g.azione} — canna liscia, calibro ${g.caliber}` : g.caliber;
+  }
+
   // ---------- Finestre di conferma/avviso personalizzate ----------
   // Sostituiscono confirm()/alert() del browser, che mostrano sempre il nome
   // del sito prima del messaggio ("massimilianodilorenzo70-eng.github.io dice").
@@ -419,6 +477,138 @@
       }
       okBtn.addEventListener("click", onOk);
     });
+  }
+
+  // ---------- I miei fucili ----------
+
+  function renderGunsList() {
+    const el = document.getElementById("gunsList");
+    if (!el) return;
+    const guns = Storage.getGuns();
+    if (guns.length === 0) {
+      el.innerHTML = `<div class="empty-state">Nessun fucile registrato.</div>`;
+      return;
+    }
+    el.innerHTML = guns.map(g => `
+      <div class="log-item" data-gun-id="${g.id}">
+        <div class="info">
+          <div class="sp">${g.name || descrizioneFucile(g)}</div>
+          <div class="cat">${descrizioneFucile(g)}${calibroNonValido(g) ? " — calibro fuori norma" : ""}</div>
+        </div>
+        <button class="del" data-gun-id="${g.id}">Elimina</button>
+      </div>`).join("");
+
+    el.querySelectorAll("button.del").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        if (await showConfirm("Eliminare questo fucile dall'elenco?")) {
+          Storage.deleteGun(btn.dataset.gunId);
+          renderGunsList();
+        }
+      });
+    });
+  }
+
+  function tipoCannaSelezionato() {
+    return document.querySelector("#gunBarrelTabs .subtab.active").dataset.barrel;
+  }
+
+  function openGunModal() {
+    document.getElementById("gunName").value = "";
+    document.querySelectorAll("#gunBarrelTabs .subtab").forEach(b => b.classList.toggle("active", b.dataset.barrel === "rigata"));
+    document.getElementById("gunRigataFields").hidden = false;
+    document.getElementById("gunLisciaFields").hidden = true;
+    document.getElementById("gunCaliber").value = "7x57";
+    document.getElementById("gunCaliberAltro").hidden = true;
+    document.getElementById("gunCaliberAltro").value = "";
+    document.getElementById("gunAzioneLiscia").value = "Sovrapposto";
+    document.getElementById("gunGauge").value = "12";
+    document.getElementById("gunGaugeAltro").hidden = true;
+    document.getElementById("gunGaugeAltro").value = "";
+    document.getElementById("gunCaliberWarning").hidden = true;
+    document.getElementById("gunModalBackdrop").classList.add("active");
+  }
+
+  // Il fucile "in bozza" così com'è impostato ora nel modulo, indipendentemente
+  // da rigata/liscia — usato sia per l'avviso live sia per il salvataggio.
+  function fucileDalModulo() {
+    const name = document.getElementById("gunName").value.trim();
+    if (tipoCannaSelezionato() === "liscia") {
+      const gaugeSel = document.getElementById("gunGauge");
+      const caliber = gaugeSel.value === "__altro__" ? document.getElementById("gunGaugeAltro").value.trim() : gaugeSel.value;
+      return { name, tipoCanna: "liscia", azione: document.getElementById("gunAzioneLiscia").value, caliber };
+    }
+    const calSel = document.getElementById("gunCaliber");
+    const caliber = calSel.value === "__altro__" ? document.getElementById("gunCaliberAltro").value.trim() : calSel.value;
+    return { name, tipoCanna: "rigata", caliber };
+  }
+
+  function setupGuns() {
+    document.getElementById("addGunBtn").addEventListener("click", openGunModal);
+    document.getElementById("gunModalCancel").addEventListener("click", () => {
+      document.getElementById("gunModalBackdrop").classList.remove("active");
+    });
+
+    function aggiornaAvvisoCalibroFucile() {
+      const warn = document.getElementById("gunCaliberWarning");
+      const gun = fucileDalModulo();
+      if (gun.caliber && calibroNonValido(gun)) {
+        warn.hidden = false;
+        warn.textContent = testoAvvisoCalibro(gun);
+      } else {
+        warn.hidden = true;
+      }
+    }
+
+    document.querySelectorAll("#gunBarrelTabs .subtab").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("#gunBarrelTabs .subtab").forEach(b => b.classList.toggle("active", b === btn));
+        const liscia = btn.dataset.barrel === "liscia";
+        document.getElementById("gunRigataFields").hidden = liscia;
+        document.getElementById("gunLisciaFields").hidden = !liscia;
+        aggiornaAvvisoCalibroFucile();
+      });
+    });
+
+    document.getElementById("gunCaliber").addEventListener("change", (e) => {
+      document.getElementById("gunCaliberAltro").hidden = e.target.value !== "__altro__";
+      aggiornaAvvisoCalibroFucile();
+    });
+    document.getElementById("gunCaliberAltro").addEventListener("input", aggiornaAvvisoCalibroFucile);
+    document.getElementById("gunGauge").addEventListener("change", (e) => {
+      document.getElementById("gunGaugeAltro").hidden = e.target.value !== "__altro__";
+      aggiornaAvvisoCalibroFucile();
+    });
+    document.getElementById("gunGaugeAltro").addEventListener("input", aggiornaAvvisoCalibroFucile);
+
+    document.getElementById("gunModalSave").addEventListener("click", () => {
+      const gun = fucileDalModulo();
+      if (!gun.caliber) return;
+      Storage.addGun(gun);
+      document.getElementById("gunModalBackdrop").classList.remove("active");
+      renderGunsList();
+      popolaSelectArmi();
+    });
+  }
+
+  // Popola il menu "Arma usata" nel modulo di registrazione con i fucili salvati.
+  function popolaSelectArmi() {
+    const sel = document.getElementById("modalGun");
+    if (!sel) return;
+    const guns = Storage.getGuns();
+    sel.innerHTML = `<option value="">— non indicata —</option>` +
+      guns.map(g => `<option value="${g.id}">${g.name ? g.name + " — " : ""}${descrizioneFucile(g)}</option>`).join("");
+  }
+
+  function aggiornaAvvisoCalibroModal() {
+    const sel = document.getElementById("modalGun");
+    const warn = document.getElementById("modalGunCaliberWarning");
+    const gun = Storage.getGuns().find(g => g.id === sel.value);
+    if (gun && calibroNonValido(gun)) {
+      warn.hidden = false;
+      warn.textContent = testoAvvisoCalibro(gun);
+    } else {
+      warn.hidden = true;
+    }
   }
 
   // ---------- SOS: posizione GPS + SMS/chiamata al 1414 ----------
@@ -671,6 +861,26 @@
         ${huntSorted.map(([ht, count]) => bar(HUNT_LABELS[ht] || ht, count, season.length)).join("")}
       </div>` : ""}
 
+      ${(() => {
+        const guns = Storage.getGuns();
+        const byGun = new Map();
+        for (const k of season) {
+          if (!k.gunId) continue;
+          const g = guns.find(x => x.id === k.gunId);
+          const label = g ? (g.name ? g.name + " — " + g.caliber : g.caliber) : null;
+          if (!label) continue;
+          byGun.set(label, (byGun.get(label) || 0) + 1);
+        }
+        if (byGun.size === 0) return "";
+        const sorted = [...byGun.entries()].sort((a, b) => b[1] - a[1]);
+        const maxGun = sorted[0][1];
+        return `
+      <div class="section-title">Per arma</div>
+      <div class="stats-bars">
+        ${sorted.map(([label, count]) => bar(label, count, maxGun)).join("")}
+      </div>`;
+      })()}
+
       <div class="section-title">Cronologia</div>
       <div class="info-box">
         <b>Primo abbattimento:</b> ${formatDateCH(datesAsc[0])}<br>
@@ -739,6 +949,19 @@
     populateModalCategories(preselectId);
     document.getElementById("modalDate").value = RulesEngine.toISO(selectedDate);
     document.getElementById("modalNote").value = "";
+    popolaSelectArmi();
+    document.getElementById("modalGun").value = "";
+    document.getElementById("modalGunCaliberWarning").hidden = true;
+
+    const hasGuns = Storage.getGuns().length > 0;
+    document.getElementById("modalGunFieldWrap").hidden = !hasGuns;
+    document.getElementById("modalGunSuggest").hidden = hasGuns;
+    document.getElementById("modalGunManageLink").textContent =
+      hasGuns ? "Gestisci i miei fucili →" : "+ Aggiungi il tuo primo fucile →";
+
+    document.getElementById("modalAmmoType").value = "";
+    document.getElementById("modalBulletWeight").value = "";
+    document.getElementById("modalBulletWeightUnit").value = "g";
     document.getElementById("modalBackdrop").classList.add("active");
   }
 
@@ -751,7 +974,12 @@
     const date = document.getElementById("modalDate").value;
     const note = document.getElementById("modalNote").value.trim();
     if (!categoryId || !date) return;
-    Storage.addKill({ categoryId, date, note });
+    const gunId = document.getElementById("modalGun").value || null;
+    const ammoType = document.getElementById("modalAmmoType").value || "";
+    const bulletWeightRaw = document.getElementById("modalBulletWeight").value;
+    const bulletWeight = bulletWeightRaw ? parseFloat(bulletWeightRaw) : null;
+    const bulletWeightUnit = document.getElementById("modalBulletWeightUnit").value;
+    Storage.addKill({ categoryId, date, note, gunId, ammoType, bulletWeight, bulletWeightUnit });
     if (!document.getElementById("registroStatistiche").classList.contains("hidden")) renderStatistiche();
     closeModal();
     renderOggi();
@@ -923,6 +1151,12 @@
     });
 
     document.getElementById("fabAdd").addEventListener("click", () => openModal(null));
+
+    document.getElementById("modalGun").addEventListener("change", aggiornaAvvisoCalibroModal);
+    document.getElementById("modalGunManageLink").addEventListener("click", () => {
+      closeModal();
+      switchView("regolamento");
+    });
     document.getElementById("modalCancel").addEventListener("click", closeModal);
     document.getElementById("modalSave").addEventListener("click", saveModal);
     document.getElementById("modalBackdrop").addEventListener("click", (e) => {
@@ -1022,6 +1256,8 @@
 
     setupRegistroSubtabs();
     setupSOS();
+    setupGuns();
+    renderGunsList();
 
     document.getElementById("exportLogBtn").addEventListener("click", () => {
       const log = Storage.getLog();
