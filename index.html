@@ -164,6 +164,14 @@
     <label class="btn secondary" for="importLogFile">Importa registro abbattimenti (JSON)</label>
     <input type="file" id="importLogFile" accept="application/json,.json">
 
+    <div class="section-title">I miei fucili</div>
+    <div class="info-box">
+      Registrali una volta sola: alla registrazione di un abbattimento li trovi già pronti in
+      un menu breve, invece di scrivere ogni volta arma e calibro.
+    </div>
+    <div id="gunsList"></div>
+    <button class="btn secondary" id="addGunBtn">+ Aggiungi fucile</button>
+
     <div class="section-title">Cronologia aggiornamenti</div>
     <details class="changelog-box">
       <summary>Vedi le versioni precedenti</summary>
@@ -238,6 +246,68 @@
   </div>
 </div>
 
+<!-- MODAL: aggiungi fucile -->
+<div class="modal-backdrop" id="gunModalBackdrop">
+  <div class="modal-sheet">
+    <h3>Aggiungi fucile</h3>
+    <label for="gunName">Nome (facoltativo)</label>
+    <input type="text" id="gunName" placeholder="es. Sauer da monte">
+
+    <label>Tipo di canna</label>
+    <div class="hunt-tabs" id="gunBarrelTabs">
+      <button type="button" class="subtab active" data-barrel="rigata">Rigata</button>
+      <button type="button" class="subtab" data-barrel="liscia">Liscia</button>
+    </div>
+
+    <div id="gunRigataFields">
+      <label for="gunCaliber">Calibro</label>
+      <select id="gunCaliber">
+        <option value="7x57">7x57</option>
+        <option value="7x64">7x64</option>
+        <option value=".270 Win">.270 Win</option>
+        <option value="7mm-08 Rem">7mm-08 Rem</option>
+        <option value="7mm Rem Mag">7mm Rem Mag</option>
+        <option value=".308 Win">.308 Win</option>
+        <option value=".30-06 Sprg">.30-06 Sprg</option>
+        <option value=".300 Win Mag">.300 Win Mag</option>
+        <option value=".300 WSM">.300 WSM</option>
+        <option value="8x57 IS">8x57 IS</option>
+        <option value="8x68S">8x68S</option>
+        <option value="9.3x62">9.3x62</option>
+        <option value="9.3x74R">9.3x74R</option>
+        <option value="7.5x55 Swiss (GP11)">7.5x55 Swiss (GP11)</option>
+        <option value="__altro__">Altro…</option>
+      </select>
+      <input type="text" id="gunCaliberAltro" placeholder="Scrivi il calibro" hidden>
+    </div>
+
+    <div id="gunLisciaFields" hidden>
+      <label for="gunAzioneLiscia">Tipo di fucile</label>
+      <select id="gunAzioneLiscia">
+        <option value="Sovrapposto">Sovrapposto</option>
+        <option value="Doppietta">Doppietta</option>
+        <option value="Semiautomatico">Semiautomatico</option>
+      </select>
+
+      <label for="gunGauge">Calibro</label>
+      <select id="gunGauge">
+        <option value="12">12</option>
+        <option value="16">16</option>
+        <option value="20">20</option>
+        <option value="__altro__">Altro…</option>
+      </select>
+      <input type="text" id="gunGaugeAltro" placeholder="Scrivi il calibro" hidden>
+    </div>
+
+    <div class="note" id="gunCaliberWarning" hidden></div>
+
+    <div class="modal-actions">
+      <button class="btn secondary" id="gunModalCancel">Annulla</button>
+      <button class="btn" id="gunModalSave">Salva</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: registra abbattimento -->
 <div class="modal-backdrop" id="modalBackdrop">
   <div class="modal-sheet">
@@ -250,6 +320,34 @@
 
     <label for="modalNote">Note (facoltativo)</label>
     <input type="text" id="modalNote" placeholder="es. località, foglio di controllo…">
+
+    <div id="modalGunFieldWrap">
+      <label for="modalGun">Arma usata (facoltativo)</label>
+      <select id="modalGun"></select>
+    </div>
+    <div class="note" id="modalGunSuggest" hidden>
+      🔫 Non hai ancora registrato un fucile. Aggiungine uno per trovarlo pronto qui la prossima volta.
+    </div>
+    <div class="modal-link" id="modalGunManageLink">Gestisci i miei fucili →</div>
+    <div class="note" id="modalGunCaliberWarning" hidden></div>
+
+    <label for="modalAmmoType">Munizione (facoltativo)</label>
+    <select id="modalAmmoType">
+      <option value="">— non indicata —</option>
+      <option value="Piombo — espansiva">Piombo — espansiva</option>
+      <option value="Senza piombo — rame">Senza piombo — rame</option>
+      <option value="Blindata">Blindata</option>
+      <option value="Altro">Altro</option>
+    </select>
+
+    <label for="modalBulletWeight">Peso della palla (facoltativo)</label>
+    <div class="weight-row">
+      <input type="number" id="modalBulletWeight" min="0" step="0.1" placeholder="es. 10.5">
+      <select id="modalBulletWeightUnit">
+        <option value="g">grammi</option>
+        <option value="gr">grani</option>
+      </select>
+    </div>
 
     <div class="privacy-note">
       🔒 Resta solo sul tuo telefono: non viene inviato né condiviso in alcun modo con l'Ufficio
