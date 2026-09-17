@@ -12,6 +12,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.7", text: "Nel modulo di registrazione, l'arma usata mostra ora solo i fucili adatti al tipo di caccia (canna rigata in caccia alta, canna liscia in bassa e acquatica). I campi munizione e peso della palla, che valgono solo per la carabina, compaiono solo in caccia alta." },
     { v: "3.6", text: "Nuova sezione \u00abI miei fucili\u00bb in Info: registra arma e calibro una volta sola, sia a canna rigata (con avviso se sotto i 7 mm / .270\" previsti dalla legge) sia a canna liscia \u2014 sovrapposto, doppietta o semiautomatico, calibro da 12 a 20 (con avviso se fuori range). In fase di registrazione di un abbattimento puoi indicare l'arma usata, il tipo di munizione e il peso della palla (grani o grammi), tutto facoltativo. Le statistiche mostrano anche il riepilogo per arma." },
     { v: "3.5", text: "Nella schermata Giornata, una specie completamente chiusa nella data scelta non viene più mostrata (resta visibile solo cercandola nella casella di ricerca)." },
     { v: "3.4", text: "L'invito a installare l'app spiega ora anche che così i dati della stagione restano più al sicuro nel tempo. Aggiunta la richiesta di conservazione permanente dei dati, e nelle Statistiche due grafici: l'andamento della stagione e il confronto con le stagioni precedenti (quando ci sono capi di più di un anno nel registro)." },
@@ -993,6 +994,9 @@
     document.getElementById("modalAmmoType").value = "";
     document.getElementById("modalBulletWeight").value = "";
     document.getElementById("modalBulletWeightUnit").value = "g";
+    // Munizione a palla e peso hanno senso solo per la carabina: in caccia
+    // bassa e acquatica, dove si usa la canna liscia, restano nascosti.
+    document.getElementById("modalBulletFields").hidden = huntType !== "alta";
     document.getElementById("modalBackdrop").classList.add("active");
   }
 
@@ -1006,8 +1010,12 @@
     const note = document.getElementById("modalNote").value.trim();
     if (!categoryId || !date) return;
     const gunId = document.getElementById("modalGun").value || null;
-    const ammoType = document.getElementById("modalAmmoType").value || "";
-    const bulletWeightRaw = document.getElementById("modalBulletWeight").value;
+
+    // Munizione e peso della palla valgono solo per la carabina (canna rigata):
+    // se il campo è nascosto (caccia bassa/acquatica) non si salva nulla.
+    const bulletFieldsVisibili = !document.getElementById("modalBulletFields").hidden;
+    const ammoType = bulletFieldsVisibili ? (document.getElementById("modalAmmoType").value || "") : "";
+    const bulletWeightRaw = bulletFieldsVisibili ? document.getElementById("modalBulletWeight").value : "";
     const bulletWeight = bulletWeightRaw ? parseFloat(bulletWeightRaw) : null;
     const bulletWeightUnit = document.getElementById("modalBulletWeightUnit").value;
     Storage.addKill({ categoryId, date, note, gunId, ammoType, bulletWeight, bulletWeightUnit });
