@@ -941,5 +941,11 @@ input[type="file"] { display: none; }
   padding: 40px 20px;
   font-size: 14px;
 }
+.empty-state-compact {
+  text-align: center;
+  color: var(--ink-soft);
+  padding: 10px 0;
+  font-size: 13.5px;
+}
 
 ::-webkit-scrollbar { width: 0; height: 0; }
