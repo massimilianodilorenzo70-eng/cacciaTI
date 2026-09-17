@@ -12,6 +12,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.4", text: "L'invito a installare l'app spiega ora anche che così i dati della stagione restano più al sicuro nel tempo. Aggiunta la richiesta di conservazione permanente dei dati, e nelle Statistiche due grafici: l'andamento della stagione e il confronto con le stagioni precedenti (quando ci sono capi di più di un anno nel registro)." },
     { v: "3.3", text: "Riscritta la spiegazione iniziale nella scheda Info, per descrivere meglio tutto ciò che l'app fa oggi (Aperto ora, zone, contingente, SOS, registro)." },
     { v: "3.2", text: "I messaggi di conferma (es. eliminare un abbattimento) ora usano una finestra propria dell'app, senza più mostrare il nome del sito prima del testo. Aggiunto un conteggio anonimo che distingue le aperture dall'icona (app installata) da quelle nel browser." },
     { v: "3.1", text: "Aggiunta una sezione SOS (icona rossa in alto): invia un SMS con le coordinate GPS al 1414 (Rega) o chiama direttamente. Funziona solo con copertura di rete." },
@@ -495,6 +496,110 @@
     });
   }
 
+  // ---------- Grafici: andamento cumulato e confronto tra stagioni ----------
+  // SVG disegnato a mano, nessuna libreria esterna, coerente con il resto
+  // dell'app. I colori sono fissi (non CSS var) per essere sicuri che
+  // rendano uguali su tutti i browser dei telefoni.
+
+  function giorniTra(isoA, isoB) {
+    return Math.round((new Date(isoB + "T00:00:00") - new Date(isoA + "T00:00:00")) / 86400000);
+  }
+
+  // Serie cumulata: un punto per ogni cattura, più un punto iniziale (0
+  // capi) e uno finale che prolunga la linea fino a xEndIso.
+  function serieCumulata(dateOrdinate, conteggioPerData, xStartIso, xEndIso) {
+    const totalDays = Math.max(1, giorniTra(xStartIso, xEndIso));
+    let cum = 0;
+    const pts = [{ x: 0, y: 0 }];
+    for (const d of dateOrdinate) {
+      if (d < xStartIso || d > xEndIso) continue;
+      cum += conteggioPerData.get(d);
+      pts.push({ x: giorniTra(xStartIso, d), y: cum });
+    }
+    if (pts[pts.length - 1].x < totalDays) pts.push({ x: totalDays, y: cum });
+    return { points: pts, totalDays, totale: cum };
+  }
+
+  // Disegna una o più serie sullo stesso grafico (per il confronto tra anni).
+  function disegnaGraficoLinee(serie) {
+    const W = 300, H = 132, padL = 26, padR = 10, padT = 12, padB = 20;
+    const maxX = Math.max(1, ...serie.map(s => s.totalDays));
+    const maxY = Math.max(1, ...serie.map(s => Math.max(...s.points.map(p => p.y))));
+    const xOf = (x) => padL + (x / maxX) * (W - padL - padR);
+    const yOf = (y) => H - padB - (y / maxY) * (H - padT - padB);
+
+    const step = maxY <= 4 ? 1 : Math.ceil(maxY / 4);
+    const griglia = [];
+    for (let v = 0; v <= maxY; v += step) {
+      griglia.push(`<line x1="${padL}" y1="${yOf(v).toFixed(1)}" x2="${W - padR}" y2="${yOf(v).toFixed(1)}" stroke="#CBC4AC" stroke-width="1"/>`);
+      griglia.push(`<text x="${padL - 5}" y="${(yOf(v) + 3).toFixed(1)}" font-size="9" fill="#565A44" text-anchor="end">${v}</text>`);
+    }
+
+    const linee = serie.map(s => {
+      const d = s.points.map((p, i) => `${i === 0 ? "M" : "L"}${xOf(p.x).toFixed(1)},${yOf(p.y).toFixed(1)}`).join(" ");
+      const last = s.points[s.points.length - 1];
+      return `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2.5" stroke-linejoin="round"/>` +
+        `<circle cx="${xOf(last.x).toFixed(1)}" cy="${yOf(last.y).toFixed(1)}" r="3" fill="${s.color}"/>`;
+    }).join("");
+
+    return `<svg viewBox="0 0 ${W} ${H}" class="chart-svg" role="img">${griglia.join("")}${linee}</svg>`;
+  }
+
+  function renderGraficoStagione(datesAsc, byDate, oggiIso, year) {
+    const xStart = datesAsc[0];
+    const xEnd = oggiIso.startsWith(year) && oggiIso > datesAsc[datesAsc.length - 1] ? oggiIso : datesAsc[datesAsc.length - 1];
+    const s = serieCumulata(datesAsc, byDate, xStart, xEnd);
+    const svg = disegnaGraficoLinee([{ points: s.points, totalDays: s.totalDays, color: "#2E4A29" }]);
+    return `
+      <div class="section-title">Andamento della stagione</div>
+      <div class="chart-box">
+        ${svg}
+        <div class="chart-xlabels"><span>${formatDateCH(xStart)}</span><span>${formatDateCH(xEnd)}</span></div>
+      </div>`;
+  }
+
+  function renderConfrontoStagioni(log, currentYear) {
+    const byYear = new Map(); // anno -> Map(data -> conteggio)
+    for (const k of log) {
+      const y = k.date.slice(0, 4);
+      if (!byYear.has(y)) byYear.set(y, new Map());
+      const m = byYear.get(y);
+      m.set(k.date, (m.get(k.date) || 0) + 1);
+    }
+    const anni = [...byYear.keys()].sort();
+    if (anni.length < 2) return ""; // niente da confrontare con una sola stagione
+
+    const palette = ["#93711F", "#8B3A2C", "#565A44", "#5B7A6E"];
+    let idxPassati = 0;
+    const oggiIso = RulesEngine.toISO(new Date());
+
+    const serie = anni.map(y => {
+      const mappa = byYear.get(y);
+      const dateOrd = [...mappa.keys()].sort();
+      const xEnd = (y === currentYear && oggiIso.startsWith(y) && oggiIso > dateOrd[dateOrd.length - 1])
+        ? oggiIso : dateOrd[dateOrd.length - 1];
+      const s = serieCumulata(dateOrd, mappa, dateOrd[0], xEnd);
+      const color = y === currentYear ? "#2E4A29" : palette[idxPassati++ % palette.length];
+      return { anno: y, color, points: s.points, totalDays: s.totalDays, totale: s.totale };
+    });
+
+    const svg = disegnaGraficoLinee(serie);
+    const legenda = serie.map(s =>
+      `<span class="chart-legend-item"><span class="chart-dot" style="background:${s.color}"></span>${s.anno}: ${s.totale} cap${s.totale === 1 ? "o" : "i"}</span>`
+    ).join("");
+
+    return `
+      <div class="section-title">Confronto con le stagioni precedenti</div>
+      <div class="chart-box">
+        ${svg}
+        <div class="chart-xlabels"><span>Giorno 0 di ciascuna stagione</span><span>→</span></div>
+        <div class="chart-legend">${legenda}</div>
+      </div>
+      <div class="note">L'asse orizzontale allinea ogni stagione al suo primo abbattimento, non al calendario:
+      così si vede se stai andando più veloce o più lento rispetto agli anni scorsi, indipendentemente
+      da quando è iniziata la caccia.</div>`;
+  }
+
   // ---------- Vista REGISTRO: statistiche stagionali ----------
 
   function renderStatistiche() {
@@ -565,6 +670,9 @@
         <b>Giorno più fruttuoso:</b> ${formatDateCH(bestDay[0])} (${bestDay[1]} cap${bestDay[1] === 1 ? "o" : "i"})
       </div>
       ${outOfSeason ? `<div class="note">Escluse dal conteggio ${outOfSeason} voci con data fuori dalla stagione ${year}.</div>` : ""}
+
+      ${renderGraficoStagione(datesAsc, byDate, RulesEngine.toISO(new Date()), year)}
+      ${renderConfrontoStagioni(log, year)}
 
       <div class="privacy-note">
         🔒 Questi dati restano solo sul tuo telefono: non vengono inviati né condivisi in alcun
@@ -706,7 +814,8 @@
 
     if (isIOS() && !isStandalone()) {
       document.getElementById("installHint").textContent =
-        "Tocca Condividi (il quadrato con la freccia in su) e poi «Aggiungi alla schermata Home».";
+        "Tocca Condividi (il quadrato con la freccia in su) e poi «Aggiungi alla schermata Home»: " +
+        "così i dati della tua stagione restano più al sicuro nel tempo.";
       btn.hidden = true;
       setTimeout(showInstallBanner, 1200);
     }
@@ -742,9 +851,20 @@
     }, 1500);
   }
 
+  // Chiede al browser di non cancellare i dati dell'app sotto pressione di
+  // spazio. Silenzioso: se il browser non supporta la richiesta (es. Safari
+  // su iPhone) non succede nulla di visibile, semplicemente non si applica —
+  // su iPhone la protezione arriva dall'aver installato l'app, non da qui.
+  function chiediConservazionePersistente() {
+    if (navigator.storage && navigator.storage.persist) {
+      navigator.storage.persist().catch(() => {});
+    }
+  }
+
   async function init() {
     setupInstallPrompt(); // subito, per non perdere l'evento del browser
     segnalaModalitaUso();
+    chiediConservazionePersistente();
 
     if (!Storage.hasAckedDisclaimer()) {
       document.getElementById("disclaimerAck").addEventListener("click", () => {
