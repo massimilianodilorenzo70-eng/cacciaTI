@@ -376,7 +376,8 @@
         }
       ],
       "hourProfile": "alta_sopra400",
-      "individualMax": 1
+      "individualMax": 2,
+      "note": "Puoi prelevare fino a 2 femmine lattifere. La prima è libera, senza condizioni. La seconda è concessa solo se prima, nella stessa azione di caccia, è stato abbattuto il suo cerbiatto: cerbiatto e femmina vanno portati insieme al posto di controllo entro 24 ore. L'app non può verificare l'abbinamento cerbiatto/femmina: verifica tu."
     },
     {
       "id": "cervo_cerbiatto",
@@ -963,7 +964,7 @@
         1,
         3
       ],
-      "note": "Consentita solo sui laghi Verbano e Ceresio, ad almeno 100 m dalla riva/canneti. Vietato sparare verso terraferma."
+      "note": "Consentita solo sui laghi Verbano e Ceresio, ad almeno 100 m dalla riva/canneti. Vietato sparare verso terraferma. Vietato portare con sé e usare pallini di piombo."
     },
     {
       "id": "germano_reale_acqua",
@@ -988,7 +989,7 @@
         1,
         3
       ],
-      "note": "Consentita solo sui laghi Verbano e Ceresio, ad almeno 100 m dalla riva/canneti. Vietato sparare verso terraferma."
+      "note": "Consentita solo sui laghi Verbano e Ceresio, ad almeno 100 m dalla riva/canneti. Vietato sparare verso terraferma. Vietato portare con sé e usare pallini di piombo."
     },
     {
       "id": "moriglione",
@@ -1013,7 +1014,7 @@
         1,
         3
       ],
-      "note": "Consentita solo sui laghi Verbano e Ceresio, ad almeno 100 m dalla riva/canneti. Vietato sparare verso terraferma."
+      "note": "Consentita solo sui laghi Verbano e Ceresio, ad almeno 100 m dalla riva/canneti. Vietato sparare verso terraferma. Vietato portare con sé e usare pallini di piombo."
     },
     {
       "id": "moretta",
@@ -1038,7 +1039,7 @@
         1,
         3
       ],
-      "note": "Consentita solo sui laghi Verbano e Ceresio, ad almeno 100 m dalla riva/canneti. Vietato sparare verso terraferma."
+      "note": "Consentita solo sui laghi Verbano e Ceresio, ad almeno 100 m dalla riva/canneti. Vietato sparare verso terraferma. Vietato portare con sé e usare pallini di piombo."
     },
     {
       "id": "folaga",
@@ -1063,7 +1064,7 @@
         1,
         3
       ],
-      "note": "Consentita solo sui laghi Verbano e Ceresio, ad almeno 100 m dalla riva/canneti. Vietato sparare verso terraferma."
+      "note": "Consentita solo sui laghi Verbano e Ceresio, ad almeno 100 m dalla riva/canneti. Vietato sparare verso terraferma. Vietato portare con sé e usare pallini di piombo."
     }
   ],
   "zones": {
