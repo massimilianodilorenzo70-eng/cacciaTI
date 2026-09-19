@@ -12,7 +12,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
-    { v: "3.11", text: "Aggiornati i dati dalle Disposizioni al cacciatore 2026: la femmina lattifera di cervo ha quota 2 (non pi\u00f9 1), con nota sulla condizione per la seconda cattura legata al cerbiatto abbattuto nella stessa azione di caccia. Aggiunto il divieto di pallini di piombo in caccia acquatica." },
+    { v: "3.11", text: "Il pulsante SOS ora richiede due tocchi per aprirsi: al primo compare un avviso che invita a toccare di nuovo entro pochi secondi, per evitare aperture accidentali (in tasca, nello zaino)." },
     { v: "3.10", text: "Il pulsante per aggiungere una foto ora propone anche la galleria, non solo la fotocamera in diretta: utile per allegare una foto gi\u00e0 scattata, magari registrando l'abbattimento in un secondo momento. Corretta anche l'anteprima nel modulo di registrazione, che prima ritagliava l'immagine per riempire il riquadro: ora la mostra intera mantenendo le proporzioni originali." },
     { v: "3.9", text: "Puoi allegare o scattare una foto a ogni abbattimento (compressa e salvata solo sul telefono), rivederla nel registro, e ora ogni abbattimento si pu\u00f2 anche modificare (non solo eliminare). L'esportazione del registro chiede se includere le foto." },
     { v: "3.8", text: "Nuova scheda \u00abImpostazioni\u00bb (icona a ingranaggio): regolamento in vigore, aggiornamento del regolamento, esporta/importa registro e i miei fucili sono ora qui invece che in Info, che resta per le sole letture (cosa fa l'app, cronologia aggiornamenti)." },
@@ -590,7 +590,28 @@
       status.className = "sos-status" + (cls ? " " + cls : "");
     };
 
+    // Un solo tocco non basta: serve un secondo tocco entro pochi secondi,
+    // così un urto accidentale al pulsante (in tasca, nello zaino) non apre
+    // subito la schermata di emergenza.
+    let sosArmato = false;
+    let sosArmTimer = null;
+    const sosArmHint = document.getElementById("sosArmHint");
+    const SOS_ARM_MS = 4000;
+
     document.getElementById("sosOpenBtn").addEventListener("click", () => {
+      if (!sosArmato) {
+        sosArmato = true;
+        sosArmHint.classList.remove("hidden");
+        clearTimeout(sosArmTimer);
+        sosArmTimer = setTimeout(() => {
+          sosArmato = false;
+          sosArmHint.classList.add("hidden");
+        }, SOS_ARM_MS);
+        return;
+      }
+      clearTimeout(sosArmTimer);
+      sosArmato = false;
+      sosArmHint.classList.add("hidden");
       showStatus("", "");
       backdrop.classList.add("active");
     });
