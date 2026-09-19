@@ -137,18 +137,20 @@
     if (!list || !summary) return;
 
     if (!isToday) {
-      summary.textContent = "Aperto ora — vale solo per la data di oggi";
-      list.innerHTML = `<div class="aperto-ora-empty">Stai guardando un'altra data. Tocca «Oggi» in alto per vedere cosa è aperto in questo momento.</div>`;
+      summary.textContent = "Aperto oggi — vale solo per la data di oggi";
+      list.innerHTML = `<div class="aperto-ora-empty">Stai guardando un'altra data. Tocca «Oggi» in alto per vedere cosa è aperto oggi.</div>`;
       return;
     }
 
-    const aperte = results.filter(r =>
-      r.category.windows && r.category.windows.length > 0 && r.nowOpen && isOpenNow(r));
+    // Tutto ciò che è cacciabile in un momento qualsiasi della giornata odierna,
+    // non solo nell'istante esatto in cui si guarda il telefono: gli orari
+    // precisi restano indicati su ogni singola scheda.
+    const aperte = results.filter(r => r.category.windows && r.category.windows.length > 0 && isOpenNow(r));
 
-    summary.textContent = aperte.length === 0 ? "Aperto ora — nessuna al momento" : `Aperto ora (${aperte.length})`;
+    summary.textContent = aperte.length === 0 ? "Aperto oggi — nessuna categoria" : `Aperto oggi (${aperte.length})`;
 
     if (aperte.length === 0) {
-      list.innerHTML = `<div class="aperto-ora-empty">Nessuna specie è cacciabile in questo preciso momento.</div>`;
+      list.innerHTML = `<div class="aperto-ora-empty">Nessuna specie è cacciabile oggi.</div>`;
       return;
     }
 
