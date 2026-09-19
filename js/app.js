@@ -12,6 +12,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.9", text: "Puoi allegare o scattare una foto a ogni abbattimento (compressa e salvata solo sul telefono), rivederla nel registro, e ora ogni abbattimento si pu\u00f2 anche modificare (non solo eliminare). L'esportazione del registro chiede se includere le foto." },
     { v: "3.8", text: "Nuova scheda \u00abImpostazioni\u00bb (icona a ingranaggio): regolamento in vigore, aggiornamento del regolamento, esporta/importa registro e i miei fucili sono ora qui invece che in Info, che resta per le sole letture (cosa fa l'app, cronologia aggiornamenti)." },
     { v: "3.7", text: "Nel modulo di registrazione, l'arma usata mostra ora solo i fucili adatti al tipo di caccia (canna rigata in caccia alta, canna liscia in bassa e acquatica). I campi munizione e peso della palla, che valgono solo per la carabina, compaiono solo in caccia alta." },
     { v: "3.6", text: "Nuova sezione \u00abI miei fucili\u00bb in Info: registra arma e calibro una volta sola, sia a canna rigata sia a canna liscia \u2014 sovrapposto, doppietta o semiautomatico. In fase di registrazione di un abbattimento puoi indicare l'arma usata, il tipo di munizione e il peso della palla (grani o grammi), tutto facoltativo. Le statistiche mostrano anche il riepilogo per arma." },
@@ -337,6 +338,18 @@
 
   // ---------- Vista REGISTRO ----------
 
+  // Carica le miniature dopo aver disegnato l'elenco: la lettura da IndexedDB
+  // è asincrona, quindi le schede compaiono subito e le foto un istante dopo.
+  async function caricaAnteprimeFoto(container) {
+    const imgs = container.querySelectorAll(".log-photo-thumb[data-photo-id]");
+    for (const img of imgs) {
+      try {
+        const blob = await Storage.getPhoto(img.dataset.photoId);
+        if (blob) img.src = URL.createObjectURL(blob);
+      } catch (e) { /* miniatura non disponibile, il resto della riga resta comunque */ }
+    }
+  }
+
   function renderRegistro() {
     const capsBox = document.getElementById("capsSummary");
     const log = Storage.getLog();
@@ -360,16 +373,18 @@
     for (const k of sorted) {
       const cat = regData.categories.find(c => c.id === k.categoryId);
 
-      // Dettagli facoltativi (arma, munizione, peso), mostrati solo se presenti.
+      // Dettagli facoltativi (foto, arma, munizione, peso), mostrati solo se presenti.
       const righeDettagli = [];
+      if (k.photoId) righeDettagli.push(`<div class="log-photo-row"><img class="log-photo-thumb" data-photo-id="${k.photoId}" alt="Foto dell'abbattimento"></div>`);
       if (k.gunId) {
         const gun = guns.find(g => g.id === k.gunId);
         righeDettagli.push(`<div><b>Arma:</b> ${gun ? (gun.name ? gun.name + " — " : "") + descrizioneFucile(gun) : "(eliminata dall'elenco)"}</div>`);
       }
       if (k.ammoType) righeDettagli.push(`<div><b>Munizione:</b> ${k.ammoType}</div>`);
       if (k.bulletWeight) righeDettagli.push(`<div><b>Peso palla:</b> ${k.bulletWeight} ${k.bulletWeightUnit === "gr" ? "grani" : "grammi"}</div>`);
+      const etichetta = k.photoId ? (righeDettagli.length > 1 ? "Foto, arma e munizione" : "Foto") : "Arma e munizione";
       const dettagli = righeDettagli.length > 0
-        ? `<details class="log-extra"><summary>Arma e munizione</summary>${righeDettagli.join("")}</details>`
+        ? `<details class="log-extra"><summary>${etichetta}</summary>${righeDettagli.join("")}</details>`
         : "";
 
       const item = document.createElement("div");
@@ -381,10 +396,15 @@
           <div class="cat">${cat ? cat.categoryLabel : ""}${k.note ? " — " + k.note : ""}</div>
           ${dettagli}
         </div>
-        <button class="del">Elimina</button>
+        <div class="log-actions">
+          <button class="edit">Modifica</button>
+          <button class="del">Elimina</button>
+        </div>
       `;
+      item.querySelector(".edit").addEventListener("click", () => openModalForEdit(k.id));
       item.querySelector(".del").addEventListener("click", async () => {
         if (await showConfirm("Eliminare questo abbattimento dal registro?")) {
+          if (k.photoId) Storage.deletePhoto(k.photoId);
           Storage.deleteKill(k.id);
           renderRegistro();
           renderOggi();
@@ -393,6 +413,7 @@
       });
       listEl.appendChild(item);
     }
+    caricaAnteprimeFoto(listEl);
   }
 
   function descrizioneFucile(g) {
@@ -898,7 +919,93 @@
     if (preselectId) sel.value = preselectId;
   }
 
+  // ---------- Foto dell'abbattimento ----------
+  // Stato del modulo di registrazione: se si sta modificando un abbattimento
+  // esistente (editingKillId), e la foto scelta/rimossa in questa sessione.
+  let editingKillId = null;
+  let currentPhotoBlob = null;
+  let currentPhotoRemoved = false;
+
+  // Ridimensiona e comprime la foto prima di salvarla: le foto dirette dalla
+  // fotocamera possono pesare diversi MB, troppo per tenerne più di una
+  // manciata sul telefono. Restano comunque ben leggibili per rivedere il capo.
+  function comprimiImmagine(file, maxLato = 1280, qualita = 0.72) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > height && width > maxLato) { height = Math.round(height * maxLato / width); width = maxLato; }
+        else if (height > maxLato) { width = Math.round(width * maxLato / height); height = maxLato; }
+        const canvas = document.createElement("canvas");
+        canvas.width = width; canvas.height = height;
+        canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+        canvas.toBlob((blob) => {
+          URL.revokeObjectURL(url);
+          if (blob) resolve(blob); else reject(new Error("Compressione non riuscita"));
+        }, "image/jpeg", qualita);
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Immagine non valida")); };
+      img.src = url;
+    });
+  }
+
+  function nascondiAnteprimaFoto() {
+    const img = document.getElementById("modalPhotoPreview");
+    if (img.src && img.src.startsWith("blob:")) URL.revokeObjectURL(img.src);
+    img.src = "";
+    document.getElementById("modalPhotoPreviewWrap").hidden = true;
+    document.getElementById("modalPhotoAddBtn").hidden = false;
+  }
+
+  function mostraAnteprimaFoto(blob) {
+    const img = document.getElementById("modalPhotoPreview");
+    if (img.src && img.src.startsWith("blob:")) URL.revokeObjectURL(img.src);
+    img.src = URL.createObjectURL(blob);
+    document.getElementById("modalPhotoPreviewWrap").hidden = false;
+    document.getElementById("modalPhotoAddBtn").hidden = true;
+  }
+
+  function resetPhotoUI() {
+    currentPhotoBlob = null;
+    currentPhotoRemoved = false;
+    nascondiAnteprimaFoto();
+    document.getElementById("modalPhotoStatus").hidden = true;
+  }
+
+  function setupPhoto() {
+    const apri = () => document.getElementById("modalPhotoInput").click();
+    document.getElementById("modalPhotoAddBtn").addEventListener("click", apri);
+    document.getElementById("modalPhotoChangeBtn").addEventListener("click", apri);
+
+    document.getElementById("modalPhotoRemoveBtn").addEventListener("click", () => {
+      currentPhotoBlob = null;
+      currentPhotoRemoved = true;
+      nascondiAnteprimaFoto();
+    });
+
+    document.getElementById("modalPhotoInput").addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      e.target.value = "";
+      if (!file) return;
+      const status = document.getElementById("modalPhotoStatus");
+      status.hidden = false;
+      status.textContent = "Sto preparando la foto…";
+      try {
+        const blob = await comprimiImmagine(file);
+        currentPhotoBlob = blob;
+        currentPhotoRemoved = false;
+        mostraAnteprimaFoto(blob);
+        status.hidden = true;
+      } catch (err) {
+        status.textContent = "Non sono riuscito a leggere questa immagine. Riprova con un'altra foto.";
+      }
+    });
+  }
+
   function openModal(preselectId) {
+    editingKillId = null;
+    resetPhotoUI();
     populateModalCategories(preselectId);
     document.getElementById("modalDate").value = RulesEngine.toISO(selectedDate);
     document.getElementById("modalNote").value = "";
@@ -924,11 +1031,50 @@
     document.getElementById("modalBackdrop").classList.add("active");
   }
 
+  // Riapre il modulo già compilato per correggere un abbattimento esistente:
+  // specie, arma, note e foto comprese. Al salvataggio aggiorna la voce
+  // invece di crearne una nuova.
+  async function openModalForEdit(killId) {
+    const k = Storage.getLog().find(x => x.id === killId);
+    if (!k) return;
+    editingKillId = killId;
+
+    populateModalCategories(k.categoryId);
+    document.getElementById("modalTitle").textContent = "Modifica abbattimento";
+    document.getElementById("modalCategory").value = k.categoryId;
+    document.getElementById("modalDate").value = k.date;
+    document.getElementById("modalNote").value = k.note || "";
+
+    const huntType = huntTypeDelModulo(k.categoryId);
+    const gunsAdatti = popolaSelectArmi(huntType);
+    const hasGuns = gunsAdatti.length > 0;
+    document.getElementById("modalGunFieldWrap").hidden = !hasGuns;
+    document.getElementById("modalGunSuggest").hidden = hasGuns;
+    document.getElementById("modalGunManageLink").textContent =
+      hasGuns ? "Gestisci i miei fucili →" : "+ Aggiungi il tuo primo fucile →";
+    document.getElementById("modalGun").value = k.gunId || "";
+
+    document.getElementById("modalBulletFields").hidden = huntType !== "alta";
+    document.getElementById("modalAmmoType").value = k.ammoType || "";
+    document.getElementById("modalBulletWeight").value = k.bulletWeight != null ? k.bulletWeight : "";
+    document.getElementById("modalBulletWeightUnit").value = k.bulletWeightUnit || "g";
+
+    resetPhotoUI();
+    if (k.photoId) {
+      try {
+        const blob = await Storage.getPhoto(k.photoId);
+        if (blob) mostraAnteprimaFoto(blob);
+      } catch (e) { /* la foto non si carica: si può comunque continuare */ }
+    }
+
+    document.getElementById("modalBackdrop").classList.add("active");
+  }
+
   function closeModal() {
     document.getElementById("modalBackdrop").classList.remove("active");
   }
 
-  function saveModal() {
+  async function saveModal() {
     const categoryId = document.getElementById("modalCategory").value;
     const date = document.getElementById("modalDate").value;
     const note = document.getElementById("modalNote").value.trim();
@@ -942,7 +1088,30 @@
     const bulletWeightRaw = bulletFieldsVisibili ? document.getElementById("modalBulletWeight").value : "";
     const bulletWeight = bulletWeightRaw ? parseFloat(bulletWeightRaw) : null;
     const bulletWeightUnit = document.getElementById("modalBulletWeightUnit").value;
-    Storage.addKill({ categoryId, date, note, gunId, ammoType, bulletWeight, bulletWeightUnit });
+
+    const entry = { categoryId, date, note, gunId, ammoType, bulletWeight, bulletWeightUnit };
+
+    // Foto: si tocca IndexedDB solo se qualcosa è davvero cambiato in questa
+    // sessione del modulo, per non riscrivere inutilmente una foto invariata.
+    const existingPhotoId = editingKillId
+      ? (Storage.getLog().find(k => k.id === editingKillId) || {}).photoId
+      : null;
+
+    if (currentPhotoBlob) {
+      const photoId = existingPhotoId || ("p_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7));
+      await Storage.savePhoto(photoId, currentPhotoBlob);
+      entry.photoId = photoId;
+    } else if (currentPhotoRemoved && existingPhotoId) {
+      await Storage.deletePhoto(existingPhotoId);
+      entry.photoId = null;
+    }
+
+    if (editingKillId) {
+      Storage.updateKill(editingKillId, entry);
+    } else {
+      Storage.addKill(entry);
+    }
+
     if (!document.getElementById("registroStatistiche").classList.contains("hidden")) renderStatistiche();
     closeModal();
     renderOggi();
@@ -1191,9 +1360,11 @@
         const year = String(regData.regulationYear || "");
         const otherYear = year ? toAdd.filter(k => !k.date.startsWith(year)).length : 0;
         const unknown = toAdd.filter(k => !regData.categories.some(c => c.id === k.categoryId)).length;
+        const conFoto = toAdd.filter(k => k.photoDataUrl).length;
 
         let msg = `Abbattimenti nel file: ${valid.length}\nNuovi da aggiungere: ${toAdd.length}`;
         if (duplicates) msg += `\nGià presenti (saltati): ${duplicates}`;
+        if (conFoto) msg += `\nCon foto: ${conFoto}`;
         if (otherYear) msg += `\n\nATTENZIONE — con date fuori dal ${year}: ${otherYear}. Conterebbero comunque nelle quote di questa stagione.`;
         if (unknown) msg += `\nCategorie non presenti nel regolamento attuale: ${unknown}`;
         if (invalid) msg += `\nRighe non valide (ignorate): ${invalid}`;
@@ -1202,13 +1373,29 @@
 
         const now = new Date().toISOString();
         for (const k of toAdd) {
-          log.push({
+          const entry = {
             id: k.id || "k_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7),
             categoryId: k.categoryId,
             date: k.date,
             note: typeof k.note === "string" ? k.note : "",
             createdAt: typeof k.createdAt === "string" ? k.createdAt : now,
-          });
+            // Il fucile è un elenco personale di questo telefono: un id importato da
+            // un altro telefono non corrisponderebbe a nessun fucile qui, quindi non
+            // si riporta. Munizione e peso invece sono dati autonomi e si conservano.
+            gunId: null,
+            ammoType: typeof k.ammoType === "string" ? k.ammoType : "",
+            bulletWeight: typeof k.bulletWeight === "number" ? k.bulletWeight : null,
+            bulletWeightUnit: k.bulletWeightUnit === "gr" ? "gr" : "g",
+          };
+          if (k.photoDataUrl) {
+            try {
+              const blob = await (await fetch(k.photoDataUrl)).blob();
+              const photoId = "p_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7);
+              await Storage.savePhoto(photoId, blob);
+              entry.photoId = photoId;
+            } catch (e) { /* la foto non si importa, il resto dell'abbattimento sì */ }
+          }
+          log.push(entry);
         }
         Storage.saveLog(log);
         renderRegistro();
@@ -1225,11 +1412,46 @@
     setupRegistroSubtabs();
     setupSOS();
     setupGuns();
+    setupPhoto();
     renderGunsList();
 
     document.getElementById("exportLogBtn").addEventListener("click", () => {
+      document.getElementById("exportIncludiFoto").checked = true;
+      document.getElementById("exportOptionsBackdrop").classList.add("active");
+    });
+
+    document.getElementById("exportOptionsCancel").addEventListener("click", () => {
+      document.getElementById("exportOptionsBackdrop").classList.remove("active");
+    });
+
+    document.getElementById("exportOptionsConfirm").addEventListener("click", async () => {
+      const includiFoto = document.getElementById("exportIncludiFoto").checked;
+      document.getElementById("exportOptionsBackdrop").classList.remove("active");
+
       const log = Storage.getLog();
-      const blob = new Blob([JSON.stringify(log, null, 2)], { type: "application/json" });
+      let daEsportare = log;
+      if (includiFoto) {
+        daEsportare = await Promise.all(log.map(async (k) => {
+          if (!k.photoId) return k;
+          try {
+            const blob = await Storage.getPhoto(k.photoId);
+            if (!blob) return k;
+            const photoDataUrl = await new Promise((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(reader.result);
+              reader.onerror = () => reject(reader.error);
+              reader.readAsDataURL(blob);
+            });
+            return { ...k, photoDataUrl };
+          } catch (e) {
+            return k; // se la foto non si legge, il resto dell'abbattimento si esporta comunque
+          }
+        }));
+      } else {
+        daEsportare = log.map(({ photoId, ...resto }) => resto);
+      }
+
+      const blob = new Blob([JSON.stringify(daEsportare, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;

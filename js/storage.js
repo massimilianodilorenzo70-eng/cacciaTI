@@ -34,6 +34,16 @@ const Storage = (() => {
     saveLog(log);
   }
 
+  function updateKill(id, patch) {
+    const log = getLog();
+    const i = log.findIndex(k => k.id === id);
+    if (i === -1) return null;
+    log[i] = { ...log[i], ...patch, id: log[i].id, createdAt: log[i].createdAt };
+    log[i].editedAt = new Date().toISOString();
+    saveLog(log);
+    return log[i];
+  }
+
   function getCustomRegolamento() {
     try {
       const raw = localStorage.getItem(KEY_REGDATA);
@@ -89,11 +99,65 @@ const Storage = (() => {
     localStorage.setItem(KEY_DISCLAIMER_ACK, "1");
   }
 
+  // ---------- Foto degli abbattimenti (IndexedDB: localStorage è troppo
+  // piccolo per delle immagini; qui le foto restano comunque solo sul
+  // telefono, in un'area diversa pensata per file più grandi) ----------
+  const PHOTO_DB_NAME = "cacciaTI_photos";
+  const PHOTO_STORE = "photos";
+  let photoDbPromise = null;
+
+  function openPhotoDB() {
+    if (photoDbPromise) return photoDbPromise;
+    photoDbPromise = new Promise((resolve, reject) => {
+      const req = indexedDB.open(PHOTO_DB_NAME, 1);
+      req.onupgradeneeded = () => {
+        if (!req.result.objectStoreNames.contains(PHOTO_STORE)) {
+          req.result.createObjectStore(PHOTO_STORE);
+        }
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+    return photoDbPromise;
+  }
+
+  async function savePhoto(id, blob) {
+    const db = await openPhotoDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(PHOTO_STORE, "readwrite");
+      tx.objectStore(PHOTO_STORE).put(blob, id);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  async function getPhoto(id) {
+    if (!id) return null;
+    const db = await openPhotoDB();
+    return new Promise((resolve, reject) => {
+      const req = db.transaction(PHOTO_STORE, "readonly").objectStore(PHOTO_STORE).get(id);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  async function deletePhoto(id) {
+    if (!id) return;
+    const db = await openPhotoDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(PHOTO_STORE, "readwrite");
+      tx.objectStore(PHOTO_STORE).delete(id);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
   return {
-    getLog, saveLog, addKill, deleteKill,
+    getLog, saveLog, addKill, updateKill, deleteKill,
     getCustomRegolamento, setCustomRegolamento, clearCustomRegolamento,
     getPrefs, savePrefs,
     getGuns, saveGuns, addGun, deleteGun,
+    savePhoto, getPhoto, deletePhoto,
     hasAckedDisclaimer, setAckedDisclaimer,
   };
 })();
