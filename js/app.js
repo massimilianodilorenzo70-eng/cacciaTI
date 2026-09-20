@@ -347,7 +347,13 @@
     for (const img of imgs) {
       try {
         const blob = await Storage.getPhoto(img.dataset.photoId);
-        if (blob) img.src = URL.createObjectURL(blob);
+        if (blob) {
+          img.src = URL.createObjectURL(blob);
+          img.addEventListener("click", () => {
+            document.getElementById("photoLightboxImg").src = img.src;
+            document.getElementById("photoLightbox").classList.add("active");
+          });
+        }
       } catch (e) { /* miniatura non disponibile, il resto della riga resta comunque */ }
     }
   }
@@ -1436,6 +1442,9 @@
     setupSOS();
     setupGuns();
     setupPhoto();
+    document.getElementById("photoLightbox").addEventListener("click", () => {
+      document.getElementById("photoLightbox").classList.remove("active");
+    });
     renderGunsList();
 
     document.getElementById("exportLogBtn").addEventListener("click", () => {
