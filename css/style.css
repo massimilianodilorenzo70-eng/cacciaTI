@@ -525,6 +525,20 @@ nav.tabbar button.active { color: var(--forest); font-weight: 600; }
   max-height: 220px;
   border-radius: 8px;
   border: 1px solid var(--line);
+  cursor: pointer;
+}
+
+.lightbox-backdrop {
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 14, 8, 0.92);
+}
+.lightbox-img {
+  max-width: 92vw;
+  max-height: 88vh;
+  object-fit: contain;
+  border-radius: 10px;
+  display: block;
 }
 
 .modal-photo-preview {
