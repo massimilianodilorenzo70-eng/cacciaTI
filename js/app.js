@@ -13,6 +13,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.19", text: "Quando l'app si aggiorna a una versione nuova, il numero in alto lampeggia quattro volte per farlo notare, poi si ferma da solo." },
     { v: "3.18", text: "L'esportazione del registro include ora anche i tuoi fucili: importando il file su un altro telefono, l'abbinamento \u00abquale arma hai usato\u00bb su ogni abbattimento resta intatto invece di andare perso. Compatibile con i file esportati in precedenza." },
     { v: "3.17", text: "L'anteprima del video dimostrativo in Info era troppo grande (allungata dalle proporzioni verticali del video); ridotta a una vera miniatura, con il pulsante di schermo intero comunque disponibile durante la riproduzione." },
     { v: "3.16", text: "Aggiunto il video dimostrativo nella scheda Info, con un'anteprima cliccabile subito dopo la descrizione iniziale. Si scarica solo quando lo tocchi, non appesantisce l'installazione dell'app." },
@@ -1599,7 +1600,25 @@
         const channel = new MessageChannel();
         channel.port1.onmessage = (e) => {
           const m = String(e.data || "").match(/v\d+(\.\d+)*$/);
-          if (m) document.getElementById("appVersion").textContent = m[0];
+          if (!m) return;
+          const versionEl = document.getElementById("appVersion");
+          versionEl.textContent = m[0];
+
+          // Se l'app è appena stata aggiornata (versione diversa dall'ultima
+          // vista su questo telefono), il numero lampeggia per farlo notare.
+          // Non lampeggia al primissimo avvio in assoluto, quando non c'è
+          // ancora nessuna versione precedente salvata con cui confrontare.
+          const KEY = "cacciaTI_last_seen_version";
+          const precedente = localStorage.getItem(KEY);
+          if (precedente && precedente !== m[0]) {
+            versionEl.classList.remove("version-blink");
+            void versionEl.offsetWidth; // forza il riavvio dell'animazione
+            versionEl.classList.add("version-blink");
+            versionEl.addEventListener("animationend", () => {
+              versionEl.classList.remove("version-blink");
+            }, { once: true });
+          }
+          localStorage.setItem(KEY, m[0]);
         };
         reg.active.postMessage({ type: "GET_VERSION" }, [channel.port2]);
       });
