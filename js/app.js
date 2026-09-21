@@ -1602,7 +1602,11 @@
       }
       const testo = JSON.stringify({ abbattimenti: daEsportare, fucili: Storage.getGuns() }, null, 2);
       const nomeFile = `cacciaTI_registro_${RulesEngine.toISO(new Date())}.json`;
-      return new File([testo], nomeFile, { type: "application/json" });
+      // "text/plain" invece di "application/json": Chrome per Android accetta in
+      // condivisione solo alcuni tipi di file (audio, immagini, pdf, video, testo),
+      // e application/json non è tra questi — veniva rifiutato a prescindere dai
+      // tempi. Il contenuto resta lo stesso file JSON, con lo stesso nome ".json".
+      return new File([testo], nomeFile, { type: "text/plain" });
     }
 
     // Segna che un backup è stato fatto ora, per il promemoria più sotto.
