@@ -13,6 +13,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.17", text: "L'anteprima del video dimostrativo in Info era troppo grande (allungata dalle proporzioni verticali del video); ridotta a una vera miniatura, con il pulsante di schermo intero comunque disponibile durante la riproduzione." },
     { v: "3.16", text: "Aggiunto il video dimostrativo nella scheda Info, con un'anteprima cliccabile subito dopo la descrizione iniziale. Si scarica solo quando lo tocchi, non appesantisce l'installazione dell'app." },
     { v: "3.15", text: "La sottoscheda \u00abStagione in corso\u00bb si chiama ora \u00abSettembrina\u00bb (il nome tradizionale ticinese), per non creare confusione a novembre quando anche la tardo autunnale sar\u00e0 \u00abin corso\u00bb." },
     { v: "3.14", text: "Il messaggio \u00abnessuna categoria aperta\u00bb ora nomina la sottoscheda giusta (caccia tardo autunnale o invernale al cinghiale) invece di dire sempre \u00abcaccia alta\u00bb. Le note delle due caccia non ancora regolamentate spiegano meglio la situazione e invitano a ricontrollare anche qui in app, oltre che sul sito ufficiale." },
