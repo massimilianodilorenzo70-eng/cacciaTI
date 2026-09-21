@@ -13,6 +13,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.15", text: "La sottoscheda \u00abStagione in corso\u00bb si chiama ora \u00abSettembrina\u00bb (il nome tradizionale ticinese), per non creare confusione a novembre quando anche la tardo autunnale sar\u00e0 \u00abin corso\u00bb." },
     { v: "3.14", text: "Il messaggio \u00abnessuna categoria aperta\u00bb ora nomina la sottoscheda giusta (caccia tardo autunnale o invernale al cinghiale) invece di dire sempre \u00abcaccia alta\u00bb. Le note delle due caccia non ancora regolamentate spiegano meglio la situazione e invitano a ricontrollare anche qui in app, oltre che sul sito ufficiale." },
     { v: "3.13", text: "In Caccia alta, la caccia tardo autunnale e la caccia invernale al cinghiale hanno ora una sottoscheda propria (accanto a \u00abStagione in corso\u00bb), invece di comparire mescolate nell'elenco principale." },
     { v: "3.12", text: "Aggiunte in caccia alta le voci per la caccia tardo autunnale (cervo, capriolo, volpe) e per la caccia invernale al cinghiale, con l'avviso che il regolamento specifico di quest'anno non è ancora stato pubblicato dal Cantone." },
@@ -238,6 +239,7 @@
     if (!anyOpen) {
       const nomeSezione = selectedHunt === "alta" && altaSubView === "tardo" ? "caccia tardo autunnale"
         : selectedHunt === "alta" && altaSubView === "invernale" ? "caccia invernale al cinghiale"
+        : selectedHunt === "alta" ? "caccia settembrina"
         : HUNT_LABELS[selectedHunt].toLowerCase();
       const banner = document.createElement("div");
       banner.className = "info-box";
