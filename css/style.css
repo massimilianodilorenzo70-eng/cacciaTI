@@ -738,8 +738,9 @@ nav.tabbar button.active { color: var(--forest); font-weight: 600; }
 
 .demo-video {
   display: block;
-  width: 68%;
-  max-width: 260px;
+  width: auto;
+  height: 200px;
+  max-width: 100%;
   margin: 6px auto 4px auto;
   border-radius: 8px;
   background: #000;
