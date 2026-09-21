@@ -13,6 +13,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.26", text: "L'app controllava se c'era un aggiornamento nuovo solo quando tornava in primo piano dopo essere stata in sospeso, non alla prima apertura. Ora lo controlla subito ogni volta che apri l'app." },
     { v: "3.25", text: "Tolto il pulsante \u00abCondividi\u00bb nell'esportazione: la condivisione diretta dava errore (\u00abPermission denied\u00bb) su più dispositivi senza una causa risolvibile lato app. Resta \u00abEsporta\u00bb, che scarica il file normalmente." },
     { v: "3.23", text: "Un promemoria in Impostazioni avvisa quando non fai un backup da un po'. Le scritte ricordano anche che il file include sempre pure i fucili." },
     { v: "3.22", text: "Scegliendo una data diversa da oggi, le schede mostravano comunque \u00abAperta ora\u00bb, creando confusione su quale giorno si riferisse. Ora, guardando un'altra data, dicono chiaramente \u00abAperta il [quella data]\u00bb; su oggi resta invariato." },
@@ -1677,6 +1678,12 @@
       });
 
       navigator.serviceWorker.register("sw.js").then((reg) => {
+        // Controlla un aggiornamento appena l'app si apre (non solo quando
+        // torna in primo piano dopo essere stata in sospeso): così un
+        // aggiornamento nuovo si vede già alla prima apertura, invece di
+        // aspettare che l'app venga messa in background e ripresa.
+        reg.update().catch(() => {});
+
         // L'app installata spesso viene "ripresa" dallo sfondo senza ricaricarsi:
         // quando torna in primo piano, controlla se è uscita una versione nuova.
         document.addEventListener("visibilitychange", () => {
