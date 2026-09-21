@@ -13,6 +13,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.18", text: "L'esportazione del registro include ora anche i tuoi fucili: importando il file su un altro telefono, l'abbinamento \u00abquale arma hai usato\u00bb su ogni abbattimento resta intatto invece di andare perso. Compatibile con i file esportati in precedenza." },
     { v: "3.17", text: "L'anteprima del video dimostrativo in Info era troppo grande (allungata dalle proporzioni verticali del video); ridotta a una vera miniatura, con il pulsante di schermo intero comunque disponibile durante la riproduzione." },
     { v: "3.16", text: "Aggiunto il video dimostrativo nella scheda Info, con un'anteprima cliccabile subito dopo la descrizione iniziale. Si scarica solo quando lo tocchi, non appesantisce l'installazione dell'app." },
     { v: "3.15", text: "La sottoscheda \u00abStagione in corso\u00bb si chiama ora \u00abSettembrina\u00bb (il nome tradizionale ticinese), per non creare confusione a novembre quando anche la tardo autunnale sar\u00e0 \u00abin corso\u00bb." },
@@ -1391,7 +1392,12 @@
       const file = e.target.files[0];
       if (!file) return;
       try {
-        const parsed = JSON.parse(await file.text());
+        const parsedRaw = JSON.parse(await file.text());
+        // Formato nuovo: { abbattimenti: [...], fucili: [...] }. Formato vecchio
+        // (file esportati prima di questa funzione): un semplice array di abbattimenti.
+        const isNewFormat = parsedRaw && !Array.isArray(parsedRaw) && Array.isArray(parsedRaw.abbattimenti);
+        const parsed = isNewFormat ? parsedRaw.abbattimenti : parsedRaw;
+        const gunsNelFile = isNewFormat && Array.isArray(parsedRaw.fucili) ? parsedRaw.fucili : [];
         if (!Array.isArray(parsed)) throw new Error("il file non contiene un registro abbattimenti");
 
         const isValid = (k) => k && typeof k.categoryId === "string" && /^\d{4}-\d{2}-\d{2}$/.test(k.date || "");
@@ -1413,7 +1419,16 @@
         }
         const duplicates = valid.length - toAdd.length;
 
-        if (toAdd.length === 0) {
+        // Fucili nel file: aggiunge solo quelli il cui id non esiste già qui
+        // (capita se importi due volte lo stesso file, o lo stesso fucile è
+        // già stato ricreato a mano). Mantenendo l'id originale, l'abbinamento
+        // "quale arma hai usato" sugli abbattimenti importati resta intatto.
+        const gunsEsistenti = Storage.getGuns();
+        const gunIdEsistenti = new Set(gunsEsistenti.map(g => g.id));
+        const nuoviFucili = gunsNelFile.filter(g => g && typeof g.id === "string" && !gunIdEsistenti.has(g.id));
+        const gunIdValidi = new Set([...gunIdEsistenti, ...nuoviFucili.map(g => g.id)]);
+
+        if (toAdd.length === 0 && nuoviFucili.length === 0) {
           await showAlert(`Nessun abbattimento nuovo: tutti quelli del file (${duplicates}) sono già nel registro.`);
           return;
         }
@@ -1426,11 +1441,16 @@
         let msg = `Abbattimenti nel file: ${valid.length}\nNuovi da aggiungere: ${toAdd.length}`;
         if (duplicates) msg += `\nGià presenti (saltati): ${duplicates}`;
         if (conFoto) msg += `\nCon foto: ${conFoto}`;
+        if (nuoviFucili.length) msg += `\nFucili nuovi da importare: ${nuoviFucili.length}`;
         if (otherYear) msg += `\n\nATTENZIONE — con date fuori dal ${year}: ${otherYear}. Conterebbero comunque nelle quote di questa stagione.`;
         if (unknown) msg += `\nCategorie non presenti nel regolamento attuale: ${unknown}`;
         if (invalid) msg += `\nRighe non valide (ignorate): ${invalid}`;
-        msg += "\n\nAggiungerli al registro?";
+        msg += "\n\nAggiungere al registro?";
         if (!(await showConfirm(msg))) return;
+
+        if (nuoviFucili.length) {
+          Storage.saveGuns([...gunsEsistenti, ...nuoviFucili]);
+        }
 
         const now = new Date().toISOString();
         for (const k of toAdd) {
@@ -1440,10 +1460,10 @@
             date: k.date,
             note: typeof k.note === "string" ? k.note : "",
             createdAt: typeof k.createdAt === "string" ? k.createdAt : now,
-            // Il fucile è un elenco personale di questo telefono: un id importato da
-            // un altro telefono non corrisponderebbe a nessun fucile qui, quindi non
-            // si riporta. Munizione e peso invece sono dati autonomi e si conservano.
-            gunId: null,
+            // Se il fucile usato esiste qui (già presente, o appena importato
+            // insieme a questo registro), il collegamento si mantiene;
+            // altrimenti resta vuoto, come già faceva prima.
+            gunId: (k.gunId && gunIdValidi.has(k.gunId)) ? k.gunId : null,
             ammoType: typeof k.ammoType === "string" ? k.ammoType : "",
             bulletWeight: typeof k.bulletWeight === "number" ? k.bulletWeight : null,
             bulletWeightUnit: k.bulletWeightUnit === "gr" ? "gr" : "g",
@@ -1461,8 +1481,11 @@
         Storage.saveLog(log);
         renderRegistro();
         renderOggi();
+        renderGunsList();
         if (!document.getElementById("registroStatistiche").classList.contains("hidden")) renderStatistiche();
-        await showAlert(`Abbattimenti aggiunti al registro: ${toAdd.length}`);
+        let riepilogo = `Abbattimenti aggiunti al registro: ${toAdd.length}`;
+        if (nuoviFucili.length) riepilogo += `\nFucili aggiunti: ${nuoviFucili.length}`;
+        await showAlert(riepilogo);
       } catch (err) {
         await showAlert("File non valido: " + err.message);
       } finally {
@@ -1547,7 +1570,7 @@
         daEsportare = log.map(({ photoId, ...resto }) => resto);
       }
 
-      const blob = new Blob([JSON.stringify(daEsportare, null, 2)], { type: "application/json" });
+      const blob = new Blob([JSON.stringify({ abbattimenti: daEsportare, fucili: Storage.getGuns() }, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
