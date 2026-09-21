@@ -885,7 +885,7 @@ input[type="file"] { display: none; }
   gap: 8px;
   margin-top: 16px;
 }
-.modal-actions .btn { margin-bottom: 0; flex: 1; }
+.modal-actions .btn { margin-bottom: 0; }
 
 .changelog-box {
   border: 1px solid var(--line);
