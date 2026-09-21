@@ -13,8 +13,8 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
-    { v: "3.24", text: "Corretto il pulsante \u00abCondividi\u00bb nell'esportazione: preparando il file dopo il tocco, il permesso di condivisione del telefono a volte scadeva prima che partisse (\u00abPermission denied\u00bb). Ora il file viene preparato in anticipo, appena si apre il modulo." },
-    { v: "3.23", text: "Accanto a \u00abEsporta\u00bb ora c'\u00e8 anche \u00abCondividi\u00bb, che apre il menu nativo del telefono per mandare il backup dove preferisci (il tuo cloud, email, ecc.), senza passare dal download. Un promemoria in Impostazioni avvisa quando non fai un backup da un po'. Le scritte ricordano anche che il file include sempre pure i fucili." },
+    { v: "3.25", text: "Tolto il pulsante \u00abCondividi\u00bb nell'esportazione: la condivisione diretta dava errore (\u00abPermission denied\u00bb) su più dispositivi senza una causa risolvibile lato app. Resta \u00abEsporta\u00bb, che scarica il file normalmente." },
+    { v: "3.23", text: "Un promemoria in Impostazioni avvisa quando non fai un backup da un po'. Le scritte ricordano anche che il file include sempre pure i fucili." },
     { v: "3.22", text: "Scegliendo una data diversa da oggi, le schede mostravano comunque \u00abAperta ora\u00bb, creando confusione su quale giorno si riferisse. Ora, guardando un'altra data, dicono chiaramente \u00abAperta il [quella data]\u00bb; su oggi resta invariato." },
     { v: "3.21", text: "Corretto un difetto nella gestione delle foto: se il primo tentativo di accesso al loro archivio falliva, restava bloccato per tutta la sessione senza più riprovare. Ora un nuovo tentativo riparte da capo alla chiamata successiva." },
     { v: "3.20", text: "Il modulo di esportazione ora dice chiaramente che il file include anche i fucili, non solo gli abbattimenti." },
@@ -1602,11 +1602,7 @@
       }
       const testo = JSON.stringify({ abbattimenti: daEsportare, fucili: Storage.getGuns() }, null, 2);
       const nomeFile = `cacciaTI_registro_${RulesEngine.toISO(new Date())}.json`;
-      // "text/plain" invece di "application/json": Chrome per Android accetta in
-      // condivisione solo alcuni tipi di file (audio, immagini, pdf, video, testo),
-      // e application/json non è tra questi — veniva rifiutato a prescindere dai
-      // tempi. Il contenuto resta lo stesso file JSON, con lo stesso nome ".json".
-      return new File([testo], nomeFile, { type: "text/plain" });
+      return new File([testo], nomeFile, { type: "application/json" });
     }
 
     // Segna che un backup è stato fatto ora, per il promemoria più sotto.
@@ -1615,25 +1611,10 @@
       localStorage.setItem("cacciaTI_last_backup_count", String(Storage.getLog().length));
     }
 
-    // Preparo il file già mentre il modulo è aperto (non solo al tocco di
-    // "Condividi"): il permesso di condivisione del telefono dura solo
-    // pochissimo dal tocco dell'utente, e se nel frattempo si legge da
-    // IndexedDB (le foto) il permesso può scadere e la condivisione fallire
-    // con "Permission denied". Preparandolo prima, al tocco resta solo da
-    // chiamare subito navigator.share, senza altre attese in mezzo.
-    let filePronto = null;
-    function preparaFileEsportazione() {
-      filePronto = null;
-      costruisciFileBackup().then((f) => { filePronto = f; }).catch(() => { filePronto = null; });
-    }
-
     document.getElementById("exportLogBtn").addEventListener("click", () => {
       document.getElementById("exportIncludiFoto").checked = true;
       document.getElementById("exportOptionsBackdrop").classList.add("active");
-      preparaFileEsportazione();
     });
-
-    document.getElementById("exportIncludiFoto").addEventListener("change", preparaFileEsportazione);
 
     document.getElementById("exportOptionsCancel").addEventListener("click", () => {
       document.getElementById("exportOptionsBackdrop").classList.remove("active");
@@ -1641,7 +1622,7 @@
 
     document.getElementById("exportOptionsConfirm").addEventListener("click", async () => {
       document.getElementById("exportOptionsBackdrop").classList.remove("active");
-      const file = filePronto || await costruisciFileBackup();
+      const file = await costruisciFileBackup();
       const url = URL.createObjectURL(file);
       const a = document.createElement("a");
       a.href = url;
@@ -1650,34 +1631,6 @@
       URL.revokeObjectURL(url);
       segnaBackupFatto();
       aggiornaPromemoriaBackup();
-    });
-
-    document.getElementById("exportOptionsShare").addEventListener("click", async () => {
-      document.getElementById("exportOptionsBackdrop").classList.remove("active");
-      try {
-        // Se il file era già pronto (il caso normale), la chiamata a share
-        // parte subito, il più vicino possibile al tocco. Solo se per
-        // qualche motivo non fosse ancora pronto, lo si costruisce ora
-        // (più lento, e più a rischio che il permesso sia scaduto).
-        const file = filePronto || await costruisciFileBackup();
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          try {
-            await navigator.share({ files: [file], title: "Backup cacciaTI" });
-            segnaBackupFatto();
-            aggiornaPromemoriaBackup();
-          } catch (e) {
-            if (e && e.name !== "AbortError") {
-              // "AbortError" = l'utente ha semplicemente annullato la condivisione, non è un errore.
-              // Qualsiasi altro errore invece lo mostro, così non sembra che "non succeda niente".
-              await showAlert("La condivisione non è riuscita: " + (e.message || e.name || "errore sconosciuto") + ". Prova con \"Esporta\" per scaricare il file.");
-            }
-          }
-        } else {
-          await showAlert("La condivisione diretta non è supportata su questo browser. Usa \"Esporta\" per scaricare il file, e condividilo tu a mano.");
-        }
-      } catch (e) {
-        await showAlert("Non sono riuscito a preparare il file da condividere: " + (e.message || "errore sconosciuto") + ". Prova con \"Esporta\".");
-      }
     });
 
     renderOggi();
