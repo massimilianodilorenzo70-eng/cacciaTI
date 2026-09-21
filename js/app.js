@@ -1634,17 +1634,25 @@
 
     document.getElementById("exportOptionsShare").addEventListener("click", async () => {
       document.getElementById("exportOptionsBackdrop").classList.remove("active");
-      const file = await costruisciFileBackup();
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share({ files: [file], title: "Backup cacciaTI" });
-          segnaBackupFatto();
-          aggiornaPromemoriaBackup();
-        } catch (e) {
-          // l'utente ha annullato la condivisione: non è un errore, non faccio nulla
+      try {
+        const file = await costruisciFileBackup();
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({ files: [file], title: "Backup cacciaTI" });
+            segnaBackupFatto();
+            aggiornaPromemoriaBackup();
+          } catch (e) {
+            if (e && e.name !== "AbortError") {
+              // "AbortError" = l'utente ha semplicemente annullato la condivisione, non è un errore.
+              // Qualsiasi altro errore invece lo mostro, così non sembra che "non succeda niente".
+              await showAlert("La condivisione non è riuscita: " + (e.message || e.name || "errore sconosciuto") + ". Prova con \"Esporta\" per scaricare il file.");
+            }
+          }
+        } else {
+          await showAlert("La condivisione diretta non è supportata su questo browser. Usa \"Esporta\" per scaricare il file, e condividilo tu a mano.");
         }
-      } else {
-        await showAlert("La condivisione diretta non è supportata su questo browser. Usa \"Esporta\" per scaricare il file, e condividilo tu a mano.");
+      } catch (e) {
+        await showAlert("Non sono riuscito a preparare il file da condividere: " + (e.message || "errore sconosciuto") + ". Prova con \"Esporta\".");
       }
     });
 
