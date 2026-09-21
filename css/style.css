@@ -242,6 +242,7 @@ main {
   gap: 6px;
   margin-bottom: 12px;
 }
+.hunt-tabs[hidden] { display: none; }
 
 .hunt-tabs .subtab,
 .hunt-tabs .hunt-tab {
