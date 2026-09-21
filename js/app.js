@@ -5,6 +5,7 @@
   let selectedDate = new Date();
   let prefs = Storage.getPrefs();
   let selectedHunt = null; // 'alta' | 'bassa' | 'acquatica' — scelto dall'utente o dedotto alla prima apertura
+  let altaSubView = "stagione"; // 'stagione' | 'tardo' | 'invernale' — solo per Caccia alta
   let contingenteData = null; // dati ufficiali camoscio/capriolo, se disponibili
 
   const HUNT_LABELS = { alta: "Caccia alta", bassa: "Caccia bassa", acquatica: "Caccia acquatica" };
@@ -12,6 +13,8 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.13", text: "In Caccia alta, la caccia tardo autunnale e la caccia invernale al cinghiale hanno ora una sottoscheda propria (accanto a \u00abStagione in corso\u00bb), invece di comparire mescolate nell'elenco principale." },
+    { v: "3.12", text: "Aggiunte in caccia alta le voci per la caccia tardo autunnale (cervo, capriolo, volpe) e per la caccia invernale al cinghiale, con l'avviso che il regolamento specifico di quest'anno non è ancora stato pubblicato dal Cantone." },
     { v: "3.11", text: "Il pulsante SOS ora richiede due tocchi per aprirsi: al primo compare un avviso che invita a toccare di nuovo entro pochi secondi, per evitare aperture accidentali (in tasca, nello zaino)." },
     { v: "3.10", text: "Il pulsante per aggiungere una foto ora propone anche la galleria, non solo la fotocamera in diretta: utile per allegare una foto gi\u00e0 scattata, magari registrando l'abbattimento in un secondo momento. Corretta anche l'anteprima nel modulo di registrazione, che prima ritagliava l'immagine per riempire il riquadro: ora la mostra intera mantenendo le proporzioni originali." },
     { v: "3.9", text: "Puoi allegare o scattare una foto a ogni abbattimento (compressa e salvata solo sul telefono), rivederla nel registro, e ora ogni abbattimento si pu\u00f2 anche modificare (non solo eliminare). L'esportazione del registro chiede se includere le foto." },
@@ -180,6 +183,11 @@
     // La scelta "sotto i 400 mslm" riguarda solo gli orari di caccia alta
     const altitude = document.querySelector(".altitude-toggle");
     if (altitude) altitude.style.display = selectedHunt === "alta" ? "" : "none";
+
+    // Le sottoschede (tardo autunnale, invernale cinghiale) esistono solo dentro Caccia alta
+    const subTabs = document.getElementById("altaSubTabs");
+    subTabs.hidden = selectedHunt !== "alta";
+    subTabs.querySelectorAll(".subtab").forEach(b => b.classList.toggle("active", b.dataset.sub === altaSubView));
   }
 
   function renderOggi() {
@@ -202,9 +210,16 @@
 
     const query = (document.getElementById("searchInput").value || "").trim().toLowerCase();
 
-    let sectionResults = results.filter(r =>
-      r.category.huntType === selectedHunt && r.category.windows && r.category.windows.length > 0
-    );
+    let sectionResults = results.filter(r => r.category.huntType === selectedHunt);
+    if (selectedHunt === "alta") {
+      if (altaSubView === "tardo") {
+        sectionResults = sectionResults.filter(r => r.category.subCategory === "tardo");
+      } else if (altaSubView === "invernale") {
+        sectionResults = sectionResults.filter(r => r.category.subCategory === "invernale");
+      } else {
+        sectionResults = sectionResults.filter(r => !r.category.subCategory);
+      }
+    }
     if (query) {
       sectionResults = sectionResults.filter(r =>
         r.category.speciesLabel.toLowerCase().includes(query) ||
@@ -242,7 +257,8 @@
       // né sbloccata né "da verificare"): non la mostro, per non riempire la
       // pagina di schede tutte "Chiusa". Durante una ricerca invece resta
       // visibile comunque, perché lì l'intento è cercare proprio quella specie.
-      if (!query && !speciesList.some(isOpenNow)) continue;
+      const inSottoschedaSpeciale = selectedHunt === "alta" && altaSubView !== "stagione";
+      if (!query && !inSottoschedaSpeciale && !speciesList.some(isOpenNow)) continue;
 
       const list = speciesList
         .map((r, i) => ({ r, i }))
@@ -323,7 +339,7 @@
         <span class="status-pill ${st.cls}">${st.label}</span>
       </div>
       <div class="meta-row">
-        <span>Orario: ${r.hoursToday}</span>
+        <span>Orario: ${r.hoursToday || "da definire"}</span>
         ${r.remainingText ? `<span>${r.remainingText}</span>` : ""}
       </div>
       ${renderZoneBox(r.category)}
@@ -1305,6 +1321,14 @@
       const btn = e.target.closest(".hunt-tab");
       if (!btn) return;
       selectedHunt = btn.dataset.hunt;
+      altaSubView = "stagione"; // si riparte sempre dalla stagione in corso
+      renderOggi();
+    });
+
+    document.getElementById("altaSubTabs").addEventListener("click", (e) => {
+      const btn = e.target.closest(".subtab");
+      if (!btn) return;
+      altaSubView = btn.dataset.sub;
       renderOggi();
     });
 
