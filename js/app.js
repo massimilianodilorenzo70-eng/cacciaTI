@@ -13,6 +13,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.20", text: "Il modulo di esportazione ora dice chiaramente che il file include anche i fucili, non solo gli abbattimenti." },
     { v: "3.19", text: "Quando l'app si aggiorna a una versione nuova, il numero in alto lampeggia quattro volte per farlo notare, poi si ferma da solo." },
     { v: "3.18", text: "L'esportazione del registro include ora anche i tuoi fucili: importando il file su un altro telefono, l'abbinamento \u00abquale arma hai usato\u00bb su ogni abbattimento resta intatto invece di andare perso. Compatibile con i file esportati in precedenza." },
     { v: "3.17", text: "L'anteprima del video dimostrativo in Info era troppo grande (allungata dalle proporzioni verticali del video); ridotta a una vera miniatura, con il pulsante di schermo intero comunque disponibile durante la riproduzione." },
