@@ -1474,6 +1474,21 @@
     setupSOS();
     setupGuns();
     setupPhoto();
+
+    // Video dimostrativo in Info: schermo intero automatico all'avvio,
+    // e torna da sola alla miniatura quando il video finisce.
+    const demoVideo = document.querySelector(".demo-video");
+    if (demoVideo) {
+      demoVideo.addEventListener("play", () => {
+        if (demoVideo.requestFullscreen) demoVideo.requestFullscreen().catch(() => {});
+        else if (demoVideo.webkitEnterFullscreen) demoVideo.webkitEnterFullscreen(); // iPhone/Safari
+        else if (demoVideo.webkitRequestFullscreen) demoVideo.webkitRequestFullscreen();
+      });
+      demoVideo.addEventListener("ended", () => {
+        if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+        else if (demoVideo.webkitExitFullscreen) demoVideo.webkitExitFullscreen();
+      });
+    }
     document.getElementById("photoLightbox").addEventListener("click", () => {
       document.getElementById("photoLightbox").classList.remove("active");
     });
