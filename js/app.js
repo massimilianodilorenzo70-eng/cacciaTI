@@ -13,6 +13,8 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.22", text: "Scegliendo una data diversa da oggi, le schede mostravano comunque \u00abAperta ora\u00bb, creando confusione su quale giorno si riferisse. Ora, guardando un'altra data, dicono chiaramente \u00abAperta il [quella data]\u00bb; su oggi resta invariato." },
+    { v: "3.21", text: "Corretto un difetto nella gestione delle foto: se il primo tentativo di accesso al loro archivio falliva, restava bloccato per tutta la sessione senza più riprovare. Ora un nuovo tentativo riparte da capo alla chiamata successiva." },
     { v: "3.20", text: "Il modulo di esportazione ora dice chiaramente che il file include anche i fucili, non solo gli abbattimenti." },
     { v: "3.19", text: "Quando l'app si aggiorna a una versione nuova, il numero in alto lampeggia quattro volte per farlo notare, poi si ferma da solo." },
     { v: "3.18", text: "L'esportazione del registro include ora anche i tuoi fucili: importando il file su un altro telefono, l'abbinamento \u00abquale arma hai usato\u00bb su ogni abbattimento resta intatto invece di andare perso. Compatibile con i file esportati in precedenza." },
@@ -313,6 +315,12 @@
   }
 
   function statusFor(r) {
+    // Se la data scelta non è oggi, non esiste un "adesso" reale con cui
+    // confrontare l'orario: lo dico esplicitamente con la data invece di
+    // scrivere "ora", che altrimenti sembrerebbe riferirsi al momento attuale.
+    const isToday = RulesEngine.toISO(selectedDate) === RulesEngine.toISO(new Date());
+    const dataScelta = formatDateCH(RulesEngine.toISO(selectedDate));
+
     // Il contingente ufficiale chiuso prevale su tutto il resto: anche se il
     // regolamento direbbe che è ancora aperta, sul terreno non lo è più.
     if (contingenteChiuso(r.category)) {
@@ -326,10 +334,12 @@
     if (r.unlockManual) return { label: "Aperta — verifica", cls: "status-check", sub: r.category.unlockManualText };
     if (r.category.manualCheck) return { label: "Aperta — verifica", cls: "status-check" };
     if (r.unlockedBy) {
+      if (!isToday) return { label: `Sbloccata · aperta il ${dataScelta}`, cls: "status-unlocked" };
       return r.nowOpen
         ? { label: "Sbloccata · aperta ora", cls: "status-unlocked" }
         : { label: "Sbloccata · aperta oggi", cls: "status-unlocked", sub: "Fuori orario in questo momento" };
     }
+    if (!isToday) return { label: `Aperta il ${dataScelta}`, cls: "status-open" };
     if (r.nowOpen) return { label: "Aperta ora", cls: "status-open" };
     return { label: "Aperta oggi", cls: "status-open", sub: "Fuori orario in questo momento" };
   }
