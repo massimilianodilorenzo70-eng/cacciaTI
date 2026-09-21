@@ -1476,17 +1476,34 @@
     setupPhoto();
 
     // Video dimostrativo in Info: schermo intero automatico all'avvio,
-    // e torna da sola alla miniatura quando il video finisce.
+    // una X per chiuderlo prima che finisca, e torna da sola alla miniatura
+    // in ogni caso (fine naturale, X, tasto Indietro/Esc del telefono).
     const demoVideo = document.querySelector(".demo-video");
-    if (demoVideo) {
-      demoVideo.addEventListener("play", () => {
-        if (demoVideo.requestFullscreen) demoVideo.requestFullscreen().catch(() => {});
-        else if (demoVideo.webkitEnterFullscreen) demoVideo.webkitEnterFullscreen(); // iPhone/Safari
-        else if (demoVideo.webkitRequestFullscreen) demoVideo.webkitRequestFullscreen();
+    const demoWrap = document.querySelector(".demo-video-wrap");
+    const demoClose = document.querySelector(".demo-video-close");
+    if (demoVideo && demoWrap) {
+      demoVideo.addEventListener("playing", () => {
+        if (document.fullscreenElement) return; // già a schermo intero, non richiederlo di nuovo
+        try {
+          if (demoWrap.requestFullscreen) demoWrap.requestFullscreen().catch(() => {});
+          else if (demoVideo.webkitEnterFullscreen) demoVideo.webkitEnterFullscreen(); // iPhone/Safari: ha già un pulsante nativo per chiudere
+          else if (demoVideo.webkitRequestFullscreen) demoVideo.webkitRequestFullscreen();
+        } catch (e) { /* se lo schermo intero non parte, il video continua comunque a riprodursi normalmente */ }
       });
       demoVideo.addEventListener("ended", () => {
         if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
         else if (demoVideo.webkitExitFullscreen) demoVideo.webkitExitFullscreen();
+      });
+      if (demoClose) {
+        demoClose.addEventListener("click", () => {
+          if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+        });
+      }
+      // qualunque sia il modo in cui si esce dallo schermo intero (X, Esc,
+      // tasto Indietro, fine naturale), il video si ferma invece di
+      // continuare a riprodursi in piccolo sullo sfondo.
+      document.addEventListener("fullscreenchange", () => {
+        if (!document.fullscreenElement) demoVideo.pause();
       });
     }
     document.getElementById("photoLightbox").addEventListener("click", () => {
