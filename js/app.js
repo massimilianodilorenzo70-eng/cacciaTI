@@ -13,7 +13,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
-    { v: "3.23", text: "Accanto a \u00abEsporta\u00bb ora c'\u00e8 anche \u00abCondividi\u00bb, che apre il menu nativo del telefono per mandare il backup dove preferisci (il tuo cloud, email, ecc.), senza passare dal download. Un promemoria gentile in Impostazioni avvisa quando non fai un backup da un po'. Le scritte ricordano anche che il file include sempre pure i fucili." },
+    { v: "3.23", text: "Accanto a \u00abEsporta\u00bb ora c'\u00e8 anche \u00abCondividi\u00bb, che apre il menu nativo del telefono per mandare il backup dove preferisci (il tuo cloud, email, ecc.), senza passare dal download. Un promemoria in Impostazioni avvisa quando non fai un backup da un po'. Le scritte ricordano anche che il file include sempre pure i fucili." },
     { v: "3.22", text: "Scegliendo una data diversa da oggi, le schede mostravano comunque \u00abAperta ora\u00bb, creando confusione su quale giorno si riferisse. Ora, guardando un'altra data, dicono chiaramente \u00abAperta il [quella data]\u00bb; su oggi resta invariato." },
     { v: "3.21", text: "Corretto un difetto nella gestione delle foto: se il primo tentativo di accesso al loro archivio falliva, restava bloccato per tutta la sessione senza più riprovare. Ora un nuovo tentativo riparte da capo alla chiamata successiva." },
     { v: "3.20", text: "Il modulo di esportazione ora dice chiaramente che il file include anche i fucili, non solo gli abbattimenti." },
