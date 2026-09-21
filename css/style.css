@@ -736,14 +736,41 @@ nav.tabbar button.active { color: var(--forest); font-weight: 600; }
   margin-bottom: 14px;
 }
 
-.demo-video {
-  display: block;
+.demo-video-wrap {
+  position: relative;
   width: 160px;
-  height: auto;
   max-width: 100%;
   margin: 6px auto 4px auto;
+}
+.demo-video {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0;
   border-radius: 8px;
   background: #000;
+}
+.demo-video-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 18px;
+  line-height: 1;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  cursor: pointer;
+}
+.demo-video-wrap:fullscreen .demo-video-close,
+.demo-video-wrap:-webkit-full-screen .demo-video-close {
+  display: flex;
 }
 .demo-video-caption {
   text-align: center;
