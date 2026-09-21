@@ -376,8 +376,7 @@
         }
       ],
       "hourProfile": "alta_sopra400",
-      "individualMax": 2,
-      "note": "Puoi prelevare fino a 2 femmine lattifere. La prima è libera, senza condizioni. La seconda è concessa solo se prima, nella stessa azione di caccia, è stato abbattuto il suo cerbiatto: cerbiatto e femmina vanno portati insieme al posto di controllo entro 24 ore. L'app non può verificare l'abbinamento cerbiatto/femmina: verifica tu."
+      "individualMax": 1
     },
     {
       "id": "cervo_cerbiatto",
@@ -964,7 +963,7 @@
         1,
         3
       ],
-      "note": "Consentita solo sui laghi Verbano e Ceresio, ad almeno 100 m dalla riva/canneti. Vietato sparare verso terraferma. Vietato portare con sé e usare pallini di piombo."
+      "note": "Consentita solo sui laghi Verbano e Ceresio, ad almeno 100 m dalla riva/canneti. Vietato sparare verso terraferma."
     },
     {
       "id": "germano_reale_acqua",
@@ -989,7 +988,7 @@
         1,
         3
       ],
-      "note": "Consentita solo sui laghi Verbano e Ceresio, ad almeno 100 m dalla riva/canneti. Vietato sparare verso terraferma. Vietato portare con sé e usare pallini di piombo."
+      "note": "Consentita solo sui laghi Verbano e Ceresio, ad almeno 100 m dalla riva/canneti. Vietato sparare verso terraferma."
     },
     {
       "id": "moriglione",
@@ -1014,7 +1013,7 @@
         1,
         3
       ],
-      "note": "Consentita solo sui laghi Verbano e Ceresio, ad almeno 100 m dalla riva/canneti. Vietato sparare verso terraferma. Vietato portare con sé e usare pallini di piombo."
+      "note": "Consentita solo sui laghi Verbano e Ceresio, ad almeno 100 m dalla riva/canneti. Vietato sparare verso terraferma."
     },
     {
       "id": "moretta",
@@ -1039,7 +1038,7 @@
         1,
         3
       ],
-      "note": "Consentita solo sui laghi Verbano e Ceresio, ad almeno 100 m dalla riva/canneti. Vietato sparare verso terraferma. Vietato portare con sé e usare pallini di piombo."
+      "note": "Consentita solo sui laghi Verbano e Ceresio, ad almeno 100 m dalla riva/canneti. Vietato sparare verso terraferma."
     },
     {
       "id": "folaga",
@@ -1064,7 +1063,47 @@
         1,
         3
       ],
-      "note": "Consentita solo sui laghi Verbano e Ceresio, ad almeno 100 m dalla riva/canneti. Vietato sparare verso terraferma. Vietato portare con sé e usare pallini di piombo."
+      "note": "Consentita solo sui laghi Verbano e Ceresio, ad almeno 100 m dalla riva/canneti. Vietato sparare verso terraferma."
+    },
+    {
+      "id": "cervo_tardo_autunnale",
+      "speciesKey": "cervo",
+      "speciesLabel": "Cervo",
+      "categoryLabel": "Caccia tardo autunnale — da pubblicare",
+      "huntType": "alta",
+      "windows": [],
+      "note": "Il regolamento specifico di questa caccia per la stagione non è ancora stato pubblicato dall'Ufficio della caccia e della pesca. Indicativamente si svolge da metà novembre a fine dicembre, di mercoledì, sabato e domenica, dalle 7:00 alle 14:00 (dati della stagione scorsa, da confermare). Verifica il sito ufficiale ti.ch/caccia prima di novembre.",
+      "subCategory": "tardo"
+    },
+    {
+      "id": "capriolo_tardo_autunnale",
+      "speciesKey": "capriolo",
+      "speciesLabel": "Capriolo",
+      "categoryLabel": "Caccia tardo autunnale — da pubblicare",
+      "huntType": "alta",
+      "windows": [],
+      "note": "Il regolamento specifico di questa caccia per la stagione non è ancora stato pubblicato dall'Ufficio della caccia e della pesca. Indicativamente si svolge da metà novembre a fine dicembre, di mercoledì, sabato e domenica, dalle 7:00 alle 14:00 (dati della stagione scorsa, da confermare). Verifica il sito ufficiale ti.ch/caccia prima di novembre.",
+      "subCategory": "tardo"
+    },
+    {
+      "id": "volpe_tardo_autunnale",
+      "speciesKey": "volpe",
+      "speciesLabel": "Volpe",
+      "categoryLabel": "Caccia speciale tardo autunnale — da pubblicare",
+      "huntType": "alta",
+      "windows": [],
+      "note": "Il regolamento specifico di questa caccia per la stagione non è ancora stato pubblicato dall'Ufficio della caccia e della pesca. Indicativamente si svolge da metà novembre a fine dicembre, di mercoledì, sabato e domenica, dalle 7:00 alle 14:00 (dati della stagione scorsa, da confermare). Verifica il sito ufficiale ti.ch/caccia prima di novembre.",
+      "subCategory": "tardo"
+    },
+    {
+      "id": "cinghiale_invernale",
+      "speciesKey": "cinghiale",
+      "speciesLabel": "Cinghiale",
+      "categoryLabel": "Caccia invernale — da pubblicare",
+      "huntType": "alta",
+      "windows": [],
+      "note": "Il regolamento specifico di questa caccia per la stagione non è ancora stato pubblicato dall'Ufficio della caccia e della pesca. Indicativamente si svolge tra novembre e gennaio, di mercoledì, sabato e domenica (dati della stagione scorsa, da confermare). Verifica il sito ufficiale ti.ch/caccia prima di novembre.",
+      "subCategory": "invernale"
     }
   ],
   "zones": {
