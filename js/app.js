@@ -13,6 +13,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.24", text: "Corretto il pulsante \u00abCondividi\u00bb nell'esportazione: preparando il file dopo il tocco, il permesso di condivisione del telefono a volte scadeva prima che partisse (\u00abPermission denied\u00bb). Ora il file viene preparato in anticipo, appena si apre il modulo." },
     { v: "3.23", text: "Accanto a \u00abEsporta\u00bb ora c'\u00e8 anche \u00abCondividi\u00bb, che apre il menu nativo del telefono per mandare il backup dove preferisci (il tuo cloud, email, ecc.), senza passare dal download. Un promemoria in Impostazioni avvisa quando non fai un backup da un po'. Le scritte ricordano anche che il file include sempre pure i fucili." },
     { v: "3.22", text: "Scegliendo una data diversa da oggi, le schede mostravano comunque \u00abAperta ora\u00bb, creando confusione su quale giorno si riferisse. Ora, guardando un'altra data, dicono chiaramente \u00abAperta il [quella data]\u00bb; su oggi resta invariato." },
     { v: "3.21", text: "Corretto un difetto nella gestione delle foto: se il primo tentativo di accesso al loro archivio falliva, restava bloccato per tutta la sessione senza più riprovare. Ora un nuovo tentativo riparte da capo alla chiamata successiva." },
@@ -1610,10 +1611,25 @@
       localStorage.setItem("cacciaTI_last_backup_count", String(Storage.getLog().length));
     }
 
+    // Preparo il file già mentre il modulo è aperto (non solo al tocco di
+    // "Condividi"): il permesso di condivisione del telefono dura solo
+    // pochissimo dal tocco dell'utente, e se nel frattempo si legge da
+    // IndexedDB (le foto) il permesso può scadere e la condivisione fallire
+    // con "Permission denied". Preparandolo prima, al tocco resta solo da
+    // chiamare subito navigator.share, senza altre attese in mezzo.
+    let filePronto = null;
+    function preparaFileEsportazione() {
+      filePronto = null;
+      costruisciFileBackup().then((f) => { filePronto = f; }).catch(() => { filePronto = null; });
+    }
+
     document.getElementById("exportLogBtn").addEventListener("click", () => {
       document.getElementById("exportIncludiFoto").checked = true;
       document.getElementById("exportOptionsBackdrop").classList.add("active");
+      preparaFileEsportazione();
     });
+
+    document.getElementById("exportIncludiFoto").addEventListener("change", preparaFileEsportazione);
 
     document.getElementById("exportOptionsCancel").addEventListener("click", () => {
       document.getElementById("exportOptionsBackdrop").classList.remove("active");
@@ -1621,7 +1637,7 @@
 
     document.getElementById("exportOptionsConfirm").addEventListener("click", async () => {
       document.getElementById("exportOptionsBackdrop").classList.remove("active");
-      const file = await costruisciFileBackup();
+      const file = filePronto || await costruisciFileBackup();
       const url = URL.createObjectURL(file);
       const a = document.createElement("a");
       a.href = url;
@@ -1635,7 +1651,11 @@
     document.getElementById("exportOptionsShare").addEventListener("click", async () => {
       document.getElementById("exportOptionsBackdrop").classList.remove("active");
       try {
-        const file = await costruisciFileBackup();
+        // Se il file era già pronto (il caso normale), la chiamata a share
+        // parte subito, il più vicino possibile al tocco. Solo se per
+        // qualche motivo non fosse ancora pronto, lo si costruisce ora
+        // (più lento, e più a rischio che il permesso sia scaduto).
+        const file = filePronto || await costruisciFileBackup();
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
           try {
             await navigator.share({ files: [file], title: "Backup cacciaTI" });
