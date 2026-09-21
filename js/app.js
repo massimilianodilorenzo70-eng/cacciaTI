@@ -13,6 +13,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.23", text: "Accanto a \u00abEsporta\u00bb ora c'\u00e8 anche \u00abCondividi\u00bb, che apre il menu nativo del telefono per mandare il backup dove preferisci (il tuo cloud, email, ecc.), senza passare dal download. Un promemoria gentile in Impostazioni avvisa quando non fai un backup da un po'. Le scritte ricordano anche che il file include sempre pure i fucili." },
     { v: "3.22", text: "Scegliendo una data diversa da oggi, le schede mostravano comunque \u00abAperta ora\u00bb, creando confusione su quale giorno si riferisse. Ora, guardando un'altra data, dicono chiaramente \u00abAperta il [quella data]\u00bb; su oggi resta invariato." },
     { v: "3.21", text: "Corretto un difetto nella gestione delle foto: se il primo tentativo di accesso al loro archivio falliva, restava bloccato per tutta la sessione senza più riprovare. Ora un nuovo tentativo riparte da capo alla chiamata successiva." },
     { v: "3.20", text: "Il modulo di esportazione ora dice chiaramente che il file include anche i fucili, non solo gli abbattimenti." },
@@ -946,6 +947,31 @@
     renderChangelog();
   }
 
+  // Promemoria gentile: se sono passati molti giorni o si sono accumulati
+  // parecchi abbattimenti dall'ultimo backup, lo ricorda qui — senza essere
+  // invadente, sparisce da solo appena fai un'esportazione o condivisione.
+  function aggiornaPromemoriaBackup() {
+    const banner = document.getElementById("backupReminder");
+    if (!banner) return;
+    const log = Storage.getLog();
+    if (log.length === 0) { banner.hidden = true; return; }
+
+    const lastAt = localStorage.getItem("cacciaTI_last_backup_at");
+    const lastCount = parseInt(localStorage.getItem("cacciaTI_last_backup_count") || "0", 10);
+    const nuovi = Math.max(0, log.length - lastCount);
+    const giorni = lastAt ? (Date.now() - new Date(lastAt).getTime()) / 86400000 : Infinity;
+
+    if (!lastAt) {
+      banner.hidden = false;
+      banner.textContent = "Non hai ancora mai fatto un backup del registro. Vale la pena farlo ora, prima di rischiare di perderlo se il telefono si rompe o si perde.";
+    } else if (nuovi >= 3 || giorni >= 14) {
+      banner.hidden = false;
+      banner.textContent = `Non fai un backup da un po': ${nuovi} abbattiment${nuovi === 1 ? "o" : "i"} nuov${nuovi === 1 ? "o" : "i"} non ancora esportat${nuovi === 1 ? "o" : "i"}. Vale la pena farlo ora.`;
+    } else {
+      banner.hidden = true;
+    }
+  }
+
   function renderImpostazioni() {
     const box = document.getElementById("regInfoBox");
     const custom = Storage.getCustomRegolamento();
@@ -955,6 +981,7 @@
       <b>Fonte:</b> ${regData.source}
     `;
     renderGunsList();
+    aggiornaPromemoriaBackup();
   }
 
   // ---------- Modale registrazione ----------
@@ -1546,19 +1573,10 @@
     });
     renderGunsList();
 
-    document.getElementById("exportLogBtn").addEventListener("click", () => {
-      document.getElementById("exportIncludiFoto").checked = true;
-      document.getElementById("exportOptionsBackdrop").classList.add("active");
-    });
-
-    document.getElementById("exportOptionsCancel").addEventListener("click", () => {
-      document.getElementById("exportOptionsBackdrop").classList.remove("active");
-    });
-
-    document.getElementById("exportOptionsConfirm").addEventListener("click", async () => {
+    // Costruisce il file di backup (registro + fucili), riusato sia da
+    // "Esporta" (scarica) sia da "Condividi" (menu nativo del telefono).
+    async function costruisciFileBackup() {
       const includiFoto = document.getElementById("exportIncludiFoto").checked;
-      document.getElementById("exportOptionsBackdrop").classList.remove("active");
-
       const log = Storage.getLog();
       let daEsportare = log;
       if (includiFoto) {
@@ -1581,14 +1599,53 @@
       } else {
         daEsportare = log.map(({ photoId, ...resto }) => resto);
       }
+      const testo = JSON.stringify({ abbattimenti: daEsportare, fucili: Storage.getGuns() }, null, 2);
+      const nomeFile = `cacciaTI_registro_${RulesEngine.toISO(new Date())}.json`;
+      return new File([testo], nomeFile, { type: "application/json" });
+    }
 
-      const blob = new Blob([JSON.stringify({ abbattimenti: daEsportare, fucili: Storage.getGuns() }, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
+    // Segna che un backup è stato fatto ora, per il promemoria più sotto.
+    function segnaBackupFatto() {
+      localStorage.setItem("cacciaTI_last_backup_at", new Date().toISOString());
+      localStorage.setItem("cacciaTI_last_backup_count", String(Storage.getLog().length));
+    }
+
+    document.getElementById("exportLogBtn").addEventListener("click", () => {
+      document.getElementById("exportIncludiFoto").checked = true;
+      document.getElementById("exportOptionsBackdrop").classList.add("active");
+    });
+
+    document.getElementById("exportOptionsCancel").addEventListener("click", () => {
+      document.getElementById("exportOptionsBackdrop").classList.remove("active");
+    });
+
+    document.getElementById("exportOptionsConfirm").addEventListener("click", async () => {
+      document.getElementById("exportOptionsBackdrop").classList.remove("active");
+      const file = await costruisciFileBackup();
+      const url = URL.createObjectURL(file);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `cacciaTI_registro_${RulesEngine.toISO(new Date())}.json`;
+      a.download = file.name;
       a.click();
       URL.revokeObjectURL(url);
+      segnaBackupFatto();
+      aggiornaPromemoriaBackup();
+    });
+
+    document.getElementById("exportOptionsShare").addEventListener("click", async () => {
+      document.getElementById("exportOptionsBackdrop").classList.remove("active");
+      const file = await costruisciFileBackup();
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: "Backup cacciaTI" });
+          segnaBackupFatto();
+          aggiornaPromemoriaBackup();
+        } catch (e) {
+          // l'utente ha annullato la condivisione: non è un errore, non faccio nulla
+        }
+      } else {
+        await showAlert("La condivisione diretta non è supportata su questo browser. Usa \"Esporta\" per scaricare il file, e condividilo tu a mano.");
+      }
     });
 
     renderOggi();
