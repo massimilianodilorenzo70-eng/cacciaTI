@@ -13,6 +13,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.28", text: "Aggiunto un tema scuro, utile all'alba o al crepuscolo per non abbagliarsi con lo schermo chiaro: un pulsante in alto accanto a SOS, o l'interruttore in Impostazioni \u00abAspetto\u00bb. Aperto/chiuso restano verde e rosso anche al buio, solo pi\u00f9 tenui." },
     { v: "3.27", text: "Quando l'app si aggiorna, accanto al numero che lampeggia compare per qualche secondo un'etichetta \u00abNuovo\u00bb, poi sparisce da sola." },
     { v: "3.26", text: "L'app controllava se c'era un aggiornamento nuovo solo quando tornava in primo piano dopo essere stata in sospeso, non alla prima apertura. Ora lo controlla subito ogni volta che apri l'app." },
     { v: "3.25", text: "Tolto il pulsante \u00abCondividi\u00bb nell'esportazione: la condivisione diretta dava errore (\u00abPermission denied\u00bb) su più dispositivi senza una causa risolvibile lato app. Resta \u00abEsporta\u00bb, che scarica il file normalmente." },
@@ -1538,6 +1539,28 @@
     setupRegistroSubtabs();
     setupSOS();
     setupGuns();
+
+    // Tema scuro: il pulsante in alto e l'interruttore in Impostazioni fanno
+    // la stessa cosa e restano sincronizzati tra loro.
+    (function setupTema() {
+      const KEY = "cacciaTI_theme_v1";
+      const btn = document.getElementById("themeToggleBtn");
+      const checkbox = document.getElementById("darkModeToggle");
+
+      function applica(scuro) {
+        document.documentElement.setAttribute("data-theme", scuro ? "dark" : "light");
+        btn.textContent = scuro ? "☀️" : "🌙";
+        checkbox.checked = scuro;
+        localStorage.setItem(KEY, scuro ? "dark" : "light");
+      }
+
+      applica(localStorage.getItem(KEY) === "dark");
+
+      btn.addEventListener("click", () => {
+        applica(document.documentElement.getAttribute("data-theme") !== "dark");
+      });
+      checkbox.addEventListener("change", () => applica(checkbox.checked));
+    })();
     setupPhoto();
 
     // Video dimostrativo in Info: schermo intero automatico all'avvio,
