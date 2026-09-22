@@ -12,6 +12,15 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="cacciaTI">
 <link rel="stylesheet" href="css/style.css">
+<script>
+  // Applica il tema salvato il prima possibile, prima che la pagina si disegni,
+  // per evitare un lampo del colore chiaro quando è impostato quello scuro.
+  try {
+    if (localStorage.getItem("cacciaTI_theme_v1") === "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    }
+  } catch (e) {}
+</script>
 
 <!-- Contatore di aperture, anonimo: nessun dato personale, nessun cookie.
      Se manca la connessione, l'apertura semplicemente non viene contata. -->
@@ -53,6 +62,7 @@
     </div>
     <div class="header-right">
       <span class="ref">RT 922.110</span>
+      <button class="theme-toggle-btn" id="themeToggleBtn" aria-label="Cambia tema">🌙</button>
       <button class="sos-btn" id="sosOpenBtn" aria-label="Emergenza">SOS</button>
       <div class="sos-arm-hint hidden" id="sosArmHint">Tocca di nuovo per aprire l'SOS — un solo tocco non basta, per sicurezza.</div>
     </div>
@@ -115,6 +125,12 @@
   <!-- VIEW: IMPOSTAZIONI -->
   <section id="view-impostazioni" class="view">
     <div class="info-box" id="regInfoBox"></div>
+
+    <div class="section-title">Aspetto</div>
+    <div class="altitude-toggle">
+      <input type="checkbox" id="darkModeToggle">
+      <label for="darkModeToggle">Tema scuro (utile all'alba o al crepuscolo)</label>
+    </div>
 
     <div class="section-title">Aggiorna il regolamento</div>
     <div class="info-box">
