@@ -209,13 +209,6 @@ header.app-header {
   opacity: 0.7;
 }
 
-/* Su schermi stretti, il riferimento normativo è il meno importante da
-   tenere sempre visibile: lo tolgo per lasciare spazio a SOS e al resto,
-   che altrimenti andrebbero a capo (specie con l'etichetta "Nuovo" accesa). */
-@media (max-width: 480px) {
-  .app-header .ref { display: none; }
-}
-
 .app-header .date-row {
   margin-top: 8px;
   display: flex;
