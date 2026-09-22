@@ -118,13 +118,6 @@ header.app-header {
 }
 .app-header .app-version-badge.show { opacity: 1; }
 
-.app-header .author-line {
-  font-size: 11px;
-  font-weight: 400;
-  color: #D9B65C;
-  margin-top: 2px;
-}
-
 .header-right {
   display: flex;
   align-items: center;
@@ -246,6 +239,38 @@ main {
   padding: 14px 14px 24px 14px;
   max-width: 640px;
   margin: 0 auto;
+}
+
+#appSplash {
+  position: fixed;
+  inset: 0;
+  background: var(--header-bg);
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  transition: opacity 0.6s ease;
+}
+#appSplash.hide { opacity: 0; pointer-events: none; }
+.splash-icon {
+  width: 96px;
+  height: 96px;
+  margin-bottom: 18px;
+}
+.splash-title {
+  color: var(--header-ink);
+  font-family: var(--sans);
+  font-size: 30px;
+  font-weight: 700;
+}
+.splash-credit {
+  color: #D9B65C;
+  font-family: var(--mono);
+  font-size: 12px;
+  margin-top: 10px;
+  letter-spacing: 0.02em;
 }
 
 .disclaimer-gate {
@@ -848,8 +873,9 @@ nav.tabbar button.active { color: var(--forest); font-weight: 600; }
 .info-box b { color: var(--ink); }
 
 .btn {
-  display: block;            /* vale anche per <label class="btn"> (importa file) */
+  display: block;            /* vale anche per <label class="btn"> (importa file) e <a class="btn"> (email) */
   text-align: center;
+  text-decoration: none;
   font-family: var(--sans);
   line-height: 1.25;
   cursor: pointer;
@@ -961,6 +987,15 @@ input[type="file"] { display: none; }
   font-size: 11.5px;
   letter-spacing: 0.02em;
   margin: 20px 0 8px 0;
+}
+
+.disclaimer-credit {
+  text-align: center;
+  color: var(--ink-soft);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  margin: 4px 0 14px 0;
 }
 
 .modal-link {
