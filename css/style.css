@@ -87,6 +87,23 @@ header.app-header {
   animation: versionBlink 0.5s ease-in-out 4;
 }
 
+.app-header .app-version-badge {
+  font-family: var(--sans);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: #D9B65C;
+  border: 1px solid #D9B65C;
+  border-radius: 4px;
+  padding: 1px 5px;
+  align-self: flex-end;
+  margin-bottom: 3px;
+  margin-left: 4px;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+.app-header .app-version-badge.show { opacity: 1; }
+
 .app-header .author-line {
   font-size: 11px;
   font-weight: 400;
