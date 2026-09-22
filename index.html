@@ -29,9 +29,42 @@
 <body>
 
 <!-- SCHERMATA DI AVVIO: compare un istante appena l'app si apre, prima
-     ancora della manleva, poi sparisce da sola. -->
+     ancora della manleva, poi sparisce da sola. Lo stile è scritto qui
+     dentro (non nel foglio esterno) apposta: se questa schermata compare
+     di nuovo dopo un ricaricamento veloce (es. "trascina giù per
+     aggiornare"), non deve aspettare che il CSS esterno sia pronto —
+     altrimenti per un attimo si vedrebbe l'icona enorme e il testo senza stile. -->
+<style>
+  #appSplash {
+    position: fixed;
+    inset: 0;
+    background: #253A21;
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 1;
+    transition: opacity 0.6s ease;
+  }
+  #appSplash.hide { opacity: 0; pointer-events: none; }
+  #appSplash .splash-icon { width: 96px; height: 96px; margin-bottom: 18px; }
+  #appSplash .splash-title {
+    color: #F6F4EA;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 30px;
+    font-weight: 700;
+  }
+  #appSplash .splash-credit {
+    color: #D9B65C;
+    font-family: "SFMono-Regular", Consolas, Menlo, monospace;
+    font-size: 12px;
+    margin-top: 10px;
+    letter-spacing: 0.02em;
+  }
+</style>
 <div id="appSplash">
-  <img src="icons/icon-512.png" alt="" class="splash-icon">
+  <img src="icons/icon-512.png" alt="" width="96" height="96" class="splash-icon">
   <div class="splash-title">cacciaTI</div>
   <div class="splash-credit">sviluppata da Massimiliano Di Lorenzo</div>
 </div>
