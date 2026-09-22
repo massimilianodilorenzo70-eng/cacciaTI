@@ -28,6 +28,23 @@
 </head>
 <body>
 
+<!-- SCHERMATA DI AVVIO: compare un istante appena l'app si apre, prima
+     ancora della manleva, poi sparisce da sola. -->
+<div id="appSplash">
+  <img src="icons/icon-512.png" alt="" class="splash-icon">
+  <div class="splash-title">cacciaTI</div>
+  <div class="splash-credit">sviluppata da Massimiliano Di Lorenzo</div>
+</div>
+<script>
+  setTimeout(() => {
+    const s = document.getElementById("appSplash");
+    if (s) {
+      s.classList.add("hide");
+      setTimeout(() => { s.remove(); }, 600);
+    }
+  }, 1200);
+</script>
+
 <!-- GATE: letto una volta sola al primo avvio -->
 <div class="disclaimer-gate" id="disclaimerGate">
   <div class="disclaimer-card">
@@ -48,6 +65,7 @@
       Utilizzando l'app accetti che ogni decisione sul campo resta sotto la tua
       responsabilità personale.
     </p>
+    <p class="disclaimer-credit">cacciaTI — sviluppata da Massimiliano Di Lorenzo</p>
     <button class="btn" id="disclaimerAck">Ho capito, continua</button>
   </div>
 </div>
@@ -67,7 +85,6 @@
       <div class="sos-arm-hint hidden" id="sosArmHint">Tocca di nuovo per aprire l'SOS — un solo tocco non basta, per sicurezza.</div>
     </div>
   </div>
-  <div class="author-line">Massimiliano Di Lorenzo</div>
   <div class="date-row" id="dateRow">
     <input type="date" id="dateInput">
     <button class="today-btn" id="todayBtn">Oggi</button>
@@ -224,6 +241,7 @@
     </details>
 
     <div class="app-credit">cacciaTI — sviluppata da Massimiliano Di Lorenzo</div>
+    <a class="btn secondary" href="mailto:massimilianodilorenzo70@gmail.com?subject=cacciaTI">Contatta sviluppatore, segnala bug o suggerisci implementazione</a>
   </section>
 
 </main>
