@@ -13,6 +13,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.32", text: "Corretta l'intestazione: quando compariva l'etichetta \u00abNuovo\u00bb, su schermi stretti SOS e il resto andavano a capo su una seconda riga. Ora restano sempre sulla stessa riga del titolo." },
     { v: "3.31", text: "Aggiunta una schermata d'avvio disegnata apposta (icona, nome dell'app su due righe centrate e credito), che compare per un istante appena apri l'app e sparisce da sola, prima ancora della manleva. Corretto anche un difetto: ricaricando l'app velocemente (es. trascina gi\u00f9 per aggiornare), per un attimo l'icona appariva enorme e il testo senza stile prima che il resto della grafica facesse in tempo a caricarsi." },
     { v: "3.29", text: "Il nome dello sviluppatore non compare pi\u00f9 in ogni schermata: resta solo nella manleva iniziale e nei crediti di Info, dove ora c'\u00e8 anche un pulsante per contattarlo via email (segnalazioni di bug, idee, richieste)." },
     { v: "3.28", text: "Aggiunto un tema scuro, utile all'alba o al crepuscolo per non abbagliarsi con lo schermo chiaro: un pulsante in alto accanto a SOS, o l'interruttore in Impostazioni \u00abAspetto\u00bb. Aperto/chiuso restano verde e rosso anche al buio, solo pi\u00f9 tenui." },
