@@ -13,6 +13,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.34", text: "Il riferimento normativo (RT 922.110) si \u00e8 spostato sotto il pulsante SOS, allineato a destra, invece di stare nella riga stretta accanto al titolo: libera spazio in modo permanente, non solo durante l'etichetta \u00abNuovo\u00bb." },
     { v: "3.33", text: "Corretta l'intestazione: quando compariva l'etichetta \u00abNuovo\u00bb, su schermi stretti SOS e il resto andavano a capo su una seconda riga. Ora il riferimento normativo (RT 922.110) sparisce solo per i pochi secondi di \u00abNuovo\u00bb e poi torna al suo posto, invece di restare sempre nascosto sugli schermi stretti." },
     { v: "3.31", text: "Aggiunta una schermata d'avvio disegnata apposta (icona, nome dell'app su due righe centrate e credito), che compare per un istante appena apri l'app e sparisce da sola, prima ancora della manleva. Corretto anche un difetto: ricaricando l'app velocemente (es. trascina gi\u00f9 per aggiornare), per un attimo l'icona appariva enorme e il testo senza stile prima che il resto della grafica facesse in tempo a caricarsi." },
     { v: "3.29", text: "Il nome dello sviluppatore non compare pi\u00f9 in ogni schermata: resta solo nella manleva iniziale e nei crediti di Info, dove ora c'\u00e8 anche un pulsante per contattarlo via email (segnalazioni di bug, idee, richieste)." },
@@ -1700,16 +1701,11 @@
             }, { once: true });
 
             const badge = document.getElementById("appVersionBadge");
-            const ref = document.querySelector(".app-header .ref");
             badge.hidden = false;
-            if (ref) ref.style.display = "none"; // fa spazio a "Nuovo" solo per questi pochi secondi
             requestAnimationFrame(() => badge.classList.add("show"));
             setTimeout(() => {
               badge.classList.remove("show");
-              setTimeout(() => {
-                badge.hidden = true;
-                if (ref) ref.style.display = ""; // il riferimento torna al suo posto
-              }, 700); // aspetta la fine della dissolvenza
+              setTimeout(() => { badge.hidden = true; }, 700); // aspetta la fine della dissolvenza
             }, 3000);
           }
           localStorage.setItem(KEY, m[0]);
