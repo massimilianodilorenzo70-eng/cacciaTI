@@ -13,6 +13,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.35", text: "Pi\u00f9 spazio tra le icone luna e SOS. Il riferimento normativo (RT 922.110) ora \u00e8 allineato in basso a destra, alla stessa altezza del fondo del pulsante \u00abOggi\u00bb, invece di stare subito sotto SOS." },
     { v: "3.34", text: "Il riferimento normativo (RT 922.110) si \u00e8 spostato sotto il pulsante SOS, allineato a destra, invece di stare nella riga stretta accanto al titolo: libera spazio in modo permanente, non solo durante l'etichetta \u00abNuovo\u00bb." },
     { v: "3.33", text: "Corretta l'intestazione: quando compariva l'etichetta \u00abNuovo\u00bb, su schermi stretti SOS e il resto andavano a capo su una seconda riga. Ora il riferimento normativo (RT 922.110) sparisce solo per i pochi secondi di \u00abNuovo\u00bb e poi torna al suo posto, invece di restare sempre nascosto sugli schermi stretti." },
     { v: "3.31", text: "Aggiunta una schermata d'avvio disegnata apposta (icona, nome dell'app su due righe centrate e credito), che compare per un istante appena apri l'app e sparisce da sola, prima ancora della manleva. Corretto anche un difetto: ricaricando l'app velocemente (es. trascina gi\u00f9 per aggiornare), per un attimo l'icona appariva enorme e il testo senza stile prima che il resto della grafica facesse in tempo a caricarsi." },
