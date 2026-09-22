@@ -2,11 +2,15 @@ name: Aggiorna contingente caccia alta
 
 on:
   schedule:
-    # Ogni 4 ore, tutti i giorni. Lo script stesso non scrive nulla se non
-    # trova le categorie attese, quindi girare anche fuori stagione è
-    # innocuo (semplicemente non cambia nulla se la pagina non le mostra).
-    - cron: "0 */4 * * *"
-  workflow_dispatch: {}   # permette di lanciarlo a mano da GitHub
+    # Solo a settembre, quando la caccia alta di camoscio e capriolo è
+    # davvero in corso (le date esatte cambiano un po' di anno in anno,
+    # ma restano sempre dentro settembre). Fuori da questo mese la pagina
+    # potrebbe cambiare aspetto a stagione chiusa, e girare comunque
+    # produrrebbe solo email di errore inutili per undici mesi l'anno,
+    # senza nessun beneficio: il contingente non si aggiorna comunque
+    # finché la caccia alta non riapre l'anno dopo.
+    - cron: "0 */4 * 9 *"
+  workflow_dispatch: {}   # permette di lanciarlo a mano da GitHub, in qualsiasi mese
 
 permissions:
   contents: write
