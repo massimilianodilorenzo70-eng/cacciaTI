@@ -13,6 +13,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.27", text: "Quando l'app si aggiorna, accanto al numero che lampeggia compare per qualche secondo un'etichetta \u00abNuovo\u00bb, poi sparisce da sola." },
     { v: "3.26", text: "L'app controllava se c'era un aggiornamento nuovo solo quando tornava in primo piano dopo essere stata in sospeso, non alla prima apertura. Ora lo controlla subito ogni volta che apri l'app." },
     { v: "3.25", text: "Tolto il pulsante \u00abCondividi\u00bb nell'esportazione: la condivisione diretta dava errore (\u00abPermission denied\u00bb) su più dispositivi senza una causa risolvibile lato app. Resta \u00abEsporta\u00bb, che scarica il file normalmente." },
     { v: "3.23", text: "Un promemoria in Impostazioni avvisa quando non fai un backup da un po'. Le scritte ricordano anche che il file include sempre pure i fucili." },
@@ -1671,6 +1672,14 @@
             versionEl.addEventListener("animationend", () => {
               versionEl.classList.remove("version-blink");
             }, { once: true });
+
+            const badge = document.getElementById("appVersionBadge");
+            badge.hidden = false;
+            requestAnimationFrame(() => badge.classList.add("show"));
+            setTimeout(() => {
+              badge.classList.remove("show");
+              setTimeout(() => { badge.hidden = true; }, 700); // aspetta la fine della dissolvenza
+            }, 3000);
           }
           localStorage.setItem(KEY, m[0]);
         };
