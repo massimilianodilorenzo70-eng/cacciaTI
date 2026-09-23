@@ -178,6 +178,25 @@ const RulesEngine = (() => {
       }
     }
 
+    // Dal secondo esemplare di questa categoria in poi (nella stagione),
+    // serve un capo della categoria indicata abbattuto nella STESSA azione
+    // di caccia (qui: stessa data). Es. la seconda femmina lattifera di
+    // cervo richiede il suo cerbiatto abbattuto lo stesso giorno; la prima
+    // resta libera, senza questo vincolo.
+    if (category.requiresSameDayFromSecond && !result.quotaBlocked) {
+      const count = seasonCountByCategory(log, category.id);
+      if (count >= 1) {
+        const compagno = log.find(
+          k => k.categoryId === category.requiresSameDayFromSecond && k.date === iso
+        );
+        if (compagno) {
+          result.unlockedBy = compagno;
+        } else {
+          result.requiresPriorMissing = true;
+        }
+      }
+    }
+
     // Regole giornaliere (limite/die e incompatibilità/die)
     const daily = data.dailyRules;
     if (daily) {

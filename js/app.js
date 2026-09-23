@@ -13,6 +13,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.36", text: "Corretta la regola della femmina lattifera di cervo: puoi prelevarne 2 in stagione (non pi\u00f9 1), la prima libera, la seconda solo se il suo cerbiatto \u00e8 gi\u00e0 stato abbattuto lo stesso giorno, come previsto dalle Disposizioni al cacciatore 2026." },
     { v: "3.35", text: "Pi\u00f9 spazio tra le icone luna e SOS. Il riferimento normativo (RT 922.110) ora \u00e8 allineato in basso a destra, alla stessa altezza del fondo del pulsante \u00abOggi\u00bb, invece di stare subito sotto SOS." },
     { v: "3.34", text: "Il riferimento normativo (RT 922.110) si \u00e8 spostato sotto il pulsante SOS, allineato a destra, invece di stare nella riga stretta accanto al titolo: libera spazio in modo permanente, non solo durante l'etichetta \u00abNuovo\u00bb." },
     { v: "3.33", text: "Corretta l'intestazione: quando compariva l'etichetta \u00abNuovo\u00bb, su schermi stretti SOS e il resto andavano a capo su una seconda riga. Ora il riferimento normativo (RT 922.110) sparisce solo per i pochi secondi di \u00abNuovo\u00bb e poi torna al suo posto, invece di restare sempre nascosto sugli schermi stretti." },
