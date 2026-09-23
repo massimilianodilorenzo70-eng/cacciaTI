@@ -376,7 +376,9 @@
         }
       ],
       "hourProfile": "alta_sopra400",
-      "individualMax": 1
+      "individualMax": 2,
+      "requiresSameDayFromSecond": "cervo_cerbiatto",
+      "lockedText": "Questa sarebbe la tua seconda femmina lattifera di cervo: la prima è libera, senza vincoli. Dalla seconda in poi serve che il suo cerbiatto sia già stato abbattuto lo stesso giorno, nella stessa uscita di caccia (vanno portati insieme al posto di controllo entro 24 ore)."
     },
     {
       "id": "cervo_cerbiatto",
