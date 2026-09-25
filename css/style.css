@@ -1149,3 +1149,61 @@ input[type="file"] { display: none; }
 }
 
 ::-webkit-scrollbar { width: 0; height: 0; }
+
+/* ---------- Dove mi trovo: bandite e distretto ---------- */
+.dove-box {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  background: var(--surface);
+}
+.dove-box > summary {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--forest);
+  cursor: pointer;
+}
+.dove-box .dove-btn { margin: 12px 0 6px 0; }
+.dove-box .dove-link { margin: 8px 0 0 0; font-size: 13px; }
+.dove-titolo {
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--ink-soft);
+  margin: 14px 0 5px 0;
+}
+.dove-sotto { font-size: 13px; color: var(--ink); margin-top: 8px; }
+.dove-nota { font-size: 12.5px; color: var(--ink-soft); margin-top: 6px; line-height: 1.4; }
+.dove-avviso { color: var(--gold); font-weight: 600; }
+.dove-fonte { font-size: 11.5px; color: var(--ink-soft); margin-top: 8px; line-height: 1.4; }
+.dove-bandita {
+  font-size: 13.5px;
+  color: var(--ink);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-top: 6px;
+  border-left: 4px solid var(--line);
+  background: var(--bg);
+}
+.dove-bandita.dove-dentro { border-left-color: var(--rust); background: var(--rust-soft); }
+.dove-bandita.dove-verifica { border-left-color: var(--gold); background: var(--gold-soft); }
+.dove-bandita.dove-libera { border-left-color: var(--forest); background: var(--forest-soft); }
+.dove-nome { font-weight: 700; }
+.dove-tipo { font-weight: 400; font-size: 12px; color: var(--ink-soft); }
+.dove-desc { margin-top: 5px; font-size: 12px; color: var(--ink-soft); }
+.dove-desc summary { cursor: pointer; font-weight: 600; }
+.dove-desc > div { margin-top: 4px; line-height: 1.4; }
+.dove-altre { margin-top: 8px; font-size: 12.5px; color: var(--ink-soft); }
+.dove-altre summary { cursor: pointer; font-weight: 600; }
+.dove-specie {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  color: var(--ink);
+  margin-top: 8px;
+}
+.dove-box a:not(.btn) { color: var(--forest); font-weight: 600; }
