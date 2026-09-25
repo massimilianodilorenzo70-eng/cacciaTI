@@ -2,15 +2,15 @@ name: Aggiorna contingente caccia alta
 
 on:
   schedule:
-    # Solo nei giorni veri della caccia settembrina di camoscio e capriolo
-    # (dal 5 al 19 e dal 23 al 27 settembre, per la stagione 2026, secondo
-    # le Disposizioni al cacciatore — la pausa del 20-22 è normale). Fuori
-    # da questo periodo il contingente non serve leggerlo: non si muove
-    # comunque finché la caccia non riapre, e la pagina può anche cambiare
-    # aspetto a stagione chiusa (lo stato perde il grassetto e cambia testo),
-    # cosa che fuori da queste date produrrebbe solo email di errore inutili.
-    # Le date esatte vanno riviste ogni anno quando esce il nuovo calendario.
-    - cron: "0 */4 5-19,23-27 9 *"
+    # Solo nel periodo di caccia di camoscio e capriolo, le uniche due specie
+    # col contingente ufficiale: dal 5 al 17 settembre per la stagione 2026
+    # (finestre delle categorie di camoscio e capriolo nel regolamento).
+    # Il resto della caccia alta (cervo, 18-19 e 23-27 settembre) non ha
+    # contingente da leggere. Fuori da queste date la pagina non si muove e
+    # a stagione chiusa cambia aspetto (lo stato perde il grassetto e il
+    # testo), cosa che produrrebbe solo email di errore inutili.
+    # Le date vanno riviste ogni anno quando esce il nuovo calendario.
+    - cron: "0 */4 5-17 9 *"
   workflow_dispatch: {}   # permette di lanciarlo a mano da GitHub, in qualsiasi momento
 
 permissions:
