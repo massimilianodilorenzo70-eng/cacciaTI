@@ -207,6 +207,22 @@ header.app-header {
 .sos-status.err { color: var(--rust); }
 .sos-status.ok { color: var(--forest); }
 
+/* Testo del messaggio SOS mostrato a schermo: serve a poterlo leggere e
+   dettare al telefono, quindi carattere a larghezza fissa e ben leggibile. */
+.sos-text {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.5;
+  margin: 6px 0 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  user-select: text;
+  -webkit-user-select: text;
+  word-break: break-word;
+}
+
 .app-header .ref {
   position: absolute;
   right: 16px;
