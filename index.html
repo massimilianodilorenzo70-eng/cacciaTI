@@ -263,9 +263,11 @@
       riquadro Aperto oggi.<br><br>
 
       <b>Il tuo registro:</b> ogni abbattimento che registri aggiorna subito le quote e le
-      statistiche. Per ciascuno puoi aggiungere una foto (toccala per vederla a schermo intero)
-      e il luogo, salvando con un tocco la posizione GPS esatta, apribile poi nelle mappe, oppure
-      scrivendolo nelle note. Ogni voce si può modificare o eliminare.<br><br>
+      statistiche. Per ciascuno puoi aggiungere una foto (toccala per vederla a schermo intero),
+      la posizione GPS esatta, apribile poi nelle mappe, il luogo di cattura (comune e
+      località, come sul foglio di controllo) e il distretto: dalla posizione GPS l'app legge sulla
+      carta nazionale svizzera comune, distretto e nomi di luogo più vicini e ti propone di
+      compilarli, oppure li inserisci a mano. Ogni voce si può modificare o eliminare.<br><br>
 
       <b>Statistiche:</b> capi totali, per specie, per tipo di caccia e per arma, con due grafici:
       l'andamento della stagione in corso e il confronto con le stagioni precedenti, quando nel
@@ -336,6 +338,20 @@
     <div class="modal-actions">
       <button class="btn secondary" id="confirmCancelBtn">Annulla</button>
       <button class="btn" id="confirmOkBtn">Ok</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: proposta del luogo di cattura dalle coordinate GPS -->
+<div class="modal-backdrop" id="placeBackdrop" style="z-index: 40">
+  <div class="modal-sheet">
+    <h3>📍 Luogo di cattura</h3>
+    <div class="confirm-message" id="placeStatus"></div>
+    <div id="placeOptions"></div>
+    <div class="note" id="placeFooter"></div>
+    <div class="modal-actions">
+      <button class="btn secondary" id="placeCancel">Annulla</button>
+      <button class="btn" id="placeUse" hidden>Usa questo</button>
     </div>
   </div>
 </div>
@@ -469,9 +485,23 @@
     <input type="date" id="modalDate">
 
     <label for="modalNote">Note (facoltativo)</label>
-    <input type="text" id="modalNote" placeholder="es. località, foglio di controllo…">
+    <input type="text" id="modalNote" placeholder="es. condizioni, compagni di caccia…">
 
-    <label>Luogo (facoltativo)</label>
+    <label for="modalPlace">Luogo di cattura (facoltativo)</label>
+    <input type="text" id="modalPlace" placeholder="comune – località, es. Blenio – Alpe di Cava">
+
+    <label for="modalDistrict">Distretto (facoltativo)</label>
+    <select id="modalDistrict">
+      <option value="">—</option>
+      <option>Bellinzona</option>
+      <option>Blenio</option>
+      <option>Leventina</option>
+      <option>Locarno</option>
+      <option>Lugano</option>
+      <option>Mendrisio</option>
+      <option>Riviera</option>
+      <option>Vallemaggia</option>
+    </select>
     <button type="button" class="btn secondary" id="modalGpsBtn">📍 Salva la posizione attuale</button>
     <div class="note" id="modalGpsInfo" hidden></div>
 
