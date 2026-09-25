@@ -227,7 +227,7 @@
         </video>
         <button type="button" class="demo-video-close" aria-label="Chiudi il video">✕</button>
       </div>
-      <div class="demo-video-caption">Video dimostrativo, poco più di due minuti</div>
+      <div class="demo-video-caption">Video dimostrativo, poco più di un minuto e mezzo</div>
 
       <b>Cosa calcola da solo:</b><br>
       • Se una categoria è aperta nella data scelta: periodo di caccia, giorni della settimana
@@ -447,6 +447,10 @@
 
     <label for="modalNote">Note (facoltativo)</label>
     <input type="text" id="modalNote" placeholder="es. località, foglio di controllo…">
+
+    <label>Luogo (facoltativo)</label>
+    <button type="button" class="btn secondary" id="modalGpsBtn">📍 Salva la posizione attuale</button>
+    <div class="note" id="modalGpsInfo" hidden></div>
 
     <label>Foto (facoltativa)</label>
     <input type="file" id="modalPhotoInput" accept="image/*" hidden>
