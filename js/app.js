@@ -13,6 +13,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.45", text: "Il pulsante \u00abApri qui la cartina della caccia del Cantone\u00bb ora apre la mappa gi\u00e0 con i livelli Bandite cantonali, Bandite federali e Zone di tranquillit\u00e0 accesi, cos\u00ec il confine si vede subito senza doverli attivare a mano ogni volta." },
     { v: "3.44", text: "Confermato dall'Ufficio della caccia e della pesca: il Decreto bandite di caccia 2021-2026 e il Decreto delle zone di tranquillit\u00e0 restano in vigore, prorogati dal Consiglio di Stato fino all'aggiornamento del concetto bosco-selvaggina (fine 2027 circa) \u2014 non serve quindi un nuovo file dati. Corretto anche un refuso del regolamento venatorio: le bandite escluse dalla caccia da postazione fissa in Blenio, Riviera e Bellinzona sono la N. 67 Leggiuna e la N. 25 Piano di Magadino, non la N. 64 e la N. 48 come scritto prima." },
     { v: "3.43", text: "Luogo di cattura: tra le località proposte dalla posizione GPS non compaiono più i nomi di grandi aree che contengono il punto (catene montuose, regioni, valli lunghe), come \u00abAlpi Lepontine\u00bb ripetuto in tre lingue o \u00abSottoceneri\u00bb, che finivano sempre in cima come \u00abqui\u00bb. Restano i nomi di luogo veri e propri, dal più vicino." },
     { v: "3.42", text: "Nuovo riquadro \u00abDove mi trovo\u00bb nella schermata principale: con un tocco controlla se sei dentro, sul confine o vicino (entro 1 km) a una bandita cantonale o federale, con distanza e direzione, e se quella bandita riguarda la caccia che hai scelto in alto (alta, bassa o acquatica, o solo camoscio, marmotta o fagiano di monte). Mostra anche le zone di tranquillit\u00e0 per la fauna vicine, con le loro regole e se sono in vigore nella data scelta. Tutti i confini sono dentro l'app, quindi il controllo funziona anche senza rete. Con la rete aggiunge distretto e comune e li confronta con il regolamento (art. 44). Due pulsanti aprono il punto sulla cartina della caccia del Cantone e sulla carta nazionale. \u00c8 un aiuto, non un permesso: fanno stato i testi ufficiali e la segnaletica sul terreno." },
@@ -1609,8 +1610,20 @@
     return out.sort((x, y) => (y.dentro - x.dentro) || (x.d - y.d));
   }
 
+  // Livelli da accendere sulla cartina del Cantone: bandite cantonali,
+  // bandite federali e zone di tranquillità (con i suoi due sotto-livelli).
+  // Nomi e formato presi da un link "Condividi" espanso manualmente: il
+  // geoportale non li documenta.
+  const LIVELLI_CARTINA_CANTONE = [
+    ["tree_group_layers_Bandite cantonali di caccia", "Bandite cantonali di caccia"],
+    ["tree_group_layers_Inventario federale delle bandite di caccia federali", "Inventario federale delle bandite di caccia federali"],
+    ["tree_group_layers_Zone di tranquillità per la fauna selvatica", "Tipi di sentieri,Zone di tranquillità"],
+  ];
   function linkCartinaCantone(E, N) {
-    return `https://map.geo.ti.ch/?lang=it&theme=caccia&map_x=${Math.round(E)}&map_y=${Math.round(N)}&map_zoom=9&map_crosshair=true`;
+    const livelli = LIVELLI_CARTINA_CANTONE
+      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+      .join("&");
+    return `https://map.geo.ti.ch/?lang=it&theme=caccia&map_x=${Math.round(E)}&map_y=${Math.round(N)}&map_zoom=9&map_crosshair=true&${livelli}`;
   }
   function linkCartaNazionale(E, N) {
     return `https://map.geo.admin.ch/?lang=it&E=${Math.round(E)}&N=${Math.round(N)}&zoom=10&crosshair=marker` +
