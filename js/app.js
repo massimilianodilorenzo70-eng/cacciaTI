@@ -13,6 +13,8 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.40", text: "Nuovo campo \u00abDistretto\u00bb nella registrazione di un abbattimento, separato dal luogo di cattura (che resta come va scritto sul foglio di controllo). Con la posizione GPS viene proposto insieme a comune e localit\u00e0, dai confini ufficiali swisstopo; senza GPS lo scegli dall'elenco. Compare nel dettaglio del registro." },
+    { v: "3.39", text: "Nuovo campo \u00abLuogo di cattura\u00bb (comune e localit\u00e0, come sul foglio di controllo). Dopo aver salvato la posizione GPS, l'app legge dalla carta nazionale svizzera (swisstopo) il comune e i nomi di luogo pi\u00f9 vicini, con distanza e direzione, e ti propone di compilare il campo: scegli tu quale usare, o scrivilo a mano. Senza rete le coordinate restano salvate e puoi compilare il luogo pi\u00f9 tardi, anche modificando l'abbattimento." },
     { v: "3.38", text: "Riscritta la sezione \u00abCosa fa cacciaTI\u00bb: ora descrive tutte le funzioni, comprese sottoschede di caccia alta, foto e luogo GPS degli abbattimenti, statistiche, backup, SOS con doppio tocco e tema scuro." },
     { v: "3.37", text: "Nuovo campo \u00abLuogo\u00bb nella registrazione di un abbattimento: puoi salvare con un tocco la posizione GPS esatta, oppure continuare a scriverla a mano nelle note, o entrambe le cose. La posizione si rivede nel dettaglio del registro, con un link per aprirla nelle mappe, e si pu\u00f2 togliere in qualsiasi momento." },
     { v: "3.36", text: "Corretta la regola della femmina lattifera di cervo: puoi prelevarne 2 in stagione (non pi\u00f9 1), la prima libera, la seconda solo se il suo cerbiatto \u00e8 gi\u00e0 stato abbattuto lo stesso giorno, come previsto dalle Disposizioni al cacciatore 2026." },
@@ -440,10 +442,12 @@
       }
       if (k.ammoType) righeDettagli.push(`<div><b>Munizione:</b> ${k.ammoType}</div>`);
       if (k.bulletWeight) righeDettagli.push(`<div><b>Peso palla:</b> ${k.bulletWeight} ${k.bulletWeightUnit === "gr" ? "grani" : "grammi"}</div>`);
+      if (k.district) righeDettagli.push(`<div><b>Distretto:</b> ${escapeHtmlLuogo(k.district)}</div>`);
+      if (k.place) righeDettagli.push(`<div><b>Luogo:</b> ${escapeHtmlLuogo(k.place)}</div>`);
       if (k.coords) {
         const { lat, lon, acc } = k.coords;
         righeDettagli.push(
-          `<div><b>Luogo:</b> ${lat.toFixed(5)}, ${lon.toFixed(5)}` +
+          `<div><b>Posizione GPS:</b> ${lat.toFixed(5)}, ${lon.toFixed(5)}` +
           (acc ? ` (±${Math.round(acc)} m)` : "") +
           ` — <a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank" rel="noopener">apri nelle mappe</a></div>`
         );
@@ -1118,6 +1122,287 @@
     });
   }
 
+  // ---------- Luogo di cattura dalle coordinate (carta nazionale swisstopo) ----------
+  // Il foglio di controllo chiede "il comune e il luogo di cattura" (art. 29
+  // RALCC). Dalle coordinate GPS si leggono, dai servizi ufficiali della
+  // Confederazione (geo.admin.ch): il comune dai confini comunali ufficiali e
+  // i nomi di luogo più vicini dalla carta nazionale (swissNAMES3D). È solo
+  // una proposta: l'utente sceglie, o scrive a mano. Serve la connessione.
+
+  function escapeHtmlLuogo(s) {
+    return String(s).replace(/[&<>"']/g, (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+
+  // WGS84 -> LV95 (formule approssimate ufficiali swisstopo, errore ~1 m).
+  function wgs84ToLv95(lat, lon) {
+    const p = (lat * 3600 - 169028.66) / 10000;
+    const l = (lon * 3600 - 26782.5) / 10000;
+    const E = 2600072.37 + 211455.93 * l - 10938.51 * l * p - 0.36 * l * p * p - 44.54 * l * l * l;
+    const N = 1200147.07 + 308807.95 * p + 3745.25 * l * l + 76.63 * p * p
+      - 194.56 * l * l * p + 119.79 * p * p * p;
+    return { E, N };
+  }
+
+  const GEO_IDENTIFY = "https://api3.geo.admin.ch/rest/services/api/MapServer/identify";
+
+  // Con mapExtent 0,0,100,100 e imageDisplay 100,100,100 un pixel vale
+  // un metro: la tolleranza diventa così il raggio di ricerca in metri.
+  async function geoIdentify(E, N, layer, raggioM) {
+    const params = new URLSearchParams({
+      geometryType: "esriGeometryPoint",
+      geometry: `${E.toFixed(1)},${N.toFixed(1)}`,
+      sr: "2056",
+      layers: "all:" + layer,
+      tolerance: String(raggioM),
+      mapExtent: "0,0,100,100",
+      imageDisplay: "100,100,100",
+      returnGeometry: raggioM > 0 ? "true" : "false",
+      geometryFormat: "geojson",
+      lang: "it",
+      limit: "50",
+    });
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 12000);
+    try {
+      const r = await fetch(`${GEO_IDENTIFY}?${params}`, { signal: ctrl.signal });
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      const data = await r.json();
+      return Array.isArray(data.results) ? data.results : [];
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  function attrLuogo(f) { return f.properties || f.attributes || {}; }
+
+  // Distanza (m) dal punto al tratto AB, con il punto più vicino.
+  function distSegmento(px, py, ax, ay, bx, by) {
+    const dx = bx - ax, dy = by - ay;
+    const l2 = dx * dx + dy * dy;
+    let t = l2 ? ((px - ax) * dx + (py - ay) * dy) / l2 : 0;
+    t = Math.max(0, Math.min(1, t));
+    const x = ax + t * dx, y = ay + t * dy;
+    return { d: Math.hypot(x - px, y - py), x, y };
+  }
+
+  function puntoInAnello(px, py, anello) {
+    let dentro = false;
+    for (let i = 0, k = anello.length - 1; i < anello.length; k = i++) {
+      const [xi, yi] = anello[i], [xk, yk] = anello[k];
+      if ((yi > py) !== (yk > py) && px < (xk - xi) * (py - yi) / (yk - yi) + xi) dentro = !dentro;
+    }
+    return dentro;
+  }
+
+  // Distanza dal punto alla geometria del nome (punto, linea o area): 0 se
+  // il punto sta dentro l'area che porta quel nome.
+  function distanzaDaGeometria(g, px, py) {
+    const nessuno = { d: Infinity, x: px, y: py };
+    if (!g || !g.coordinates) return nessuno;
+    const c = g.coordinates;
+    const daLinee = (linee) => {
+      let best = nessuno;
+      for (const linea of linee) {
+        for (let i = 0; i < linea.length; i++) {
+          const a = linea[i], b = linea[i + 1] || linea[i];
+          const r = distSegmento(px, py, a[0], a[1], b[0], b[1]);
+          if (r.d < best.d) best = r;
+        }
+      }
+      return best;
+    };
+    switch (g.type) {
+      case "Point": return { d: Math.hypot(c[0] - px, c[1] - py), x: c[0], y: c[1] };
+      case "MultiPoint": return daLinee(c.map((p) => [p]));
+      case "LineString": return daLinee([c]);
+      case "MultiLineString": return daLinee(c);
+      case "Polygon":
+      case "MultiPolygon": {
+        const poligoni = g.type === "Polygon" ? [c] : c;
+        let best = nessuno;
+        for (const pol of poligoni) {
+          if (puntoInAnello(px, py, pol[0]) && !pol.slice(1).some((buco) => puntoInAnello(px, py, buco))) {
+            return { d: 0, x: px, y: py };
+          }
+          const r = daLinee(pol);
+          if (r.d < best.d) best = r;
+        }
+        return best;
+      }
+      default: return nessuno;
+    }
+  }
+
+  function direzioneCardinale(dx, dy) {
+    const nomi = ["N", "NE", "E", "SE", "S", "SO", "O", "NO"];
+    const ang = (Math.atan2(dx, dy) * 180 / Math.PI + 360) % 360;
+    return nomi[Math.round(ang / 45) % 8];
+  }
+
+  // I distretti di caccia ticinesi coincidono con gli 8 distretti politici.
+  const DISTRETTI_TI = ["Bellinzona", "Blenio", "Leventina", "Locarno", "Lugano", "Mendrisio", "Riviera", "Vallemaggia"];
+
+  function normalizzaDistretto(nome) {
+    if (!nome) return "";
+    const pulito = String(nome).replace(/^distretto\s+(di\s+)?/i, "").trim().toLowerCase();
+    return DISTRETTI_TI.find((d) => d.toLowerCase() === pulito) || "";
+  }
+
+  // Imposta la tendina; un valore non in elenco (vecchi dati) si aggiunge
+  // come opzione, per non perderlo modificando l'abbattimento.
+  function impostaDistrettoModulo(valore) {
+    const sel = document.getElementById("modalDistrict");
+    if (valore && ![...sel.options].some((o) => o.value === valore)) {
+      const o = document.createElement("option");
+      o.value = valore;
+      o.textContent = valore;
+      sel.appendChild(o);
+    }
+    sel.value = valore || "";
+  }
+
+  async function distrettoDaCoordinate(E, N) {
+    const ris = await geoIdentify(E, N, "ch.swisstopo.swissboundaries3d-bezirk-flaeche.fill", 0);
+    for (const f of ris) {
+      const a = attrLuogo(f);
+      const d = normalizzaDistretto(a.name || a.label || a.bezirksname);
+      if (d) return d;
+    }
+    return "";
+  }
+
+  async function comuneDaCoordinate(E, N) {
+    const ris = await geoIdentify(E, N, "ch.swisstopo.swissboundaries3d-gemeinde-flaeche.fill", 0);
+    for (const f of ris) {
+      const a = attrLuogo(f);
+      const nome = a.gemname || a.label || a.name;
+      if (nome) return String(nome).trim();
+    }
+    return null;
+  }
+
+  // Nomi di luogo più vicini: si allarga il raggio a gradini finché se ne
+  // trovano almeno 4 diversi, così nei posti isolati non si resta a mani
+  // vuote e in quelli ricchi di nomi non si superano i 50 risultati del servizio.
+  async function toponimiVicini(E, N) {
+    const migliori = new Map();
+    for (const raggio of [150, 500, 1500]) {
+      const ris = await geoIdentify(E, N, "ch.swisstopo.swissnames3d", raggio);
+      for (const f of ris) {
+        const a = attrLuogo(f);
+        const nome = (a.name || a.label || "").trim();
+        if (!nome) continue;
+        const r = distanzaDaGeometria(f.geometry, E, N);
+        if (!isFinite(r.d)) continue;
+        const prec = migliori.get(nome);
+        if (!prec || r.d < prec.d) migliori.set(nome, { nome, d: r.d, dx: r.x - E, dy: r.y - N });
+      }
+      if (migliori.size >= 4) break;
+    }
+    return [...migliori.values()].sort((a, b) => a.d - b.d).slice(0, 5);
+  }
+
+  function descriviDistanza(t) {
+    if (t.d < 25) return "qui";
+    const m = t.d < 1000 ? `${Math.round(t.d / 10) * 10} m` : `${(t.d / 1000).toFixed(1).replace(".", ",")} km`;
+    return `${m} a ${direzioneCardinale(t.dx, t.dy)}`;
+  }
+
+  // Finestra di proposta: comune + scelta fra i nomi di luogo più vicini.
+  async function proponiLuogo(coords) {
+    if (!coords) return;
+    const backdrop = document.getElementById("placeBackdrop");
+    const stato = document.getElementById("placeStatus");
+    const opzioni = document.getElementById("placeOptions");
+    const piede = document.getElementById("placeFooter");
+    const btnUsa = document.getElementById("placeUse");
+    const btnAnnulla = document.getElementById("placeCancel");
+
+    stato.textContent = "Cerco comune e località sulla carta nazionale…";
+    opzioni.innerHTML = "";
+    piede.innerHTML = "";
+    btnUsa.hidden = true;
+    btnAnnulla.textContent = "Annulla";
+    backdrop.classList.add("active");
+
+    let chiusa = false;
+    const chiudi = () => {
+      chiusa = true;
+      backdrop.classList.remove("active");
+      btnUsa.onclick = null;
+      btnAnnulla.onclick = null;
+    };
+    btnAnnulla.onclick = chiudi;
+
+    const { E, N } = wgs84ToLv95(coords.lat, coords.lon);
+    let comune, toponimi, distretto;
+    try {
+      [comune, toponimi, distretto] = await Promise.all([
+        comuneDaCoordinate(E, N),
+        toponimiVicini(E, N),
+        distrettoDaCoordinate(E, N).catch(() => ""), // se manca, il resto vale comunque
+      ]);
+    } catch (e) {
+      if (chiusa) return;
+      stato.textContent = "Non riesco a leggere la carta nazionale, probabilmente manca la connessione. " +
+        "Le coordinate restano salvate: puoi compilare il luogo più tardi con «compila il luogo», " +
+        "anche aprendo «Modifica» sull'abbattimento.";
+      btnAnnulla.textContent = "Chiudi";
+      return;
+    }
+    if (chiusa) return;
+
+    if (!comune) {
+      stato.textContent = "Questa posizione non risulta in un comune svizzero. Scrivi il luogo a mano.";
+      btnAnnulla.textContent = "Chiudi";
+      return;
+    }
+
+    stato.innerHTML = `Comune: <b>${escapeHtmlLuogo(comune)}</b>` +
+      (distretto ? ` · Distretto: <b>${escapeHtmlLuogo(distretto)}</b>` : "") +
+      `.<br>Scegli la località da riportare:`;
+
+    const scelte = toponimi.map((t) => ({ testo: `${comune} – ${t.nome}`, nome: t.nome, dettaglio: descriviDistanza(t) }));
+    scelte.push({ testo: comune, nome: "Solo il comune", dettaglio: "la località la scrivi tu" });
+    scelte.forEach((s, i) => {
+      const riga = document.createElement("div");
+      riga.className = "altitude-toggle";
+      riga.style.marginBottom = "8px";
+      const input = document.createElement("input");
+      input.type = "radio";
+      input.name = "placeChoice";
+      input.id = "placeChoice" + i;
+      input.value = s.testo;
+      if (i === 0) input.checked = true;
+      const label = document.createElement("label");
+      label.htmlFor = input.id;
+      const b = document.createElement("b");
+      b.textContent = s.nome;
+      label.appendChild(b);
+      label.appendChild(document.createTextNode(` — ${s.dettaglio}`));
+      riga.appendChild(input);
+      riga.appendChild(label);
+      opzioni.appendChild(riga);
+    });
+
+    const avvisi = [];
+    if (coords.acc && coords.acc > 30) {
+      avvisi.push(`Precisione GPS di circa ±${Math.round(coords.acc)} m: se possibile aggiorna la posizione all'aperto prima di scegliere.`);
+    }
+    avvisi.push("I nomi vengono dalla carta nazionale: il più vicino non è per forza quello che usi tu. Controlla prima di scriverlo sul foglio di controllo.");
+    piede.innerHTML = avvisi.map(escapeHtmlLuogo).join("<br>") +
+      `<br><a href="https://map.geo.admin.ch/?lang=it&E=${Math.round(E)}&N=${Math.round(N)}&zoom=10&crosshair=marker" target="_blank" rel="noopener">Verifica sulla carta nazionale</a>`;
+
+    btnUsa.hidden = false;
+    btnUsa.onclick = () => {
+      const scelta = opzioni.querySelector('input[name="placeChoice"]:checked');
+      if (scelta) document.getElementById("modalPlace").value = scelta.value;
+      if (distretto) impostaDistrettoModulo(distretto);
+      chiudi();
+    };
+  }
+
   // Posizione del capo abbattuto: facoltativa e alternativa alle note scritte
   // a mano. Tenuta in memoria qui finché il modulo è aperto, poi salvata
   // nell'abbattimento insieme al resto.
@@ -1131,8 +1416,15 @@
       info.hidden = false;
       info.innerHTML = `📍 Posizione salvata: ${coords.lat.toFixed(5)}, ${coords.lon.toFixed(5)}` +
         (coords.acc ? ` (±${Math.round(coords.acc)} m)` : "") +
-        ` — <a href="#" id="modalGpsRemove">rimuovi</a>`;
+        ` — <a href="#" id="modalGpsFill">compila il luogo</a> · <a href="#" id="modalGpsRemove">rimuovi</a>`;
       btn.textContent = "📍 Aggiorna la posizione";
+      const compila = document.getElementById("modalGpsFill");
+      if (compila) {
+        compila.addEventListener("click", (e) => {
+          e.preventDefault();
+          proponiLuogo(posizioneModulo);
+        });
+      }
       const rimuovi = document.getElementById("modalGpsRemove");
       if (rimuovi) {
         rimuovi.addEventListener("click", (e) => {
@@ -1153,6 +1445,8 @@
     populateModalCategories(preselectId);
     document.getElementById("modalDate").value = RulesEngine.toISO(selectedDate);
     document.getElementById("modalNote").value = "";
+    document.getElementById("modalPlace").value = "";
+    document.getElementById("modalDistrict").value = "";
     impostaPosizioneModulo(null);
     const huntType = huntTypeDelModulo(preselectId);
     const gunsAdatti = popolaSelectArmi(huntType);
@@ -1189,6 +1483,8 @@
     document.getElementById("modalCategory").value = k.categoryId;
     document.getElementById("modalDate").value = k.date;
     document.getElementById("modalNote").value = k.note || "";
+    document.getElementById("modalPlace").value = k.place || "";
+    impostaDistrettoModulo(k.district || "");
     impostaPosizioneModulo(k.coords || null);
 
     const huntType = huntTypeDelModulo(k.categoryId);
@@ -1240,6 +1536,8 @@
     // toglierla deve davvero rimuoverla dall'abbattimento, non lasciare la
     // vecchia: per questo si assegna sempre, anche a null.
     entry.coords = posizioneModulo || null;
+    entry.place = document.getElementById("modalPlace").value.trim();
+    entry.district = document.getElementById("modalDistrict").value || "";
 
     // Foto: si tocca IndexedDB solo se qualcosa è davvero cambiato in questa
     // sessione del modulo, per non riscrivere inutilmente una foto invariata.
@@ -1555,6 +1853,8 @@
             categoryId: k.categoryId,
             date: k.date,
             note: typeof k.note === "string" ? k.note : "",
+            place: typeof k.place === "string" ? k.place : "",
+            district: typeof k.district === "string" ? k.district : "",
             createdAt: typeof k.createdAt === "string" ? k.createdAt : now,
             // Se il fucile usato esiste qui (già presente, o appena importato
             // insieme a questo registro), il collegamento si mantiene;
@@ -1630,6 +1930,8 @@
           lon: pos.coords.longitude,
           acc: pos.coords.accuracy,
         });
+        // Subito dopo, la proposta di comune e località dalla carta nazionale.
+        proponiLuogo(posizioneModulo);
       } catch (err) {
         btn.textContent = testoOriginale;
         await showAlert(geoErrorText(err));
