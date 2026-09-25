@@ -13,6 +13,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.43", text: "Luogo di cattura: tra le località proposte dalla posizione GPS non compaiono più i nomi di grandi aree che contengono il punto (catene montuose, regioni, valli lunghe), come \u00abAlpi Lepontine\u00bb ripetuto in tre lingue o \u00abSottoceneri\u00bb, che finivano sempre in cima come \u00abqui\u00bb. Restano i nomi di luogo veri e propri, dal più vicino." },
     { v: "3.42", text: "Nuovo riquadro \u00abDove mi trovo\u00bb nella schermata principale: con un tocco controlla se sei dentro, sul confine o vicino (entro 1 km) a una bandita cantonale o federale, con distanza e direzione, e se quella bandita riguarda la caccia che hai scelto in alto (alta, bassa o acquatica, o solo camoscio, marmotta o fagiano di monte). Mostra anche le zone di tranquillit\u00e0 per la fauna vicine, con le loro regole e se sono in vigore nella data scelta. Tutti i confini sono dentro l'app, quindi il controllo funziona anche senza rete. Con la rete aggiunge distretto e comune e li confronta con il regolamento (art. 44). Due pulsanti aprono il punto sulla cartina della caccia del Cantone e sulla carta nazionale. \u00c8 un aiuto, non un permesso: fanno stato i testi ufficiali e la segnaletica sul terreno." },
     { v: "3.41", text: "Messaggio SOS pi\u00f9 completo per la Rega: oltre a coordinate, precisione e ora, ora contiene anche le coordinate svizzere CH1903+/LV95 (quelle usate dai soccorsi) e la quota. Se c'\u00e8 rete, in pochi secondi aggiunge comune e localit\u00e0 pi\u00f9 vicina e, quando il GPS non d\u00e0 l'altitudine, la ricava dal modello del terreno; se la rete non risponde il messaggio parte comunque subito. Il testo compare anche sullo schermo, con un pulsante per copiarlo, cos\u00ec puoi dettarlo per telefono o riusarlo se l'app Messaggi non lo riempie da sola." },
     { v: "3.40", text: "Nuovo campo \u00abDistretto\u00bb nella registrazione di un abbattimento, separato dal luogo di cattura (che resta come va scritto sul foglio di controllo). Con la posizione GPS viene proposto insieme a comune e localit\u00e0, dai confini ufficiali swisstopo; senza GPS lo scegli dall'elenco. Compare nel dettaglio del registro. Come tutti i dati dell'app, coordinate, luogo e distretto restano solo sul tuo telefono e non vengono inviati a nessuno." },
@@ -1356,17 +1357,45 @@
   // Nomi di luogo più vicini: si allarga il raggio a gradini finché se ne
   // trovano almeno 4 diversi, così nei posti isolati non si resta a mani
   // vuote e in quelli ricchi di nomi non si superano i 50 risultati del servizio.
+  // swissNAMES3D contiene anche nomi di grandi aree (catene montuose, regioni,
+  // valli lunghe) che «contengono» il punto e finivano sempre in cima come
+  // «qui», spesso ripetuti in tre lingue (Alpi Lepontine, Alpes Lépontines,
+  // Lepontinische Alpen, Sottoceneri…). Non sono un luogo di cattura: si
+  // scartano per categoria e, per sicurezza, per estensione.
+  const TOPONIMI_ESCLUSI = /gebirge|grossraum|landschaftsname|gebiet|region|massiv/i;
+  const TOPONIMO_MAX_ESTENSIONE = 3000; // m: aree più grandi non sono una località
+
+  function estensioneGeometria(g) {
+    if (!g || !g.coordinates || g.type === "Point") return 0;
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    const visita = (c) => {
+      if (typeof c[0] === "number") {
+        if (c[0] < x0) x0 = c[0]; if (c[0] > x1) x1 = c[0];
+        if (c[1] < y0) y0 = c[1]; if (c[1] > y1) y1 = c[1];
+      } else c.forEach(visita);
+    };
+    visita(g.coordinates);
+    return Math.hypot(x1 - x0, y1 - y0);
+  }
+
   async function toponimiVicini(E, N) {
     const migliori = new Map();
+    const giaVisti = new Set(); // stesso oggetto con il nome in più lingue
     for (const raggio of [150, 500, 1500]) {
       const ris = await geoIdentify(E, N, "ch.swisstopo.swissnames3d", raggio);
       for (const f of ris) {
         const a = attrLuogo(f);
         const nome = (a.name || a.label || "").trim();
         if (!nome) continue;
+        if (TOPONIMI_ESCLUSI.test(String(a.objektart || a.objektklasse || ""))) continue;
+        if (/^(Polygon|MultiPolygon)$/.test(f.geometry && f.geometry.type) &&
+            estensioneGeometria(f.geometry) > TOPONIMO_MAX_ESTENSIONE) continue;
+        const chiave = f.featureId != null ? `id:${f.featureId}` : `g:${JSON.stringify(f.geometry).slice(0, 200)}`;
+        const prec = migliori.get(nome);
+        if (!prec && giaVisti.has(chiave)) continue;
         const r = distanzaDaGeometria(f.geometry, E, N);
         if (!isFinite(r.d)) continue;
-        const prec = migliori.get(nome);
+        giaVisti.add(chiave);
         if (!prec || r.d < prec.d) migliori.set(nome, { nome, d: r.d, dx: r.x - E, dy: r.y - N });
       }
       if (migliori.size >= 4) break;
