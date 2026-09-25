@@ -13,6 +13,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.46", text: "Il pulsante della cartina del Cantone ora apre la mappa con bandite cantonali, bandite federali e zone di tranquillit\u00e0 gi\u00e0 visibili." },
     { v: "3.45", text: "Il pulsante \u00abApri qui la cartina della caccia del Cantone\u00bb ora apre la mappa gi\u00e0 con i livelli Bandite cantonali, Bandite federali e Zone di tranquillit\u00e0 accesi, cos\u00ec il confine si vede subito senza doverli attivare a mano ogni volta." },
     { v: "3.44", text: "Confermato dall'Ufficio della caccia e della pesca: il Decreto bandite di caccia 2021-2026 e il Decreto delle zone di tranquillit\u00e0 restano in vigore, prorogati dal Consiglio di Stato fino all'aggiornamento del concetto bosco-selvaggina (fine 2027 circa) \u2014 non serve quindi un nuovo file dati. Corretto anche un refuso del regolamento venatorio: le bandite escluse dalla caccia da postazione fissa in Blenio, Riviera e Bellinzona sono la N. 67 Leggiuna e la N. 25 Piano di Magadino, non la N. 64 e la N. 48 come scritto prima." },
     { v: "3.43", text: "Luogo di cattura: tra le località proposte dalla posizione GPS non compaiono più i nomi di grandi aree che contengono il punto (catene montuose, regioni, valli lunghe), come \u00abAlpi Lepontine\u00bb ripetuto in tre lingue o \u00abSottoceneri\u00bb, che finivano sempre in cima come \u00abqui\u00bb. Restano i nomi di luogo veri e propri, dal più vicino." },
