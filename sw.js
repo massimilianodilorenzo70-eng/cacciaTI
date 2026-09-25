@@ -2,7 +2,7 @@
  * Quando aggiorni i file, incrementa CACHE_NAME (es. cacciaTI-v2) così i
  * telefoni scaricano la nuova versione invece di restare sulla vecchia cache. */
 
-const CACHE_NAME = "cacciaTI-v3.41";
+const CACHE_NAME = "cacciaTI-v3.42";
 
 const ASSETS = [
   "./",
@@ -13,6 +13,9 @@ const ASSETS = [
   "./js/storage.js",
   "./js/app.js",
   "./data/regolamento_2026.json",
+  "./data/bandite_cantonali.json",
+  "./data/bandite_federali.json",
+  "./data/zone_tranquillita.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/icon-maskable-512.png",
