@@ -13,6 +13,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.42", text: "Nuovo riquadro \u00abDove mi trovo\u00bb nella schermata principale: con un tocco controlla se sei dentro, sul confine o vicino (entro 1 km) a una bandita cantonale o federale, con distanza e direzione, e se quella bandita riguarda la caccia che hai scelto in alto (alta, bassa o acquatica, o solo camoscio, marmotta o fagiano di monte). Mostra anche le zone di tranquillit\u00e0 per la fauna vicine, con le loro regole e se sono in vigore nella data scelta. Tutti i confini sono dentro l'app, quindi il controllo funziona anche senza rete. Con la rete aggiunge distretto e comune e li confronta con il regolamento (art. 44). Due pulsanti aprono il punto sulla cartina della caccia del Cantone e sulla carta nazionale. \u00c8 un aiuto, non un permesso: fanno stato i testi ufficiali e la segnaletica sul terreno." },
     { v: "3.41", text: "Messaggio SOS pi\u00f9 completo per la Rega: oltre a coordinate, precisione e ora, ora contiene anche le coordinate svizzere CH1903+/LV95 (quelle usate dai soccorsi) e la quota. Se c'\u00e8 rete, in pochi secondi aggiunge comune e localit\u00e0 pi\u00f9 vicina e, quando il GPS non d\u00e0 l'altitudine, la ricava dal modello del terreno; se la rete non risponde il messaggio parte comunque subito. Il testo compare anche sullo schermo, con un pulsante per copiarlo, cos\u00ec puoi dettarlo per telefono o riusarlo se l'app Messaggi non lo riempie da sola." },
     { v: "3.40", text: "Nuovo campo \u00abDistretto\u00bb nella registrazione di un abbattimento, separato dal luogo di cattura (che resta come va scritto sul foglio di controllo). Con la posizione GPS viene proposto insieme a comune e localit\u00e0, dai confini ufficiali swisstopo; senza GPS lo scegli dall'elenco. Compare nel dettaglio del registro. Come tutti i dati dell'app, coordinate, luogo e distretto restano solo sul tuo telefono e non vengono inviati a nessuno." },
     { v: "3.39", text: "Nuovo campo \u00abLuogo di cattura\u00bb (comune e localit\u00e0, come sul foglio di controllo). Dopo aver salvato la posizione GPS, l'app legge dalla carta nazionale svizzera (swisstopo) il comune e i nomi di luogo pi\u00f9 vicini, con distanza e direzione, e ti propone di compilare il campo: scegli tu quale usare, o scrivilo a mano. Senza rete le coordinate restano salvate e puoi compilare il luogo pi\u00f9 tardi, anche modificando l'abbattimento. Coordinate e luogo restano solo sul tuo telefono: non vengono inviati a nessuno." },
@@ -213,6 +214,7 @@
     const subTabs = document.getElementById("altaSubTabs");
     subTabs.hidden = selectedHunt !== "alta";
     subTabs.querySelectorAll(".subtab").forEach(b => b.classList.toggle("active", b.dataset.sub === altaSubView));
+    renderDoveSono();
   }
 
   function renderOggi() {
@@ -1475,6 +1477,318 @@
   // Posizione del capo abbattuto: facoltativa e alternativa alle note scritte
   // a mano. Tenuta in memoria qui finché il modulo è aperto, poi salvata
   // nell'abbattimento insieme al resto.
+  // ---------- Dove mi trovo: bandite di caccia e distretto ----------
+  // I confini delle bandite cantonali sono dentro l'app (data/bandite_cantonali.json)
+  // e il controllo si fa sul telefono, quindi funziona anche senza rete. Il
+  // distretto e il comune invece arrivano da swisstopo e servono la rete: se
+  // manca, la parte sulle bandite resta valida lo stesso.
+  // L'app non dice mai «qui puoi cacciare»: segnala dentro/vicino/sul confine,
+  // perché per i confini esatti fa stato la descrizione del decreto e il GPS
+  // in montagna sbaglia di parecchi metri.
+
+  let banditeData = null;     // bandite cantonali
+  let federaliData = null;    // bandite federali (inventario UFAM)
+  let tranquillitaData = null; // zone di tranquillità per la fauna selvatica
+  let doveStato = null; // { E, N, acc, ora, distretto, comune, rete: 'ok'|'no'|'attesa' }
+  const DOVE_RAGGIO_VICINE = 1000; // m
+  const DOVE_MARGINE_MIN = 25;     // m: sotto questa distanza dal confine è sempre «da verificare»
+
+  async function caricaJson(url) {
+    try {
+      const res = await fetch(url);
+      return res.ok ? await res.json() : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  async function loadBanditeData() {
+    [banditeData, federaliData, tranquillitaData] = await Promise.all([
+      banditeData || caricaJson("data/bandite_cantonali.json"),
+      federaliData || caricaJson("data/bandite_federali.json"),
+      tranquillitaData || caricaJson("data/zone_tranquillita.json"),
+    ]);
+  }
+
+  const TIPO_BANDITA = {
+    totale: "Bandita totale",
+    alta: "Bandita di caccia alta",
+    bassa: "Bandita di caccia bassa",
+    camoscio: "Bandita camoscio",
+    marmotta: "Bandita marmotta",
+    fagiano: "Bandita fagiano di monte",
+    camoscio_fagiano: "Bandita camoscio e fagiano di monte",
+    fed_integrale: "Bandita federale, protezione integrale",
+    fed_parziale: "Bandita federale, protezione parziale",
+    fed_danni: "Bandita federale, perimetro danni della selvaggina",
+  };
+
+  // Cosa vieta la bandita per il tipo di caccia scelto in alto.
+  // null = non riguarda questa caccia; specie vuota = vietata tutta questa caccia.
+  function divietoBandita(tipo, hunt) {
+    switch (tipo) {
+      case "totale": return { specie: [], testo: "vietata ogni caccia" };
+      // Bandite federali: valgono per ogni tipo di caccia. Nella protezione
+      // parziale e nel perimetro danni la scheda federale può ammettere
+      // determinate specie o abbattimenti ordinati dal Cantone: l'app non
+      // lo decide, lo segnala in giallo da verificare.
+      case "fed_integrale": return { specie: [], testo: "vietata ogni caccia" };
+      case "fed_parziale": return { specie: ["scheda"], testo: "caccia ammessa solo per le specie indicate nella scheda federale: verifica" };
+      case "fed_danni": return { specie: ["scheda"], testo: "possibili abbattimenti ordinati dal Cantone per danni della selvaggina: verifica" };
+      case "alta": return hunt === "alta" ? { specie: [], testo: "vietata la caccia alta" } : null;
+      case "bassa": return hunt === "bassa" ? { specie: [], testo: "vietata la caccia bassa" } : null;
+      case "camoscio": return hunt === "alta" ? { specie: ["Camoscio"], testo: "vietata la caccia al camoscio" } : null;
+      case "marmotta": return hunt === "alta" ? { specie: ["Marmotta"], testo: "vietata la caccia alla marmotta" } : null;
+      case "fagiano": return hunt === "bassa" ? { specie: ["Fagiano di monte"], testo: "vietata la caccia al fagiano di monte" } : null;
+      case "camoscio_fagiano":
+        if (hunt === "alta") return { specie: ["Camoscio"], testo: "vietata la caccia al camoscio" };
+        if (hunt === "bassa") return { specie: ["Fagiano di monte"], testo: "vietata la caccia al fagiano di monte" };
+        return null;
+      default: return null;
+    }
+  }
+
+  // Distanza dal confine (anche stando dentro) e se il punto è dentro.
+  function posizioneRispettoBandita(b, E, N) {
+    let dentro = false;
+    let best = { d: Infinity, x: E, y: N };
+    for (const pol of b.poligoni) {
+      if (puntoInAnello(E, N, pol[0]) && !pol.slice(1).some((buco) => puntoInAnello(E, N, buco))) dentro = true;
+      for (const anello of pol) {
+        for (let i = 0; i < anello.length - 1; i++) {
+          const a = anello[i], c = anello[i + 1];
+          const r = distSegmento(E, N, a[0], a[1], c[0], c[1]);
+          if (r.d < best.d) best = r;
+        }
+      }
+    }
+    return { dentro, d: best.d, dir: direzioneCardinale(best.x - E, best.y - N) };
+  }
+
+  function banditeVicine(lista, E, N) {
+    if (!lista) return [];
+    const r = DOVE_RAGGIO_VICINE;
+    const out = [];
+    for (const b of lista) {
+      const [e0, n0, e1, n1] = b.bbox;
+      if (E < e0 - r || E > e1 + r || N < n0 - r || N > n1 + r) continue;
+      const p = posizioneRispettoBandita(b, E, N);
+      if (p.dentro || p.d <= r) out.push({ b, ...p });
+    }
+    // prima quelle in cui sei dentro, poi le più vicine
+    return out.sort((x, y) => (y.dentro - x.dentro) || (x.d - y.d));
+  }
+
+  function linkCartinaCantone(E, N) {
+    return `https://map.geo.ti.ch/?lang=it&theme=caccia&map_x=${Math.round(E)}&map_y=${Math.round(N)}&map_zoom=9&map_crosshair=true`;
+  }
+  function linkCartaNazionale(E, N) {
+    return `https://map.geo.admin.ch/?lang=it&E=${Math.round(E)}&N=${Math.round(N)}&zoom=10&crosshair=marker` +
+      `&layers=ch.bafu.bundesinventare-jagdbanngebiete,ch.bafu.wrz-wildruhezonen_portal`;
+  }
+
+  function metri(d) {
+    return d < 1000 ? `${Math.round(d / 5) * 5} m` : `${(d / 1000).toFixed(1).replace(".", ",")} km`;
+  }
+
+  function rigaBandita(v, hunt, margine) {
+    const b = v.b;
+    const div = divietoBandita(b.tipo, hunt);
+    const sulConfine = v.d <= margine;
+    let cls, stato;
+    if (v.dentro && !sulConfine) {
+      cls = div && div.specie.length === 0 ? "dove-dentro" : "dove-verifica";
+      stato = `Sei <b>dentro</b>`;
+    } else if (sulConfine) {
+      cls = "dove-verifica";
+      stato = `Sei <b>sul confine</b>, ${v.dentro ? "appena dentro" : "appena fuori"} (${metri(v.d)}) — da verificare`;
+    } else {
+      cls = "dove-vicina";
+      stato = `Confine a <b>${metri(v.d)}</b> verso ${v.dir}`;
+    }
+    const desc = b.scheda
+      ? `<div class="dove-desc"><a href="${b.scheda}" target="_blank" rel="noopener">Scheda federale della zona n. ${b.n} (PDF, serve la rete)</a></div>`
+      : b.desc
+      ? `<details class="dove-desc"><summary>Confine secondo il decreto</summary><div>${escapeHtmlLuogo(b.desc)}</div></details>`
+      : "";
+    return `<div class="dove-bandita ${cls}">
+      <div class="dove-nome">${escapeHtmlLuogo(b.nome)} <span class="dove-tipo">· ${TIPO_BANDITA[b.tipo] || b.tipo}${b.distretto ? " · " + escapeHtmlLuogo(b.distretto) : ""}</span></div>
+      <div>${stato}${div ? ` — ${div.testo}` : ""}</div>
+      ${desc}
+    </div>`;
+  }
+
+  // Zone di tranquillità: limitano l'accesso (divieto, obbligo di restare sui
+  // sentieri, cani al guinzaglio…) in certi periodi dell'anno. Non sono
+  // bandite di caccia, ma valgono anche per il cacciatore: si segnala se la
+  // data scelta cade nel periodo di protezione.
+  function zonaInVigore(z, data) {
+    if (z.periodi === "annuale") return true;
+    const md = (data.getMonth() + 1) * 100 + data.getDate();
+    return z.periodi.some(([m1, g1, m2, g2]) => {
+      const da = m1 * 100 + g1, a = m2 * 100 + g2;
+      return da <= a ? md >= da && md <= a : md >= da || md <= a; // periodo a cavallo di capodanno
+    });
+  }
+
+  function rigaZonaTranquillita(v, margine) {
+    const z = v.b;
+    const attiva = zonaInVigore(z, selectedDate);
+    const regola = [z.disposizione, z.regola].filter(Boolean).join(". ") || "Disposizioni particolari: vedi il decreto";
+    const sulConfine = v.d <= margine;
+    let cls = "dove-vicina", stato;
+    if (v.dentro && !sulConfine) {
+      stato = "Sei <b>dentro</b>";
+      if (attiva) cls = /divieto di accesso/i.test(regola) ? "dove-dentro" : "dove-verifica";
+    } else if (sulConfine) {
+      stato = `Sei <b>sul confine</b>, ${v.dentro ? "appena dentro" : "appena fuori"} (${metri(v.d)})`;
+      if (attiva) cls = "dove-verifica";
+    } else {
+      stato = `Confine a <b>${metri(v.d)}</b> verso ${v.dir}`;
+    }
+    const quando = attiva ? `<b>in vigore il ${formatDateCH(RulesEngine.toISO(selectedDate))}</b>` : "non in vigore nella data scelta";
+    return `<div class="dove-bandita ${cls}">
+      <div class="dove-nome">${escapeHtmlLuogo(z.nome)} <span class="dove-tipo">· Zona di tranquillità${z.vincolante ? "" : " (raccomandata)"}</span></div>
+      <div>${stato}</div>
+      <div class="dove-nota">${escapeHtmlLuogo(regola)} — ${escapeHtmlLuogo(z.periodoTesto)}, ${quando}</div>
+    </div>`;
+  }
+
+  // Distretto: confronta con l'art. 44 (regData.zones) le specie del tipo di
+  // caccia scelto. È un aiuto alla lettura, non un'interpretazione: dove il
+  // testo pone limiti che l'app non può verificare, lo dice e mostra il testo.
+  function statoDistrettoSpecie(z, distretto, comune) {
+    const cont = (t, parola) => !!t && !!parola &&
+      new RegExp("(^|[^\\p{L}])" + parola.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "($|[^\\p{L}])", "iu").test(t);
+    // le condizioni contano solo se nominano questo distretto
+    const cond = z.condizioni && cont(z.condizioni, distretto) ? z.condizioni : "";
+    const aperta = cond ? { cls: "status-check", label: "Aperta, con condizioni", testo: cond }
+      : { cls: "status-open", label: "Aperta", testo: "" };
+    if (z.chiuso && /distrett/i.test(z.chiuso) && cont(z.chiuso, distretto)) {
+      return { cls: "status-closed", label: "Chiusa nel distretto", testo: z.chiuso };
+    }
+    if (z.aperto) {
+      if (cont(z.aperto, distretto)) {
+        // il pezzo di frase che nomina il distretto (le virgole dentro le parentesi non spezzano)
+        const pezzi = z.aperto.split(/[;,.](?![^(]*\))|\s+e\s+(?![^(]*\))/);
+        const pezzo = (pezzi.find((t) => cont(t, distretto)) || "").trim();
+        if (/esclus|solo|sopra|sotto|a sinistra|a destra/i.test(pezzo)) {
+          return { cls: "status-check", label: "Aperta in parte", testo: pezzo };
+        }
+      } else if (!/^(tutt|resto del territorio)/i.test(z.aperto.trim())) {
+        return { cls: "status-closed", label: "Chiusa nel distretto", testo: `Il distretto di ${distretto} non è tra quelli aperti. ${z.aperto}` };
+      }
+    }
+    if (z.chiuso && !/distrett/i.test(z.chiuso)) {
+      if (!comune) return { cls: "status-check", label: "Chiusa in alcuni comuni", testo: z.chiuso };
+      if (cont(z.chiuso, comune)) return { cls: "status-check", label: "Verifica: il tuo comune è citato", testo: z.chiuso };
+    }
+    return aperta;
+  }
+
+  function renderDistrettoDove(hunt) {
+    const s = doveStato;
+    if (s.rete === "attesa") return `<div class="dove-nota">Cerco distretto e comune sulla carta nazionale…</div>`;
+    if (!s.distretto) {
+      return `<div class="dove-nota">Distretto non disponibile${s.rete === "no" ? " senza rete" : ""}: il controllo delle bandite qui sopra vale comunque, perché è fatto sul telefono.</div>`;
+    }
+    const zones = (regData && regData.zones) || {};
+    const specie = [...new Set(regData.categories.filter((c) => c.huntType === hunt).map((c) => c.speciesLabel))];
+    const righe = [];
+    for (const sp of specie) {
+      const z = zones[sp.toLowerCase()];
+      if (!z) continue;
+      const st = statoDistrettoSpecie(z, s.distretto, s.comune);
+      if (!st) continue;
+      righe.push(`<div class="dove-specie"><span>${sp}</span><span class="status-pill ${st.cls}">${st.label}</span></div>` +
+        (st.testo ? `<div class="dove-nota">${escapeHtmlLuogo(st.testo)}</div>` : ""));
+    }
+    const generale = hunt === "alta" && s.distretto === "Bellinzona" ? zones._caccia_alta
+      : hunt === "acquatica" ? zones._caccia_acquatica : "";
+    return `<div class="dove-sotto">Distretto: <b>${s.distretto}</b>${s.comune ? ` · Comune: <b>${escapeHtmlLuogo(s.comune)}</b>` : ""}</div>` +
+      (generale ? `<div class="dove-nota dove-avviso">${escapeHtmlLuogo(generale)}</div>` : "") +
+      (righe.length ? righe.join("") : `<div class="dove-nota">Nessuna limitazione per distretto indicata per ${HUNT_LABELS[hunt].toLowerCase()}.</div>`);
+  }
+
+  function renderDoveSono() {
+    const box = document.getElementById("doveContent");
+    if (!box) return;
+    const hunt = selectedHunt || "alta";
+    const nomeCaccia = HUNT_LABELS[hunt].toLowerCase();
+    const fonte = banditeData
+      ? `<div class="dove-fonte">Bandite cantonali dal Geoportale Ticino (${escapeHtmlLuogo(banditeData.decreto)}, dati aggiornati al ${formatDateCH(banditeData.dataMutazione)})` +
+        (federaliData ? `; bandite federali dall'inventario UFAM (revisione ${escapeHtmlLuogo(federaliData.revisione)})` : "") +
+        (tranquillitaData ? `; zone di tranquillità dal Geoportale Ticino (<a href="${tranquillitaData.link}" target="_blank" rel="noopener">decreto</a>)` : "") +
+        `. Non comprende il limite dei 50 m da abitazioni e strutture. Fanno stato i testi ufficiali e la segnaletica sul terreno.</div>`
+      : `<div class="dove-fonte">Confini delle bandite non caricati: riapri l'app con la rete almeno una volta.</div>`;
+
+    let corpo = "";
+    if (!doveStato || (doveStato.E === undefined && !doveStato.errore)) {
+      corpo = `<div class="dove-nota">Controlla se sei dentro o vicino a una bandita cantonale o federale che riguarda la ${nomeCaccia}, o a una zona di tranquillità, e cosa dice il regolamento per il distretto in cui ti trovi. Bandite e zone si controllano anche senza rete.</div>`;
+    } else if (doveStato.errore) {
+      corpo = `<div class="dove-nota dove-avviso">${escapeHtmlLuogo(doveStato.errore)}</div>`;
+    } else {
+      const { E, N, acc } = doveStato;
+      const margine = Math.max(DOVE_MARGINE_MIN, acc || 0);
+      const vicine = [
+        ...banditeVicine(banditeData && banditeData.bandite, E, N),
+        ...banditeVicine(federaliData && federaliData.bandite, E, N),
+      ].sort((x, y) => (y.dentro - x.dentro) || (x.d - y.d));
+      const pertinenti = vicine.filter((v) => divietoBandita(v.b.tipo, hunt));
+      const altre = vicine.filter((v) => !divietoBandita(v.b.tipo, hunt));
+      const zoneTr = banditeVicine(tranquillitaData && tranquillitaData.zone, E, N);
+      const ora = doveStato.ora.toLocaleTimeString("it-CH", { hour: "2-digit", minute: "2-digit" });
+
+      corpo += `<div class="dove-sotto">Posizione delle ${ora}, precisione ±${Math.round(acc)} m${acc > 50 ? " — <b>bassa</b>, riprova all'aperto" : ""}</div>`;
+      corpo += `<div class="dove-titolo">Bandite che riguardano la ${nomeCaccia}</div>`;
+      corpo += pertinenti.length
+        ? pertinenti.map((v) => rigaBandita(v, hunt, margine)).join("")
+        : `<div class="dove-bandita dove-libera">Nessuna bandita, cantonale o federale, della ${nomeCaccia} entro ${metri(DOVE_RAGGIO_VICINE)}.</div>`;
+      if (altre.length) {
+        corpo += `<details class="dove-altre"><summary>Altre bandite vicine, non riguardano la ${nomeCaccia} (${altre.length})</summary>${altre.map((v) => rigaBandita(v, hunt, margine)).join("")}</details>`;
+      }
+      corpo += `<div class="dove-titolo">Zone di tranquillità per la fauna</div>`;
+      corpo += zoneTr.length
+        ? zoneTr.map((v) => rigaZonaTranquillita(v, margine)).join("")
+        : `<div class="dove-nota">Nessuna zona di tranquillità entro ${metri(DOVE_RAGGIO_VICINE)}.</div>`;
+      corpo += `<div class="dove-titolo">Distretto e regolamento (art. 44)</div>` + renderDistrettoDove(hunt);
+      corpo += `<a class="btn secondary dove-link" href="${linkCartinaCantone(E, N)}" target="_blank" rel="noopener">Apri qui la cartina della caccia del Cantone</a>`;
+      corpo += `<a class="btn secondary dove-link" href="${linkCartaNazionale(E, N)}" target="_blank" rel="noopener">Apri qui la carta nazionale</a>`;
+    }
+    const inCorso = doveStato && doveStato.cerca;
+    box.innerHTML = corpo +
+      `<button class="btn dove-btn" id="doveBtn" ${inCorso ? "disabled" : ""}>${inCorso ? "Cerco la posizione…" : doveStato && !doveStato.errore ? "Aggiorna la posizione" : "Controlla la mia posizione"}</button>` +
+      fonte;
+    document.getElementById("doveBtn").addEventListener("click", controllaDoveSono);
+  }
+
+  async function controllaDoveSono() {
+    doveStato = { ...(doveStato && !doveStato.errore ? doveStato : {}), cerca: true };
+    renderDoveSono();
+    let pos;
+    try {
+      pos = await getPosition();
+    } catch (err) {
+      doveStato = { errore: err && err.code ? geoErrorText(err).replace(", oppure chiama direttamente", "") : "Non riesco a ottenere la posizione." };
+      renderDoveSono();
+      return;
+    }
+    if (!banditeData || !federaliData || !tranquillitaData) await loadBanditeData();
+    const { E, N } = wgs84ToLv95(pos.coords.latitude, pos.coords.longitude);
+    doveStato = { E, N, acc: pos.coords.accuracy || 0, ora: new Date(), distretto: "", comune: "", rete: "attesa" };
+    renderDoveSono();
+    const mio = doveStato;
+    const [distretto, comune] = await Promise.all([
+      distrettoDaCoordinate(E, N).catch(() => null),
+      comuneDaCoordinate(E, N).catch(() => null),
+    ]);
+    if (doveStato !== mio) return; // nel frattempo è partita un'altra ricerca
+    doveStato.distretto = distretto || "";
+    doveStato.comune = comune || "";
+    doveStato.rete = distretto === null && comune === null ? "no" : "ok";
+    renderDoveSono();
+  }
+
   let posizioneModulo = null;
 
   function impostaPosizioneModulo(coords) {
@@ -1764,6 +2078,7 @@
 
     await loadRegData();
     loadContingenteData().then(renderOggi); // aggiorna la vista quando arriva (non blocca l'avvio)
+    loadBanditeData().then(renderDoveSono); // confini bandite, per il controllo offline della posizione
 
     const dateInput = document.getElementById("dateInput");
     dateInput.value = RulesEngine.toISO(selectedDate);
