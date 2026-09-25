@@ -13,6 +13,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.41", text: "Messaggio SOS pi\u00f9 completo per la Rega: oltre a coordinate, precisione e ora, ora contiene anche le coordinate svizzere CH1903+/LV95 (quelle usate dai soccorsi) e la quota. Se c'\u00e8 rete, in pochi secondi aggiunge comune e localit\u00e0 pi\u00f9 vicina e, quando il GPS non d\u00e0 l'altitudine, la ricava dal modello del terreno; se la rete non risponde il messaggio parte comunque subito. Il testo compare anche sullo schermo, con un pulsante per copiarlo, cos\u00ec puoi dettarlo per telefono o riusarlo se l'app Messaggi non lo riempie da sola." },
     { v: "3.40", text: "Nuovo campo \u00abDistretto\u00bb nella registrazione di un abbattimento, separato dal luogo di cattura (che resta come va scritto sul foglio di controllo). Con la posizione GPS viene proposto insieme a comune e localit\u00e0, dai confini ufficiali swisstopo; senza GPS lo scegli dall'elenco. Compare nel dettaglio del registro. Come tutti i dati dell'app, coordinate, luogo e distretto restano solo sul tuo telefono e non vengono inviati a nessuno." },
     { v: "3.39", text: "Nuovo campo \u00abLuogo di cattura\u00bb (comune e localit\u00e0, come sul foglio di controllo). Dopo aver salvato la posizione GPS, l'app legge dalla carta nazionale svizzera (swisstopo) il comune e i nomi di luogo pi\u00f9 vicini, con distanza e direzione, e ti propone di compilare il campo: scegli tu quale usare, o scrivilo a mano. Senza rete le coordinate restano salvate e puoi compilare il luogo pi\u00f9 tardi, anche modificando l'abbattimento. Coordinate e luogo restano solo sul tuo telefono: non vengono inviati a nessuno." },
     { v: "3.38", text: "Riscritta la sezione \u00abCosa fa cacciaTI\u00bb: ora descrive tutte le funzioni, comprese sottoschede di caccia alta, foto e luogo GPS degli abbattimenti, statistiche, backup, SOS con doppio tocco e tema scuro." },
@@ -673,6 +674,62 @@
     return "Non riesco a ottenere la posizione. Riprova, oppure chiama direttamente.";
   }
 
+  // Messaggio per la Rega. Le coordinate WGS84, quelle svizzere LV95 e l'ora
+  // si calcolano sul telefono, senza rete: quelle ci sono sempre. Comune,
+  // località e quota dal modello del terreno arrivano dai servizi
+  // swisstopo e sono un di più: se la rete non risponde entro pochi secondi
+  // il messaggio parte lo stesso, perché in emergenza l'attesa costa più
+  // del dettaglio mancante.
+  const SOS_EXTRA_MS = 4000;
+
+  async function quotaDaModelloTerreno(E, N) {
+    const url = `https://api3.geo.admin.ch/rest/services/height?easting=${E.toFixed(1)}&northing=${N.toFixed(1)}&sr=2056`;
+    const r = await fetch(url);
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const d = await r.json();
+    const h = parseFloat(d.height);
+    return isFinite(h) ? Math.round(h) : null;
+  }
+
+  async function componiMessaggioSOS(pos) {
+    const lat = pos.coords.latitude;
+    const lon = pos.coords.longitude;
+    const acc = Math.round(pos.coords.accuracy);
+    const { E, N } = wgs84ToLv95(lat, lon);
+    const ora = new Date().toLocaleString("it-CH", { dateStyle: "short", timeStyle: "short" });
+
+    let quota = pos.coords.altitude != null ? Math.round(pos.coords.altitude) : null;
+    let comune = null, vicino = null;
+
+    // Tutto in parallelo, con un tetto di tempo complessivo.
+    const extra = Promise.all([
+      comune === null ? comuneDaCoordinate(E, N).catch(() => null) : null,
+      toponimiVicini(E, N).catch(() => []),
+      quota == null ? quotaDaModelloTerreno(E, N).catch(() => null) : null,
+    ]);
+    const scaduto = Symbol("scaduto");
+    const esito = await Promise.race([
+      extra,
+      new Promise((res) => setTimeout(() => res(scaduto), SOS_EXTRA_MS)),
+    ]);
+    if (esito !== scaduto) {
+      comune = esito[0];
+      const t = esito[1] && esito[1][0];
+      if (t) vicino = t.d < 25 ? t.nome : `${t.nome} (${descriviDistanza(t)})`;
+      if (quota == null && esito[2] != null) quota = esito[2];
+    }
+
+    let testo = "EMERGENZA. Ho bisogno di soccorso.";
+    if (comune || vicino) {
+      testo += ` Luogo: ${[comune, vicino].filter(Boolean).join(" – ")}.`;
+    }
+    testo += ` Posizione: ${lat.toFixed(5)}, ${lon.toFixed(5)}` +
+      ` (CH1903+/LV95: ${Math.round(E)}, ${Math.round(N)}).`;
+    if (quota != null) testo += ` Quota: circa ${quota} m.`;
+    testo += ` Precisione GPS: circa ${acc} m. Ora: ${ora}.`;
+    return testo;
+  }
+
   function setupSOS() {
     const backdrop = document.getElementById("sosBackdrop");
     const status = document.getElementById("sosStatus");
@@ -713,23 +770,35 @@
 
     document.getElementById("sosSmsBtn").addEventListener("click", async () => {
       showStatus("Ricerca della posizione GPS in corso…", "");
+      mostraTestoSOS("");
       try {
         const pos = await getPosition();
-        const lat = pos.coords.latitude.toFixed(5);
-        const lon = pos.coords.longitude.toFixed(5);
-        const acc = Math.round(pos.coords.accuracy);
-        const alt = pos.coords.altitude != null ? Math.round(pos.coords.altitude) : null;
-        const now = new Date();
-        const ora = now.toLocaleString("it-CH", { dateStyle: "short", timeStyle: "short" });
-
-        let testo = `EMERGENZA. Ho bisogno di soccorso. Posizione: ${lat}, ${lon}`;
-        if (alt != null) testo += ` (quota indicativa ${alt} m)`;
-        testo += `. Precisione GPS: circa ${acc} m. Ora: ${ora}.`;
-
-        showStatus("Posizione trovata. Si apre ora l'app Messaggi: controlla il testo e invialo tu.", "ok");
+        showStatus("Posizione trovata. Cerco anche comune, località e quota…", "");
+        const testo = await componiMessaggioSOS(pos);
+        mostraTestoSOS(testo);
+        showStatus("Si apre ora l'app Messaggi: controlla il testo e invialo tu.", "ok");
         window.location.href = `sms:1414?body=${encodeURIComponent(testo)}`;
       } catch (err) {
         showStatus(geoErrorText(err), "err");
+      }
+    });
+
+    // Il testo resta anche sullo schermo: se l'app Messaggi non lo riempie da
+    // sola, o se si finisce per telefonare, si può leggere e dettare.
+    function mostraTestoSOS(testo) {
+      const wrap = document.getElementById("sosTextWrap");
+      document.getElementById("sosText").textContent = testo;
+      wrap.hidden = !testo;
+    }
+
+    document.getElementById("sosCopyBtn").addEventListener("click", async () => {
+      const testo = document.getElementById("sosText").textContent;
+      if (!testo) return;
+      try {
+        await navigator.clipboard.writeText(testo);
+        showStatus("Testo copiato.", "ok");
+      } catch (e) {
+        showStatus("Non riesco a copiare: seleziona il testo a mano.", "err");
       }
     });
 
