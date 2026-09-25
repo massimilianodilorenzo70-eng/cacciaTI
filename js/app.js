@@ -1613,17 +1613,12 @@
   // Livelli da accendere sulla cartina del Cantone: bandite cantonali,
   // bandite federali e zone di tranquillità (con i suoi due sotto-livelli).
   // Nomi e formato presi da un link "Condividi" espanso manualmente: il
-  // geoportale non li documenta.
-  const LIVELLI_CARTINA_CANTONE = [
-    ["tree_group_layers_Bandite cantonali di caccia", "Bandite cantonali di caccia"],
-    ["tree_group_layers_Inventario federale delle bandite di caccia federali", "Inventario federale delle bandite di caccia federali"],
-    ["tree_group_layers_Zone di tranquillità per la fauna selvatica", "Tipi di sentieri,Zone di tranquillità"],
-  ];
+  // geoportale vuole gli spazi come + (non %20) e non li documenta.
+  const LIVELLI_CARTINA = "tree_group_layers_Bandite+cantonali+di+caccia=Bandite+cantonali+di+caccia" +
+    "&tree_group_layers_Inventario+federale+delle+bandite+di+caccia+federali=Inventario+federale+delle+bandite+di+caccia+federali" +
+    "&tree_group_layers_Zone+di+tranquillit%C3%A0+per+la+fauna+selvatica=Tipi+di+sentieri%2CZone+di+tranquillit%C3%A0";
   function linkCartinaCantone(E, N) {
-    const livelli = LIVELLI_CARTINA_CANTONE
-      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
-      .join("&");
-    return `https://map.geo.ti.ch/?lang=it&theme=caccia&map_x=${Math.round(E)}&map_y=${Math.round(N)}&map_zoom=9&map_crosshair=true&${livelli}`;
+    return `https://map.geo.ti.ch/?lang=it&theme=caccia&map_x=${Math.round(E)}&map_y=${Math.round(N)}&map_zoom=9&map_crosshair=true&${LIVELLI_CARTINA}`;
   }
   function linkCartaNazionale(E, N) {
     return `https://map.geo.admin.ch/?lang=it&E=${Math.round(E)}&N=${Math.round(N)}&zoom=10&crosshair=marker` +
