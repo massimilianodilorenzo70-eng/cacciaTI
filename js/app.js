@@ -13,7 +13,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
-    { v: "3.37", text: "Video dimostrativo aggiornato con le novit\u00e0: modalit\u00e0 notturna, sottoschede della caccia alta (Settembrina, Tardo autunnale, Invernale cinghiale), promemoria del backup e contatto con lo sviluppatore." },
+    { v: "3.37", text: "Nuovo campo \u00abLuogo\u00bb nella registrazione di un abbattimento: puoi salvare con un tocco la posizione GPS esatta, oppure continuare a scriverla a mano nelle note, o entrambe le cose. La posizione si rivede nel dettaglio del registro, con un link per aprirla nelle mappe, e si pu\u00f2 togliere in qualsiasi momento." },
     { v: "3.36", text: "Corretta la regola della femmina lattifera di cervo: puoi prelevarne 2 in stagione (non pi\u00f9 1), la prima libera, la seconda solo se il suo cerbiatto \u00e8 gi\u00e0 stato abbattuto lo stesso giorno, come previsto dalle Disposizioni al cacciatore 2026." },
     { v: "3.35", text: "Pi\u00f9 spazio tra le icone luna e SOS. Il riferimento normativo (RT 922.110) ora \u00e8 allineato in basso a destra, alla stessa altezza del fondo del pulsante \u00abOggi\u00bb, invece di stare subito sotto SOS." },
     { v: "3.34", text: "Il riferimento normativo (RT 922.110) si \u00e8 spostato sotto il pulsante SOS, allineato a destra, invece di stare nella riga stretta accanto al titolo: libera spazio in modo permanente, non solo durante l'etichetta \u00abNuovo\u00bb." },
@@ -439,7 +439,15 @@
       }
       if (k.ammoType) righeDettagli.push(`<div><b>Munizione:</b> ${k.ammoType}</div>`);
       if (k.bulletWeight) righeDettagli.push(`<div><b>Peso palla:</b> ${k.bulletWeight} ${k.bulletWeightUnit === "gr" ? "grani" : "grammi"}</div>`);
-      const etichetta = k.photoId ? (righeDettagli.length > 1 ? "Foto, arma e munizione" : "Foto") : "Arma e munizione";
+      if (k.coords) {
+        const { lat, lon, acc } = k.coords;
+        righeDettagli.push(
+          `<div><b>Luogo:</b> ${lat.toFixed(5)}, ${lon.toFixed(5)}` +
+          (acc ? ` (±${Math.round(acc)} m)` : "") +
+          ` — <a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank" rel="noopener">apri nelle mappe</a></div>`
+        );
+      }
+      const etichetta = righeDettagli.length === 1 && k.photoId ? "Foto" : "Dettagli";
       const dettagli = righeDettagli.length > 0
         ? `<details class="log-extra"><summary>${etichetta}</summary>${righeDettagli.join("")}</details>`
         : "";
@@ -636,6 +644,30 @@
 
   // ---------- SOS: posizione GPS + SMS/chiamata al 1414 ----------
 
+  // Posizione GPS: usata sia dall'SOS sia dal campo "Luogo" del modulo di
+  // registrazione, quindi sta qui fuori e non dentro una delle due.
+  function getPosition() {
+    return new Promise((resolve, reject) => {
+      if (!("geolocation" in navigator)) {
+        reject(new Error("Questo telefono/browser non supporta la localizzazione."));
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
+        enableHighAccuracy: true, timeout: 20000, maximumAge: 0,
+      });
+    });
+  }
+
+  function geoErrorText(err) {
+    if (err.code === err.PERMISSION_DENIED) {
+      return "Permesso di localizzazione negato. Abilitalo nelle impostazioni del telefono per usare questa funzione.";
+    }
+    if (err.code === err.TIMEOUT) {
+      return "Non riesco a ottenere la posizione in tempo (segnale GPS debole). Riprova, oppure chiama direttamente.";
+    }
+    return "Non riesco a ottenere la posizione. Riprova, oppure chiama direttamente.";
+  }
+
   function setupSOS() {
     const backdrop = document.getElementById("sosBackdrop");
     const status = document.getElementById("sosStatus");
@@ -673,28 +705,6 @@
     document.getElementById("sosClose").addEventListener("click", () => {
       backdrop.classList.remove("active");
     });
-
-    function getPosition() {
-      return new Promise((resolve, reject) => {
-        if (!("geolocation" in navigator)) {
-          reject(new Error("Questo telefono/browser non supporta la localizzazione."));
-          return;
-        }
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true, timeout: 20000, maximumAge: 0,
-        });
-      });
-    }
-
-    function geoErrorText(err) {
-      if (err.code === err.PERMISSION_DENIED) {
-        return "Permesso di localizzazione negato. Abilitalo nelle impostazioni del telefono per usare questa funzione.";
-      }
-      if (err.code === err.TIMEOUT) {
-        return "Non riesco a ottenere la posizione in tempo (segnale GPS debole). Riprova, oppure chiama direttamente.";
-      }
-      return "Non riesco a ottenere la posizione. Riprova, oppure chiama direttamente.";
-    }
 
     document.getElementById("sosSmsBtn").addEventListener("click", async () => {
       showStatus("Ricerca della posizione GPS in corso…", "");
@@ -1107,12 +1117,42 @@
     });
   }
 
+  // Posizione del capo abbattuto: facoltativa e alternativa alle note scritte
+  // a mano. Tenuta in memoria qui finché il modulo è aperto, poi salvata
+  // nell'abbattimento insieme al resto.
+  let posizioneModulo = null;
+
+  function impostaPosizioneModulo(coords) {
+    posizioneModulo = coords;
+    const info = document.getElementById("modalGpsInfo");
+    const btn = document.getElementById("modalGpsBtn");
+    if (coords) {
+      info.hidden = false;
+      info.innerHTML = `📍 Posizione salvata: ${coords.lat.toFixed(5)}, ${coords.lon.toFixed(5)}` +
+        (coords.acc ? ` (±${Math.round(coords.acc)} m)` : "") +
+        ` — <a href="#" id="modalGpsRemove">rimuovi</a>`;
+      btn.textContent = "📍 Aggiorna la posizione";
+      const rimuovi = document.getElementById("modalGpsRemove");
+      if (rimuovi) {
+        rimuovi.addEventListener("click", (e) => {
+          e.preventDefault();
+          impostaPosizioneModulo(null);
+        });
+      }
+    } else {
+      info.hidden = true;
+      info.textContent = "";
+      btn.textContent = "📍 Salva la posizione attuale";
+    }
+  }
+
   function openModal(preselectId) {
     editingKillId = null;
     resetPhotoUI();
     populateModalCategories(preselectId);
     document.getElementById("modalDate").value = RulesEngine.toISO(selectedDate);
     document.getElementById("modalNote").value = "";
+    impostaPosizioneModulo(null);
     const huntType = huntTypeDelModulo(preselectId);
     const gunsAdatti = popolaSelectArmi(huntType);
     document.getElementById("modalGun").value = "";
@@ -1148,6 +1188,7 @@
     document.getElementById("modalCategory").value = k.categoryId;
     document.getElementById("modalDate").value = k.date;
     document.getElementById("modalNote").value = k.note || "";
+    impostaPosizioneModulo(k.coords || null);
 
     const huntType = huntTypeDelModulo(k.categoryId);
     const gunsAdatti = popolaSelectArmi(huntType);
@@ -1194,6 +1235,10 @@
     const bulletWeightUnit = document.getElementById("modalBulletWeightUnit").value;
 
     const entry = { categoryId, date, note, gunId, ammoType, bulletWeight, bulletWeightUnit };
+    // coords: presente solo se una posizione è stata salvata. In modifica,
+    // toglierla deve davvero rimuoverla dall'abbattimento, non lasciare la
+    // vecchia: per questo si assegna sempre, anche a null.
+    entry.coords = posizioneModulo || null;
 
     // Foto: si tocca IndexedDB solo se qualcosa è davvero cambiato in questa
     // sessione del modulo, per non riscrivere inutilmente una foto invariata.
@@ -1517,6 +1562,8 @@
             ammoType: typeof k.ammoType === "string" ? k.ammoType : "",
             bulletWeight: typeof k.bulletWeight === "number" ? k.bulletWeight : null,
             bulletWeightUnit: k.bulletWeightUnit === "gr" ? "gr" : "g",
+            ...(k.coords && typeof k.coords.lat === "number" && typeof k.coords.lon === "number"
+              ? { coords: k.coords } : {}),
           };
           if (k.photoDataUrl) {
             try {
@@ -1569,6 +1616,26 @@
       checkbox.addEventListener("change", () => applica(checkbox.checked));
     })();
     setupPhoto();
+
+    document.getElementById("modalGpsBtn").addEventListener("click", async () => {
+      const btn = document.getElementById("modalGpsBtn");
+      const testoOriginale = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = "📍 Ricerca posizione…";
+      try {
+        const pos = await getPosition();
+        impostaPosizioneModulo({
+          lat: pos.coords.latitude,
+          lon: pos.coords.longitude,
+          acc: pos.coords.accuracy,
+        });
+      } catch (err) {
+        btn.textContent = testoOriginale;
+        await showAlert(geoErrorText(err));
+      } finally {
+        btn.disabled = false;
+      }
+    });
 
     // Video dimostrativo in Info: schermo intero automatico all'avvio,
     // una X per chiuderlo prima che finisca, e torna da sola alla miniatura
