@@ -13,6 +13,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.38", text: "Riscritta la sezione \u00abCosa fa cacciaTI\u00bb: ora descrive tutte le funzioni, comprese sottoschede di caccia alta, foto e luogo GPS degli abbattimenti, statistiche, backup, SOS con doppio tocco e tema scuro." },
     { v: "3.37", text: "Nuovo campo \u00abLuogo\u00bb nella registrazione di un abbattimento: puoi salvare con un tocco la posizione GPS esatta, oppure continuare a scriverla a mano nelle note, o entrambe le cose. La posizione si rivede nel dettaglio del registro, con un link per aprirla nelle mappe, e si pu\u00f2 togliere in qualsiasi momento." },
     { v: "3.36", text: "Corretta la regola della femmina lattifera di cervo: puoi prelevarne 2 in stagione (non pi\u00f9 1), la prima libera, la seconda solo se il suo cerbiatto \u00e8 gi\u00e0 stato abbattuto lo stesso giorno, come previsto dalle Disposizioni al cacciatore 2026." },
     { v: "3.35", text: "Pi\u00f9 spazio tra le icone luna e SOS. Il riferimento normativo (RT 922.110) ora \u00e8 allineato in basso a destra, alla stessa altezza del fondo del pulsante \u00abOggi\u00bb, invece di stare subito sotto SOS." },
