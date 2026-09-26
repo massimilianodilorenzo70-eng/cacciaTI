@@ -13,9 +13,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
-    { v: "3.47", text: "Cartina del Cantone: corretto il formato del collegamento, ora identico a quello ufficiale del geoportale." },
-    { v: "3.46", text: "Il pulsante della cartina del Cantone ora apre la mappa con bandite cantonali, bandite federali e zone di tranquillit\u00e0 gi\u00e0 visibili." },
-    { v: "3.45", text: "Il pulsante \u00abApri qui la cartina della caccia del Cantone\u00bb ora apre la mappa gi\u00e0 con i livelli Bandite cantonali, Bandite federali e Zone di tranquillit\u00e0 accesi, cos\u00ec il confine si vede subito senza doverli attivare a mano ogni volta." },
+    { v: "3.45", text: "Il pulsante della cartina del Cantone ora apre il geoportale con bandite cantonali, bandite federali e zone di tranquillit\u00e0 gi\u00e0 visibili. Per centrare sulla propria posizione basta toccare il pulsante posizione del geoportale." },
     { v: "3.44", text: "Confermato dall'Ufficio della caccia e della pesca: il Decreto bandite di caccia 2021-2026 e il Decreto delle zone di tranquillit\u00e0 restano in vigore, prorogati dal Consiglio di Stato fino all'aggiornamento del concetto bosco-selvaggina (fine 2027 circa) \u2014 non serve quindi un nuovo file dati. Corretto anche un refuso del regolamento venatorio: le bandite escluse dalla caccia da postazione fissa in Blenio, Riviera e Bellinzona sono la N. 67 Leggiuna e la N. 25 Piano di Magadino, non la N. 64 e la N. 48 come scritto prima." },
     { v: "3.43", text: "Luogo di cattura: tra le località proposte dalla posizione GPS non compaiono più i nomi di grandi aree che contengono il punto (catene montuose, regioni, valli lunghe), come \u00abAlpi Lepontine\u00bb ripetuto in tre lingue o \u00abSottoceneri\u00bb, che finivano sempre in cima come \u00abqui\u00bb. Restano i nomi di luogo veri e propri, dal più vicino." },
     { v: "3.42", text: "Nuovo riquadro \u00abDove mi trovo\u00bb nella schermata principale: con un tocco controlla se sei dentro, sul confine o vicino (entro 1 km) a una bandita cantonale o federale, con distanza e direzione, e se quella bandita riguarda la caccia che hai scelto in alto (alta, bassa o acquatica, o solo camoscio, marmotta o fagiano di monte). Mostra anche le zone di tranquillit\u00e0 per la fauna vicine, con le loro regole e se sono in vigore nella data scelta. Tutti i confini sono dentro l'app, quindi il controllo funziona anche senza rete. Con la rete aggiunge distretto e comune e li confronta con il regolamento (art. 44). Due pulsanti aprono il punto sulla cartina della caccia del Cantone e sulla carta nazionale. \u00c8 un aiuto, non un permesso: fanno stato i testi ufficiali e la segnaletica sul terreno." },
@@ -1612,15 +1610,13 @@
     return out.sort((x, y) => (y.dentro - x.dentro) || (x.d - y.d));
   }
 
-  // Livelli da accendere sulla cartina del Cantone: bandite cantonali,
-  // bandite federali e zone di tranquillità (con i suoi due sotto-livelli).
-  // Nomi e formato presi da un link "Condividi" espanso manualmente: il
-  // geoportale vuole gli spazi come + (non %20) e non li documenta.
-  const LIVELLI_CARTINA = "tree_group_layers_Bandite+cantonali+di+caccia=Bandite+cantonali+di+caccia" +
-    "&tree_group_layers_Inventario+federale+delle+bandite+di+caccia+federali=Inventario+federale+delle+bandite+di+caccia+federali" +
-    "&tree_group_layers_Zone+di+tranquillit%C3%A0+per+la+fauna+selvatica=Tipi+di+sentieri%2CZone+di+tranquillit%C3%A0";
-  function linkCartinaCantone(E, N) {
-    return `https://map.geo.ti.ch/?baselayer_ref=Carta+Nazionale+%28bianco+e+nero%29&lang=it&theme=caccia&map_x=${Math.round(E)}&map_y=${Math.round(N)}&map_zoom=9&map_crosshair=true&${LIVELLI_CARTINA}`;
+  // Link corto del geoportale con bandite cantonali, federali e zone di
+  // tranquillità già accese. La versione mobile ignora i parametri
+  // tree_group_layers_ nell'URL lungo, ma il link corto funziona.
+  // Non è centrato sulla posizione: l'utente tocca il pulsante posizione
+  // del geoportale per centrarsi.
+  function linkCartinaCantone(/* E, N non usati */) {
+    return "https://map.geo.ti.ch/s/ObAF";
   }
   function linkCartaNazionale(E, N) {
     return `https://map.geo.admin.ch/?lang=it&E=${Math.round(E)}&N=${Math.round(N)}&zoom=10&crosshair=marker` +
