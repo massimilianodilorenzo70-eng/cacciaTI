@@ -2500,9 +2500,16 @@
             setTimeout(() => {
               badge.classList.remove("show");
               setTimeout(() => { badge.hidden = true; }, 700); // aspetta la fine della dissolvenza
-            }, 3000);
+            }, 8000);
           }
           localStorage.setItem(KEY, m[0]);
+
+          // Tocco sul numero di versione → apre la scheda Info e la cronologia
+          versionEl.addEventListener("click", () => {
+            switchView("regolamento");
+            const box = document.querySelector(".changelog-box");
+            if (box) { box.open = true; box.scrollIntoView({ behavior: "smooth", block: "start" }); }
+          });
         };
         reg.active.postMessage({ type: "GET_VERSION" }, [channel.port2]);
       });
