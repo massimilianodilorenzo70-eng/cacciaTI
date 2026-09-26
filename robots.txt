@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://massimilianodilorenzo70-eng.github.io/cacciaTI/sitemap.xml
