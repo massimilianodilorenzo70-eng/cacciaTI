@@ -2503,15 +2503,16 @@
             }, 8000);
           }
           localStorage.setItem(KEY, m[0]);
-
-          // Tocco sul numero di versione → apre la scheda Info e la cronologia
-          versionEl.addEventListener("click", () => {
-            switchView("regolamento");
-            const box = document.querySelector(".changelog-box");
-            if (box) { box.open = true; box.scrollIntoView({ behavior: "smooth", block: "start" }); }
-          });
         };
         reg.active.postMessage({ type: "GET_VERSION" }, [channel.port2]);
+      });
+
+      // Tocco sul numero di versione → apre la scheda Info e la cronologia
+      // (fuori dal callback del SW: funziona anche senza service worker)
+      document.getElementById("appVersion").addEventListener("click", () => {
+        switchView("regolamento");
+        const box = document.querySelector(".changelog-box");
+        if (box) { box.open = true; box.scrollIntoView({ behavior: "smooth", block: "start" }); }
       });
 
       navigator.serviceWorker.register("sw.js").then((reg) => {
