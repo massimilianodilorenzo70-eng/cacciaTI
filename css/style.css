@@ -144,6 +144,7 @@ header.app-header {
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.35);
   z-index: 25;
+  pointer-events: none;
 }
 .sos-arm-hint.hidden { display: none; }
 
@@ -631,6 +632,37 @@ nav.tabbar button.active { color: var(--forest); font-weight: 600; }
   align-items: center;
   justify-content: center;
   background: rgba(10, 14, 8, 0.92);
+}
+
+.easteregg-backdrop {
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 14, 8, 0.92);
+  z-index: 60;
+  cursor: pointer;
+  transition: opacity 0.6s ease;
+}
+.easteregg-backdrop.fading { opacity: 0; }
+.easteregg-sheet {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 0 24px;
+}
+.easteregg-sheet img {
+  max-width: 88vw;
+  max-height: 70vh;
+  object-fit: contain;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+}
+.easteregg-caption {
+  color: #F6F4EA;
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 15px;
+  text-align: center;
 }
 .lightbox-img {
   max-width: 92vw;
