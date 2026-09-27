@@ -350,7 +350,7 @@
 
     if (showMoon) {
       const m = getMoonPhase(date);
-      html += `<div class="am-block">` +
+      html += `<div class="am-block" id="moonBlock">` +
         `<span class="am-icon">${m.icon}</span>` +
         `<div><div class="am-label">${m.name}</div>` +
         `<div class="am-sub">Illuminazione ${m.illum}%</div></div></div>`;
@@ -906,7 +906,7 @@
   // ---------- Easter egg: tocco su SOS, poi tema, poi Oggi, ognuno entro
   // un secondo dal precedente ----------
   function setupEasterEgg() {
-    const sequenza = ["oggi", "tema", "sos"];
+    const sequenza = ["oggi", "luna", "meteo"];
     const FINESTRA_MS = 1000;
     let progresso = [];
     let ultimoTocco = 0;
@@ -943,9 +943,11 @@
       setTimeout(chiudi, 4000);
     }
 
-    document.getElementById("sosOpenBtn").addEventListener("click", () => tocco("sos"));
-    document.getElementById("themeToggleBtn").addEventListener("click", () => tocco("tema"));
     document.getElementById("todayBtn").addEventListener("click", () => tocco("oggi"));
+    document.getElementById("astroMeteoRow").addEventListener("click", (e) => {
+      if (e.target.closest("#moonBlock")) tocco("luna");
+      else if (e.target.closest("#meteoBlock")) tocco("meteo");
+    });
   }
 
   function setupSOS() {
