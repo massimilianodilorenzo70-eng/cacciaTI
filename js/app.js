@@ -905,7 +905,7 @@
   // ---------- Easter egg: tocco su SOS, poi tema, poi Oggi, ognuno entro
   // un secondo dal precedente ----------
   function setupEasterEgg() {
-    const sequenza = ["sos", "tema", "oggi"];
+    const sequenza = ["oggi", "tema", "sos"];
     const FINESTRA_MS = 1000;
     let progresso = [];
     let ultimoTocco = 0;
