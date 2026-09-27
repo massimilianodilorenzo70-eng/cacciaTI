@@ -13,6 +13,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.49", text: "Bug fix e miglioramenti." },
     { v: "3.48", text: "Piccola sorpresa nascosta da qualche parte nell'app, per chi la esplora con attenzione." },
     { v: "3.47", text: "Nuova riga sotto la data: fase lunare (offline) e meteo del giorno (con rete, da Open-Meteo). Entrambi disattivabili da Impostazioni > Aspetto." },
     { v: "3.46", text: "Aggiornato il video dimostrativo con le nuove funzioni (bandite, distretto, cartina del Cantone). Aggiornata anche la descrizione di Cosa fa cacciaTI." },
@@ -923,6 +924,14 @@
     }
 
     function mostraEasterEgg() {
+      const foto = [
+        { src: "media/autore.jpg", didascalia: "L'autore con Luminensis Loco" },
+        { src: "media/autore-2.jpg", didascalia: "L'autore con Luminensis Fuoco e Loco" },
+      ];
+      const scelta = foto[Math.floor(Math.random() * foto.length)];
+      document.getElementById("easterEggImg").src = scelta.src;
+      document.getElementById("easterEggCaption").textContent = scelta.didascalia;
+
       const backdrop = document.getElementById("easterEggBackdrop");
       backdrop.classList.remove("fading");
       backdrop.classList.add("active");
