@@ -13,6 +13,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.47", text: "Nuova riga sotto la data: fase lunare (offline) e meteo del giorno (con rete, da Open-Meteo). Entrambi disattivabili da Impostazioni > Aspetto." },
     { v: "3.46", text: "Aggiornato il video dimostrativo con le nuove funzioni (bandite, distretto, cartina del Cantone). Aggiornata anche la descrizione di Cosa fa cacciaTI." },
     { v: "3.45", text: "Il pulsante della cartina del Cantone ora apre il geoportale con bandite cantonali, bandite federali e zone di tranquillit\u00e0 gi\u00e0 visibili. Per centrare sulla propria posizione basta toccare il pulsante posizione del geoportale." },
     { v: "3.44", text: "Confermato dall'Ufficio della caccia e della pesca: il Decreto bandite di caccia 2021-2026 e il Decreto delle zone di tranquillit\u00e0 restano in vigore, prorogati dal Consiglio di Stato fino all'aggiornamento del concetto bosco-selvaggina (fine 2027 circa) \u2014 non serve quindi un nuovo file dati. Corretto anche un refuso del regolamento venatorio: le bandite escluse dalla caccia da postazione fissa in Blenio, Riviera e Bellinzona sono la N. 67 Leggiuna e la N. 25 Piano di Magadino, non la N. 64 e la N. 48 come scritto prima." },
@@ -221,9 +222,173 @@
     renderDoveSono();
   }
 
+  // ---------- Fase lunare (calcolo offline) ----------
+
+  function getMoonPhase(date) {
+    // Algoritmo di Conway per la fase lunare
+    const y = date.getFullYear();
+    const m = date.getMonth() + 1;
+    const d = date.getDate();
+
+    let r = y % 100;
+    r %= 19;
+    if (r > 9) r -= 19;
+    r = ((r * 11) % 30) + m + d;
+    if (m < 3) r += 2;
+    r -= ((y < 2000) ? 4 : 8.3);
+    r = Math.floor(r + 0.5) % 30;
+    if (r < 0) r += 30;
+
+    // r = giorni dall'ultima luna nuova (0-29)
+    const age = r;
+    const illum = Math.round(50 - 50 * Math.cos(2 * Math.PI * age / 29.53));
+
+    let name, icon;
+    if (age < 1.85)       { name = "Luna nuova";           icon = "\u{1F311}"; }
+    else if (age < 7.38)  { name = "Luna crescente";       icon = "\u{1F312}"; }
+    else if (age < 9.23)  { name = "Primo quarto";         icon = "\u{1F313}"; }
+    else if (age < 14.77) { name = "Gibbosa crescente";    icon = "\u{1F314}"; }
+    else if (age < 16.61) { name = "Luna piena";           icon = "\u{1F315}"; }
+    else if (age < 22.15) { name = "Gibbosa calante";      icon = "\u{1F316}"; }
+    else if (age < 23.99) { name = "Ultimo quarto";        icon = "\u{1F317}"; }
+    else if (age < 27.68) { name = "Luna calante";         icon = "\u{1F318}"; }
+    else                  { name = "Luna nuova";           icon = "\u{1F311}"; }
+
+    return { name, icon, illum, age };
+  }
+
+  // ---------- Meteo (Open-Meteo, gratuito, no API key) ----------
+
+  let meteoCache = {};
+
+  async function fetchMeteo(date) {
+    const iso = RulesEngine.toISO(date);
+    if (meteoCache[iso]) return meteoCache[iso];
+
+    try {
+      // Usa la posizione dell'utente se disponibile, altrimenti centro Ticino
+      let lat = 46.19, lon = 9.02;
+      if (lastPosition) { lat = lastPosition.lat; lon = lastPosition.lon; }
+
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+        `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max,winddirection_10m_dominant,weathercode` +
+        `&timezone=Europe/Zurich&start_date=${iso}&end_date=${iso}`;
+
+      const resp = await fetch(url);
+      if (!resp.ok) return null;
+      const data = await resp.json();
+      const d = data.daily;
+      if (!d || !d.time || d.time.length === 0) return null;
+
+      const wmo = d.weathercode[0];
+      const desc = wmoDescription(wmo);
+      const icon = wmoIcon(wmo);
+
+      const result = {
+        tempMax: Math.round(d.temperature_2m_max[0]),
+        tempMin: Math.round(d.temperature_2m_min[0]),
+        precip: Math.round(d.precipitation_sum[0] * 10) / 10,
+        windMax: Math.round(d.windspeed_10m_max[0]),
+        windDir: windDirName(d.winddirection_10m_dominant[0]),
+        desc, icon
+      };
+      meteoCache[iso] = result;
+      return result;
+    } catch { return null; }
+  }
+
+  function wmoDescription(code) {
+    const map = {
+      0: "Sereno", 1: "Prev. sereno", 2: "Parz. nuvoloso", 3: "Coperto",
+      45: "Nebbia", 48: "Brina", 51: "Pioviggine leggera", 53: "Pioviggine",
+      55: "Pioviggine intensa", 56: "Pioggia gelata legg.", 57: "Pioggia gelata",
+      61: "Pioggia leggera", 63: "Pioggia", 65: "Pioggia intensa",
+      66: "Pioggia gelata legg.", 67: "Pioggia gelata intensa",
+      71: "Neve leggera", 73: "Neve", 75: "Neve intensa", 77: "Granuli di neve",
+      80: "Rovesci leggeri", 81: "Rovesci", 82: "Rovesci intensi",
+      85: "Rovesci di neve legg.", 86: "Rovesci di neve intensi",
+      95: "Temporale", 96: "Temporale con grandine", 99: "Temporale forte"
+    };
+    return map[code] || "Variabile";
+  }
+
+  function wmoIcon(code) {
+    if (code <= 1) return "\u2600\uFE0F";
+    if (code <= 2) return "\u26C5";
+    if (code <= 3) return "\u2601\uFE0F";
+    if (code <= 48) return "\u{1F32B}\uFE0F";
+    if (code <= 57) return "\u{1F327}\uFE0F";
+    if (code <= 67) return "\u{1F327}\uFE0F";
+    if (code <= 77) return "\u{1F328}\uFE0F";
+    if (code <= 82) return "\u{1F326}\uFE0F";
+    if (code <= 86) return "\u{1F328}\uFE0F";
+    return "\u26C8\uFE0F";
+  }
+
+  function windDirName(deg) {
+    const dirs = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
+    return dirs[Math.round(deg / 22.5) % 16];
+  }
+
+  // ---------- Rendering riga luna/meteo ----------
+
+  let lastPosition = null;
+
+  function renderAstroMeteo() {
+    const row = document.getElementById("astroMeteoRow");
+    const inner = document.getElementById("astroMeteoInner");
+    const showMoon = localStorage.getItem("cacciaTI_show_moon") !== "0";
+    const showMeteo = localStorage.getItem("cacciaTI_show_meteo") !== "0";
+
+    if (!showMoon && !showMeteo) { row.hidden = true; return; }
+
+    row.hidden = false;
+    const date = selectedDate;
+    let html = "";
+
+    if (showMoon) {
+      const m = getMoonPhase(date);
+      html += `<div class="am-block">` +
+        `<span class="am-icon">${m.icon}</span>` +
+        `<div><div class="am-label">${m.name}</div>` +
+        `<div class="am-sub">Illuminazione ${m.illum}%</div></div></div>`;
+    }
+
+    if (showMoon && showMeteo) {
+      html += `<div class="am-sep"></div>`;
+    }
+
+    if (showMeteo) {
+      html += `<div class="am-block" id="meteoBlock">` +
+        `<span class="am-icon">\u23F3</span>` +
+        `<div><div class="am-label">Caricamento...</div>` +
+        `<div class="am-sub"></div></div></div>`;
+    }
+
+    inner.innerHTML = html;
+
+    if (showMeteo) {
+      fetchMeteo(date).then(m => {
+        const el = document.getElementById("meteoBlock");
+        if (!el) return;
+        if (!m) {
+          el.innerHTML = `<span class="am-icon">\u2014</span>` +
+            `<div><div class="am-label">Meteo non disponibile</div>` +
+            `<div class="am-sub">Richiede connessione</div></div>`;
+          return;
+        }
+        el.innerHTML = `<span class="am-icon">${m.icon}</span>` +
+          `<div><div class="am-label">${m.tempMin}°/${m.tempMax}°C \u00B7 ${m.desc}</div>` +
+          `<div class="am-sub">Vento ${m.windMax} km/h ${m.windDir}` +
+          `${m.precip > 0 ? " \u00B7 Pioggia " + m.precip + " mm" : ""}</div></div>`;
+      });
+    }
+  }
+
   function renderOggi() {
     const container = document.getElementById("sectionsContainer");
     container.innerHTML = "";
+    renderAstroMeteo();
 
     const iso = RulesEngine.toISO(selectedDate);
     const now = RulesEngine.toISO(new Date()) === iso ? RulesEngine.nowHHMM(new Date()) : null;
@@ -1812,6 +1977,7 @@
     }
     if (!banditeData || !federaliData || !tranquillitaData) await loadBanditeData();
     const { E, N } = wgs84ToLv95(pos.coords.latitude, pos.coords.longitude);
+    lastPosition = { lat: pos.coords.latitude, lon: pos.coords.longitude };
     doveStato = { E, N, acc: pos.coords.accuracy || 0, ora: new Date(), distretto: "", comune: "", rete: "attesa" };
     renderDoveSono();
     const mio = doveStato;
@@ -2337,6 +2503,26 @@
       });
       checkbox.addEventListener("change", () => applica(checkbox.checked));
     })();
+
+    // ---------- Toggle luna e meteo ----------
+    (function setupAstroMeteo() {
+      const moonCb = document.getElementById("moonToggle");
+      const meteoCb = document.getElementById("meteoToggle");
+      moonCb.checked = localStorage.getItem("cacciaTI_show_moon") !== "0";
+      meteoCb.checked = localStorage.getItem("cacciaTI_show_meteo") !== "0";
+
+      moonCb.addEventListener("change", () => {
+        localStorage.setItem("cacciaTI_show_moon", moonCb.checked ? "1" : "0");
+        renderAstroMeteo();
+      });
+      meteoCb.addEventListener("change", () => {
+        localStorage.setItem("cacciaTI_show_meteo", meteoCb.checked ? "1" : "0");
+        renderAstroMeteo();
+      });
+
+      renderAstroMeteo();
+    })();
+
     setupPhoto();
 
     document.getElementById("modalGpsBtn").addEventListener("click", async () => {
@@ -2346,6 +2532,7 @@
       btn.textContent = "📍 Ricerca posizione…";
       try {
         const pos = await getPosition();
+        lastPosition = { lat: pos.coords.latitude, lon: pos.coords.longitude };
         impostaPosizioneModulo({
           lat: pos.coords.latitude,
           lon: pos.coords.longitude,
