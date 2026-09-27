@@ -151,10 +151,13 @@
       </div>
     </div>
   </div>
-  <span class="ref">RT 922.110</span>
   <div class="date-row" id="dateRow">
     <input type="date" id="dateInput">
     <button class="today-btn" id="todayBtn">Oggi</button>
+    <span class="ref" style="margin-left:auto">RT 922.110</span>
+  </div>
+  <div class="astro-meteo-row" id="astroMeteoRow" hidden>
+    <div class="astro-meteo-inner" id="astroMeteoInner"></div>
   </div>
 </header>
 
@@ -219,6 +222,14 @@
     <div class="altitude-toggle">
       <input type="checkbox" id="darkModeToggle">
       <label for="darkModeToggle">Tema scuro (utile all'alba o al crepuscolo)</label>
+    </div>
+    <div class="altitude-toggle">
+      <input type="checkbox" id="moonToggle" checked>
+      <label for="moonToggle">Fase lunare (sotto la data)</label>
+    </div>
+    <div class="altitude-toggle">
+      <input type="checkbox" id="meteoToggle" checked>
+      <label for="meteoToggle">Meteo (sotto la data, richiede rete)</label>
     </div>
 
     <div class="section-title">Aggiorna il regolamento</div>
