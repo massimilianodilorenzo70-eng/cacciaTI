@@ -13,6 +13,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.48", text: "Piccola sorpresa nascosta da qualche parte nell'app, per chi la esplora con attenzione." },
     { v: "3.47", text: "Nuova riga sotto la data: fase lunare (offline) e meteo del giorno (con rete, da Open-Meteo). Entrambi disattivabili da Impostazioni > Aspetto." },
     { v: "3.46", text: "Aggiornato il video dimostrativo con le nuove funzioni (bandite, distretto, cartina del Cantone). Aggiornata anche la descrizione di Cosa fa cacciaTI." },
     { v: "3.45", text: "Il pulsante della cartina del Cantone ora apre il geoportale con bandite cantonali, bandite federali e zone di tranquillit\u00e0 gi\u00e0 visibili. Per centrare sulla propria posizione basta toccare il pulsante posizione del geoportale." },
@@ -899,6 +900,43 @@
     if (quota != null) testo += ` Quota: circa ${quota} m.`;
     testo += ` Precisione GPS: circa ${acc} m. Ora: ${ora}.`;
     return testo;
+  }
+
+  // ---------- Easter egg: tocco su SOS, poi tema, poi Oggi, ognuno entro
+  // un secondo dal precedente ----------
+  function setupEasterEgg() {
+    const sequenza = ["sos", "tema", "oggi"];
+    const FINESTRA_MS = 1000;
+    let progresso = [];
+    let ultimoTocco = 0;
+
+    function tocco(passo) {
+      const ora = Date.now();
+      if (ora - ultimoTocco > FINESTRA_MS) progresso = [];
+      ultimoTocco = ora;
+      progresso.push(passo);
+      if (progresso.length > sequenza.length) progresso.shift();
+      if (progresso.length === sequenza.length && progresso.every((p, i) => p === sequenza[i])) {
+        progresso = [];
+        mostraEasterEgg();
+      }
+    }
+
+    function mostraEasterEgg() {
+      const backdrop = document.getElementById("easterEggBackdrop");
+      backdrop.classList.remove("fading");
+      backdrop.classList.add("active");
+      const chiudi = () => {
+        backdrop.classList.add("fading");
+        setTimeout(() => backdrop.classList.remove("active", "fading"), 650);
+      };
+      backdrop.onclick = chiudi;
+      setTimeout(chiudi, 4000);
+    }
+
+    document.getElementById("sosOpenBtn").addEventListener("click", () => tocco("sos"));
+    document.getElementById("themeToggleBtn").addEventListener("click", () => tocco("tema"));
+    document.getElementById("todayBtn").addEventListener("click", () => tocco("oggi"));
   }
 
   function setupSOS() {
@@ -2480,6 +2518,7 @@
 
     setupRegistroSubtabs();
     setupSOS();
+    setupEasterEgg();
     setupGuns();
 
     // Tema scuro: il pulsante in alto e l'interruttore in Impostazioni fanno
