@@ -224,12 +224,11 @@ header.app-header {
 }
 
 .app-header .ref {
-  position: absolute;
-  right: 16px;
-  bottom: calc(14px + env(safe-area-inset-top));
   font-family: var(--mono);
   font-size: 11px;
   opacity: 0.7;
+  margin-left: auto;
+  white-space: nowrap;
 }
 
 .app-header .date-row {
@@ -256,6 +255,38 @@ header.app-header {
   border-radius: 8px;
   padding: 6px 10px;
   font-size: 13px;
+}
+
+.astro-meteo-row {
+  margin-top: 6px;
+  padding: 0;
+}
+.astro-meteo-inner {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: rgba(255,255,255,0.05);
+  border: 0.5px solid rgba(255,255,255,0.15);
+  border-radius: 8px;
+  padding: 6px 12px;
+  min-height: 34px;
+}
+.astro-meteo-inner .am-block {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex: 1;
+  min-width: 0;
+}
+.astro-meteo-inner .am-icon { font-size: 20px; flex-shrink: 0; }
+.astro-meteo-inner .am-label { color: var(--header-ink); font-size: 11.5px; font-weight: 500; line-height: 1.3; }
+.astro-meteo-inner .am-sub { color: rgba(255,255,255,0.45); font-size: 9.5px; line-height: 1.2; }
+.astro-meteo-inner .am-sep {
+  width: 0.5px;
+  align-self: stretch;
+  background: rgba(255,255,255,0.2);
+  margin: 0 12px;
+  flex-shrink: 0;
 }
 
 main {
