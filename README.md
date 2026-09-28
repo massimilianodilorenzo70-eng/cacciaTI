@@ -51,15 +51,33 @@ caccia alta/bassa/acquatica:
   solo quando serve. La quota non è rilevata dal GPS: per l'imprecisione
   dell'altitudine satellitare, specialmente in bosco o in valle stretta,
   si è scelto di lasciarla a conferma manuale.
+- Riga **fase lunare e meteo del giorno** sotto la data: la fase lunare
+  funziona offline; il meteo (temperatura min/max, vento, precipitazioni)
+  richiede connessione e viene letto da Open-Meteo. Entrambi disattivabili
+  da Impostazioni → Aspetto.
+- Riquadro **"Dove mi trovo"**: con un tocco controlla se sei dentro, sul
+  confine o vicino (entro 1 km) a una bandita cantonale o federale, con
+  distanza e direzione, e se quella bandita riguarda il tipo di caccia
+  selezionato. Mostra anche le zone di tranquillità per la fauna vicine.
+  Tutti i confini sono dentro l'app, quindi funziona anche senza rete. Con
+  la rete aggiunge distretto e comune e li confronta con il regolamento
+  (art. 44). Due pulsanti aprono il punto sulla cartina della caccia del
+  Cantone e sulla carta nazionale. È un aiuto, non un permesso: fanno stato
+  i testi ufficiali e la segnaletica sul terreno.
+- Sottoschede **Tardo autunnale** e **Invernale cinghiale**, già pronte per
+  quando aprono le rispettive finestre di caccia.
+- **Tema scuro** attivabile dal pulsante ☀️/🌙 in alto a destra, utile
+  all'alba e al crepuscolo.
 
-**Registro catture** — due sottoschede:
+**Registro catture** — tre sottoschede:
 - *Elenco*: tutti gli abbattimenti registrati, con i totali sulle quote di
   gruppo che sommano più categorie insieme (es. camoscio: 3 capi totali di
   cui max 2 adulti; lepre comune+variabile: 2 capi totali). Le quote a
   singola categoria (es. cervo, fagiano di monte) sono invece già sulla
   scheda della categoria stessa, non ripetute qui.
-- *Statistiche*: capi totali, per specie, per tipo di caccia, e cronologia
-  della stagione (primo/ultimo abbattimento, giorno più fruttuoso).
+- *Statistiche*: capi totali, per specie, per tipo di caccia, per arma
+  usata, cronologia della stagione (primo/ultimo abbattimento, giorno più
+  fruttuoso) e andamento giornaliero della stagione in grafico.
 - Esporta/importa il registro in JSON — utile come backup o per passare i
   dati da un telefono all'altro; l'importazione salta automaticamente i
   doppioni e chiede conferma prima di aggiungere.
@@ -133,5 +151,5 @@ voce in cima all'array `CHANGELOG` in `js/app.js`.
 
 ## Versione attuale
 
-**v3.2** — vedi la cronologia completa nell'app, scheda Info →
+**v3.49** — vedi la cronologia completa nell'app, scheda Info →
 "Cronologia aggiornamenti".
