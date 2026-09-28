@@ -923,6 +923,7 @@
       }
     }
 
+    let eggTimer = null;
     function mostraEasterEgg() {
       const foto = [
         { src: "media/autore.jpg", didascalia: "L'autore con Luminensis Loco" },
@@ -935,18 +936,22 @@
       const backdrop = document.getElementById("easterEggBackdrop");
       backdrop.classList.remove("fading");
       backdrop.classList.add("active");
+      if (eggTimer) clearTimeout(eggTimer);
       const chiudi = () => {
+        eggTimer = null;
         backdrop.classList.add("fading");
         setTimeout(() => backdrop.classList.remove("active", "fading"), 650);
       };
       backdrop.onclick = chiudi;
-      setTimeout(chiudi, 4000);
+      eggTimer = setTimeout(chiudi, 4000);
     }
 
     document.getElementById("todayBtn").addEventListener("click", () => tocco("oggi"));
     document.getElementById("astroMeteoRow").addEventListener("click", (e) => {
-      if (e.target.closest("#moonBlock")) tocco("luna");
-      else if (e.target.closest("#meteoBlock")) tocco("meteo");
+      const moon = document.getElementById("moonBlock");
+      const meteo = document.getElementById("meteoBlock");
+      if (moon && e.target.closest("#moonBlock")) tocco("luna");
+      else if (meteo && e.target.closest("#meteoBlock")) tocco("meteo");
     });
   }
 
