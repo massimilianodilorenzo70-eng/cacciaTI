@@ -14,6 +14,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.54", text: "Nel modulo di registrazione, per lepre comune, lepre variabile, fagiano di monte e beccaccia compare ora il promemoria della registrazione online obbligatoria, con il link diretto allo sportello." },
     { v: "3.53", text: "Aggiunto il link diretto allo sportello online per la registrazione delle catture di caccia bassa (Da sapere)." },
     { v: "3.52", text: "Bug fix e miglioramenti." },
     { v: "3.51", text: "Corretto «Da sapere» (caccia bassa): tolte alcune regole generali che non erano specifiche della caccia bassa." },
@@ -508,6 +509,27 @@
     "agosto", "settembre", "ottobre", "novembre", "dicembre"];
   const MESI_BREVI = ["gen", "feb", "mar", "apr", "mag", "giu", "lug", "ago", "set", "ott", "nov", "dic"];
   const AVVISO_BASSA = "Riassunto del regolamento. Fa stato il testo ufficiale.";
+
+  // Specie di caccia bassa per cui l'art. 29 cpv. 1 lett. e impone la
+  // registrazione online entro 12 ore, oltre a questo registro personale.
+  const SPECIE_REGISTRAZIONE_ONLINE = new Set([
+    "lepre_comune", "lepre_variabile", "fagiano_di_monte", "beccaccia",
+  ]);
+
+  function aggiornaAvvisoRegistrazioneOnline() {
+    const catId = document.getElementById("modalCategory").value;
+    const cat = (regData.categories || []).find(c => c.id === catId);
+    const box = document.getElementById("modalObbligoOnline");
+    const serve = !!cat && SPECIE_REGISTRAZIONE_ONLINE.has(cat.speciesKey);
+    box.hidden = !serve;
+    if (serve) {
+      const link = document.getElementById("modalObbligoOnlineLink");
+      const url = (regData.daSapere && regData.daSapere.linkRegistrazioneOnline) || "";
+      link.href = url;
+      link.textContent = (regData.daSapere && regData.daSapere.linkRegistrazioneOnlineLabel) || url;
+      link.style.display = url ? "" : "none";
+    }
+  }
 
   function dataLunga(iso) {
     const d = RulesEngine.parseISO(iso);
@@ -2317,6 +2339,7 @@
     // Munizione a palla e peso hanno senso solo per la carabina: in caccia
     // bassa e acquatica, dove si usa la canna liscia, restano nascosti.
     document.getElementById("modalBulletFields").hidden = huntType !== "alta";
+    aggiornaAvvisoRegistrazioneOnline();
     document.getElementById("modalBackdrop").classList.add("active");
   }
 
@@ -2359,6 +2382,7 @@
       } catch (e) { /* la foto non si carica: si può comunque continuare */ }
     }
 
+    aggiornaAvvisoRegistrazioneOnline();
     document.getElementById("modalBackdrop").classList.add("active");
   }
 
@@ -2609,6 +2633,7 @@
       // nessun fucile adatto ancora: apre subito il modulo, già sul tipo di canna giusto
       if (!hasGuns) openGunModal(huntType === "alta" ? "rigata" : "liscia");
     });
+    document.getElementById("modalCategory").addEventListener("change", aggiornaAvvisoRegistrazioneOnline);
     document.getElementById("modalCancel").addEventListener("click", closeModal);
     document.getElementById("modalSave").addEventListener("click", saveModal);
     document.getElementById("modalBackdrop").addEventListener("click", (e) => {
