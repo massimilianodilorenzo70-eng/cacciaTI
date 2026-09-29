@@ -14,6 +14,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.57", text: "Le foto vengono ora compresse automaticamente prima del salvataggio (massimo 1280px sul lato maggiore, qualità JPEG 72%): le foto dalla fotocamera venivano già compresse, ora la stessa compressione si applica anche alle foto importate tramite backup JSON. Backup più leggeri, spazio occupato ridotto." },
     { v: "3.56", text: "Nuova impostazione «Posizione e bandite»: scegli la distanza di pre-allarme per il riquadro «Dove mi trovo» tra tre livelli — Esperto (200 m), Standard (500 m) e Prudente (1.000 m, default). La soglia è salvata sul tuo telefono e si applica subito." },
     { v: "3.55", text: "Caccia bassa: le specie Fagiano di monte, Beccaccia, Lepre comune e Lepre variabile compaiono ora in cima alla lista. Il tab «Regole» è rinominato «Cacciabili». Quando non c'è nessuna specie aperta, un messaggio mostra la data di apertura e il conto alla rovescia in giorni." },
     { v: "3.54", text: "Nel modulo di registrazione, per lepre comune, lepre variabile, fagiano di monte e beccaccia compare ora il promemoria della registrazione online obbligatoria, con il link diretto allo sportello." },
@@ -2799,7 +2800,10 @@
           };
           if (k.photoDataUrl) {
             try {
-              const blob = await (await fetch(k.photoDataUrl)).blob();
+              const rawBlob = await (await fetch(k.photoDataUrl)).blob();
+              // Comprimi anche le foto importate, come quelle scattate direttamente
+              const file = new File([rawBlob], "import.jpg", { type: rawBlob.type });
+              const blob = await comprimiImmagine(file).catch(() => rawBlob);
               const photoId = "p_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7);
               await Storage.savePhoto(photoId, blob);
               entry.photoId = photoId;
