@@ -14,7 +14,8 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
-    { v: "3.58.1", text: "Bug fix: il menu Quick Log (📍 Segna punto / 🎯 Abbattimento) non era più visibile all'avvio — compariva fisso sullo schermo invece di restare nascosto fino al tap sul +. Corretto." },
+    { v: "3.59", text: "Bug fix Quick Log: dopo aver completato un punto rapido con il modulo abbattimento, il punto rapido originale veniva mantenuto nel registro invece di essere eliminato automaticamente. Ora viene rimosso non appena l'abbattimento completo è salvato." },
+    { v: "3.58.1", text: "Bug fix: il menu Quick Log (📍 Segna punto / 🦌 Abbattimento) non era più visibile all'avvio — compariva fisso sullo schermo invece di restare nascosto fino al tap sul +. Corretto." },
     { v: "3.58", text: "Quick Log — Segna punto rapido: il pulsante + ora apre un menu a due voci. «Segna punto» salva istantaneamente coordinate GPS, altitudine, data e ora esatta con un solo tap — scegli il tipo (🦌 Abbattimento, 📍 Anschluss, ⭐ Luogo di interesse) e aggiungi una nota opzionale. Il punto compare subito nel registro con bordo tratteggiato e badge colorato; tocca «Completa» per aggiungere in seguito specie, foto, arma e tutti gli altri dettagli. Un banner in cima al registro ricorda quanti punti rapidi sono ancora da completare." },
     { v: "3.57", text: "Le foto vengono ora compresse automaticamente prima del salvataggio (massimo 1280px sul lato maggiore, qualità JPEG 72%): le foto dalla fotocamera venivano già compresse, ora la stessa compressione si applica anche alle foto importate tramite backup JSON. Backup più leggeri, spazio occupato ridotto." },
     { v: "3.56", text: "Nuova impostazione «Posizione e bandite»: scegli la distanza di pre-allarme per il riquadro «Dove mi trovo» tra tre livelli — Esperto (200 m), Standard (500 m) e Prudente (1.000 m, default). La soglia è salvata sul tuo telefono e si applica subito." },
@@ -907,16 +908,13 @@
         `;
         if (!k.complete) {
           item.querySelector(".complete-btn").addEventListener("click", () => {
-            // Apre il modulo completo pre-selezionando la data e le coordinate
+            // Apre il modulo completo pre-compilato con i dati del punto rapido
             openModal(null);
-            // Pre-compila data e ora
             document.getElementById("modalDate").value = k.date;
-            // Pre-compila coordinate se presenti
             if (k.coords) impostaPosizioneModulo(k.coords);
-            // Pre-compila nota
             if (k.note) document.getElementById("modalNote").value = k.note;
-            // Segna come "completato in lavorazione" — sarà rimosso al salvataggio
-            item.dataset.quickId = k.id;
+            // Memorizza l'id del punto rapido: saveModal lo eliminerà dopo il salvataggio
+            completingQuickId = k.id;
           });
         }
         item.querySelector(".del").addEventListener("click", async () => {
@@ -1664,6 +1662,7 @@
   // Stato del modulo di registrazione: se si sta modificando un abbattimento
   // esistente (editingKillId), e la foto scelta/rimossa in questa sessione.
   let editingKillId = null;
+  let completingQuickId = null; // id del punto rapido che si sta completando
   let currentPhotoBlob = null;
   let currentPhotoRemoved = false;
 
@@ -2503,6 +2502,7 @@
 
   function openModal(preselectId) {
     editingKillId = null;
+    completingQuickId = null;
     resetPhotoUI();
     populateModalCategories(preselectId);
     document.getElementById("modalDate").value = RulesEngine.toISO(selectedDate);
@@ -2622,6 +2622,11 @@
       Storage.updateKill(editingKillId, entry);
     } else {
       Storage.addKill(entry);
+      // Se stiamo completando un punto rapido, eliminarlo ora che l'abbattimento è salvato
+      if (completingQuickId) {
+        Storage.deleteKill(completingQuickId);
+        completingQuickId = null;
+      }
     }
 
     if (!document.getElementById("registroStatistiche").classList.contains("hidden")) renderStatistiche();
