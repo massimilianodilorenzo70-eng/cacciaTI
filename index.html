@@ -221,6 +221,7 @@
 
     <div id="registroElenco">
       <div class="summary-caps" id="capsSummary"></div>
+      <div id="quickLogBanner" hidden></div>
       <div id="logList"></div>
     </div>
 
@@ -420,6 +421,48 @@
 </main>
 
 <button class="fab" id="fabAdd">+</button>
+
+<!-- Menu FAB: scelta rapida -->
+<div class="fab-menu" id="fabMenu" hidden>
+  <button class="fab-menu-item" id="fabQuick">
+    <span class="fab-menu-icon">📍</span>
+    <span class="fab-menu-label">Segna punto<small>Rapido, un tap</small></span>
+  </button>
+  <button class="fab-menu-item" id="fabFull">
+    <span class="fab-menu-icon">🎯</span>
+    <span class="fab-menu-label">Abbattimento<small>Modulo completo</small></span>
+  </button>
+</div>
+<div class="fab-menu-backdrop" id="fabMenuBackdrop" hidden></div>
+
+<!-- Modal Quick Log -->
+<div class="modal-backdrop" id="quickLogBackdrop">
+  <div class="modal-sheet">
+    <h3>Segna punto</h3>
+
+    <!-- Tipo punto -->
+    <div class="quick-type-row">
+      <button class="quick-type-btn active" data-type="abbattimento">🦌<span>Abbattimento</span></button>
+      <button class="quick-type-btn" data-type="anschluss">📍<span>Anschluss</span></button>
+      <button class="quick-type-btn" data-type="luogo">⭐<span>Luogo</span></button>
+    </div>
+
+    <!-- GPS status -->
+    <div class="quick-gps-status" id="quickGpsStatus">
+      <span class="quick-gps-dot" id="quickGpsDot"></span>
+      <span id="quickGpsText">⏳ Rilevamento GPS…</span>
+    </div>
+
+    <!-- Nota -->
+    <label for="quickNote">Nota (opzionale)</label>
+    <textarea id="quickNote" rows="2" placeholder="Es. colpito, andato verso nord…" style="resize:none;"></textarea>
+
+    <div class="modal-actions">
+      <button class="btn secondary" id="quickLogCancel">Annulla</button>
+      <button class="btn" id="quickLogSave">✓ Salva subito</button>
+    </div>
+  </div>
+</div>
 
 <!-- INVITO A INSTALLARE L'APP -->
 <div class="install-banner hidden" id="installBanner" role="dialog" aria-label="Installa cacciaTI">
