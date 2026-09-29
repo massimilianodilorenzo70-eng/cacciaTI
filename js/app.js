@@ -14,6 +14,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.55", text: "Caccia bassa: le specie Fagiano di monte, Beccaccia, Lepre comune e Lepre variabile compaiono ora in cima alla lista. Il tab «Regole» è rinominato «Cacciabili». Quando non c'è nessuna specie aperta, un messaggio mostra la data di apertura e il conto alla rovescia in giorni." },
     { v: "3.54", text: "Nel modulo di registrazione, per lepre comune, lepre variabile, fagiano di monte e beccaccia compare ora il promemoria della registrazione online obbligatoria, con il link diretto allo sportello." },
     { v: "3.53", text: "Aggiunto il link diretto allo sportello online per la registrazione delle catture di caccia bassa (Da sapere)." },
     { v: "3.52", text: "Bug fix e miglioramenti." },
@@ -466,9 +467,34 @@
         : selectedHunt === "alta" && altaSubView === "invernale" ? "caccia invernale al cinghiale"
         : selectedHunt === "alta" ? "caccia settembrina"
         : HUNT_LABELS[selectedHunt].toLowerCase();
+
+      // Calcola countdown alla prima data di apertura futura per questo tipo di caccia
+      const primaApertura = (() => {
+        const allDates = [];
+        for (const cat of (regData.categories || [])) {
+          if (cat.huntType !== selectedHunt) continue;
+          for (const w of (cat.windows || [])) {
+            if (w.from && w.from > iso) allDates.push(w.from);
+            if (w.dates) w.dates.filter(d => d > iso).forEach(d => allDates.push(d));
+          }
+        }
+        return allDates.length ? allDates.sort()[0] : null;
+      })();
+
       const banner = document.createElement("div");
       banner.className = "info-box";
-      banner.innerHTML = `<b>Nessuna categoria aperta</b> in ${nomeSezione} il ${formatDateCH(iso)}.`;
+      if (primaApertura) {
+        const msPerDay = 1000 * 60 * 60 * 24;
+        const giorniMancanti = Math.round(
+          (RulesEngine.parseISO(primaApertura) - RulesEngine.parseISO(iso)) / msPerDay
+        );
+        const giorniTesto = giorniMancanti === 1 ? "1 giorno" : `${giorniMancanti} giorni`;
+        banner.innerHTML =
+          `🗓️ <b>Nessuna specie cacciabile oggi</b><br>` +
+          `La ${nomeSezione} apre il <b>${formatDateCH(primaApertura)}</b> — mancano <b>${giorniTesto}</b>.`;
+      } else {
+        banner.innerHTML = `<b>Nessuna categoria aperta</b> in ${nomeSezione} il ${formatDateCH(iso)}.`;
+      }
       container.appendChild(banner);
     }
 
