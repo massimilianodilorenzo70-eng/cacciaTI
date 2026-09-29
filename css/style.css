@@ -1403,11 +1403,11 @@ input[type="file"] { display: none; }
   right: 14px;
   bottom: calc(138px + env(safe-area-inset-bottom));
   z-index: 20;
-  display: flex;
   flex-direction: column;
   gap: 10px;
   align-items: flex-end;
 }
+.fab-menu:not([hidden]) { display: flex; }
 .fab-menu-item {
   display: flex;
   align-items: center;
