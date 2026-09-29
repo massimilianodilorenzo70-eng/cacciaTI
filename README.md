@@ -66,6 +66,16 @@ caccia alta/bassa/acquatica:
   i testi ufficiali e la segnaletica sul terreno.
 - Sottoschede **Tardo autunnale** e **Invernale cinghiale**, già pronte per
   quando aprono le rispettive finestre di caccia.
+- In **Caccia bassa** tre sottoschede: **Regole** (le specie, come in caccia
+  alta), **Prove cani** e **Da sapere**. *Prove cani* dice se nella data scelta
+  la prova è permessa (art. 38), con orario, il calendario di tutti i giorni di
+  prova dell'anno (toccando un giorno si passa a quella data) e le regole sui
+  cani. *Da sapere* raccoglie le scadenze della stagione (vigilia, apertura,
+  cambio d'orario, chiusura, rientro, invio del foglio di controllo), gli
+  obblighi (registrazione online entro 12 ore, alta visibilità, cane da ferma e
+  da seguita…) e i divieti principali, ognuno con l'articolo di riferimento. I
+  dati stanno nel file del regolamento (`proveCani` e `daSapere`), quindi si
+  aggiornano ogni anno insieme al resto.
 - **Tema scuro** attivabile dal pulsante ☀️/🌙 in alto a destra, utile
   all'alba e al crepuscolo.
 
@@ -151,5 +161,5 @@ voce in cima all'array `CHANGELOG` in `js/app.js`.
 
 ## Versione attuale
 
-**v3.49** — vedi la cronologia completa nell'app, scheda Info →
+**v3.50** — vedi la cronologia completa nell'app, scheda Info →
 "Cronologia aggiornamenti".
