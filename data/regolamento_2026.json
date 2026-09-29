@@ -1289,18 +1289,13 @@
             "multa": "Mancato rispetto: multa disciplinare di 50 fr."
           },
           {
-            "titolo": "Foglio di controllo",
-            "testo": "Iscrivi subito sul posto della cattura, con inchiostro indelebile: giorno, ora, comune e luogo, specie, età e sesso. Le correzioni sono ammesse solo con l'autorizzazione di un guardacaccia o dell'Ufficio della caccia e della pesca.",
-            "art": "art. 29 cpv. 1 lett. a"
-          },
-          {
             "titolo": "Capi da autodenunciare",
             "testo": "In caccia bassa vanno segnalati subito all'Ufficio della caccia e della pesca o a un agente della polizia della caccia, che provvedono al sequestro.",
             "art": "art. 29 cpv. 1 lett. f"
           },
           {
             "titolo": "Indumenti ad alta visibilità",
-            "testo": "In caccia bassa e acquatica è obbligatorio indossare indumenti ad alta visibilità. Novità in vigore dal 3 luglio 2026.",
+            "testo": "In caccia bassa è obbligatorio indossare indumenti ad alta visibilità. Novità in vigore dal 3 luglio 2026.",
             "art": "art. 53 lett. l",
             "multa": "Inosservanza: multa disciplinare di 150 fr."
           },
@@ -1308,11 +1303,6 @@
             "titolo": "Cane da ferma e cane da seguita",
             "testo": "Fagiano di monte e beccaccia si cacciano solo con il cane da ferma. Lepre comune e lepre variabile solo con il cane da seguita.",
             "art": "art. 53 lett. h"
-          },
-          {
-            "titolo": "Ricerca del capo ferito",
-            "testo": "Cerca, per quanto possibile, i capi potenzialmente feriti, se serve con un cane da traccia abilitato, dopo aver avvisato un agente della polizia della caccia o l'Ufficio. Se interrompi la ricerca perdi ogni diritto sul capo.",
-            "art": "art. 54 cpv. 1"
           }
         ]
       },
@@ -1321,34 +1311,14 @@
         "voci": [
           {
             "titolo": "Fototrappole, visori e termocamere",
-            "testo": "Da 3 giorni prima della caccia alta fino al 14 novembre è vietato portare con sé fototrappole, apparecchi per l'intensificazione della luce residua, camere termiche e strumenti simili. Chi caccia in bassa è soggetto al divieto fino al 30 novembre. Visori e termocamere nei periodi vietati comportano il ritiro immediato della patente.",
-            "art": "art. 49 lett. m, art. 67b lett. c"
+            "testo": "Chi esercita la caccia bassa non può portare con sé fototrappole, apparecchi per l'intensificazione della luce residua, camere termiche e strumenti simili fino al 30 novembre.",
+            "art": "art. 49 lett. m",
+            "multa": "Visori e termocamere nei periodi vietati: ritiro immediato della patente (art. 67b lett. c)."
           },
           {
-            "titolo": "Richiami e foraggiamento",
-            "testo": "È vietato adescare la selvaggina con richiami o foraggiamenti.",
-            "art": "art. 53 lett. i",
-            "multa": "Multa disciplinare di 200 fr."
-          },
-          {
-            "titolo": "Distanze e tiro",
-            "testo": "Niente caccia entro 50 m da edifici abitati, campeggi e percorsi vita, né a meno di 50 m da autostrade, ferrovie e strade cantonali. Niente tiri oltre i 250 m. Non si spara da veicoli e non si portano armi cariche su di essi.",
-            "art": "art. 53 lett. a–d"
-          },
-          {
-            "titolo": "Arma e gruppi",
-            "testo": "Fucile a pallini, una sola arma. Gruppi di al massimo 4 cacciatori e nessuna partecipazione attiva di persone senza patente, salvo autorizzazione specifica.",
-            "art": "art. 45, 48, 49 lett. a–b"
-          },
-          {
-            "titolo": "Bandite",
-            "testo": "Si attraversano solo lungo le strade e i sentieri principali marcati, con l'arma scarica e i cani al guinzaglio. Cacciare in bandita comporta il ritiro immediato della patente.",
-            "art": "art. 10 cpv. 3, art. 67b lett. d"
-          },
-          {
-            "titolo": "Reati gravi con ritiro immediato della patente",
-            "testo": "Cacciare in giorni o orari vietati; usare armi o mezzi ausiliari vietati; cacciare in bandita; omettere o falsificare l'iscrizione sul foglio di controllo o scrivere dati non veritieri; opporsi a un agente della polizia della caccia; gravi mancanze nelle regole di sicurezza con le armi.",
-            "art": "art. 67b"
+            "titolo": "Arma",
+            "testo": "Per la caccia bassa può essere usato unicamente il fucile a pallini, e non più di un'arma per cacciatore.",
+            "art": "art. 45, 48"
           }
         ]
       }
