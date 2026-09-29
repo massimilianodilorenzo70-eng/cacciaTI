@@ -14,6 +14,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.56", text: "Nuova impostazione «Posizione e bandite»: scegli la distanza di pre-allarme per il riquadro «Dove mi trovo» tra tre livelli — Esperto (200 m), Standard (500 m) e Prudente (1.000 m, default). La soglia è salvata sul tuo telefono e si applica subito." },
     { v: "3.55", text: "Caccia bassa: le specie Fagiano di monte, Beccaccia, Lepre comune e Lepre variabile compaiono ora in cima alla lista. Il tab «Regole» è rinominato «Cacciabili». Quando non c'è nessuna specie aperta, un messaggio mostra la data di apertura e il conto alla rovescia in giorni." },
     { v: "3.54", text: "Nel modulo di registrazione, per lepre comune, lepre variabile, fagiano di monte e beccaccia compare ora il promemoria della registrazione online obbligatoria, con il link diretto allo sportello." },
     { v: "3.53", text: "Aggiunto il link diretto allo sportello online per la registrazione delle catture di caccia bassa (Da sapere)." },
@@ -1998,8 +1999,10 @@
   let federaliData = null;    // bandite federali (inventario UFAM)
   let tranquillitaData = null; // zone di tranquillità per la fauna selvatica
   let doveStato = null; // { E, N, acc, ora, distretto, comune, rete: 'ok'|'no'|'attesa' }
-  const DOVE_RAGGIO_VICINE = 1000; // m
   const DOVE_MARGINE_MIN = 25;     // m: sotto questa distanza dal confine è sempre «da verificare»
+  function doveRaggioVicine() {
+    return Storage.getPrefs().sogliaBandita || 1000;
+  }
 
   async function caricaJson(url) {
     try {
@@ -2075,7 +2078,7 @@
 
   function banditeVicine(lista, E, N) {
     if (!lista) return [];
-    const r = DOVE_RAGGIO_VICINE;
+    const r = doveRaggioVicine();
     const out = [];
     for (const b of lista) {
       const [e0, n0, e1, n1] = b.bbox;
@@ -2256,14 +2259,14 @@
       corpo += `<div class="dove-titolo">Bandite che riguardano la ${nomeCaccia}</div>`;
       corpo += pertinenti.length
         ? pertinenti.map((v) => rigaBandita(v, hunt, margine)).join("")
-        : `<div class="dove-bandita dove-libera">Nessuna bandita, cantonale o federale, della ${nomeCaccia} entro ${metri(DOVE_RAGGIO_VICINE)}.</div>`;
+        : `<div class="dove-bandita dove-libera">Nessuna bandita, cantonale o federale, della ${nomeCaccia} entro ${metri(doveRaggioVicine())}.</div>`;
       if (altre.length) {
         corpo += `<details class="dove-altre"><summary>Altre bandite vicine, non riguardano la ${nomeCaccia} (${altre.length})</summary>${altre.map((v) => rigaBandita(v, hunt, margine)).join("")}</details>`;
       }
       corpo += `<div class="dove-titolo">Zone di tranquillità per la fauna</div>`;
       corpo += zoneTr.length
         ? zoneTr.map((v) => rigaZonaTranquillita(v, margine)).join("")
-        : `<div class="dove-nota">Nessuna zona di tranquillità entro ${metri(DOVE_RAGGIO_VICINE)}.</div>`;
+        : `<div class="dove-nota">Nessuna zona di tranquillità entro ${metri(doveRaggioVicine())}.</div>`;
       corpo += `<div class="dove-titolo">Distretto e regolamento (art. 44)</div>` + renderDistrettoDove(hunt);
       corpo += `<a class="btn secondary dove-link" href="${linkCartinaCantone(E, N)}" target="_blank" rel="noopener">Apri qui la cartina della caccia del Cantone</a>`;
       corpo += `<a class="btn secondary dove-link" href="${linkCartaNazionale(E, N)}" target="_blank" rel="noopener">Apri qui la carta nazionale</a>`;
@@ -2616,6 +2619,25 @@
       prefs.altitudeBelow400 = e.target.checked;
       Storage.savePrefs(prefs);
       renderOggi();
+    });
+
+    // Soglia pre-allarme bandite
+    function aggiornaBottoniSoglia() {
+      const soglia = String(Storage.getPrefs().sogliaBandita || 1000);
+      document.querySelectorAll(".soglia-btn").forEach(btn => {
+        btn.classList.toggle("attiva", btn.dataset.soglia === soglia);
+      });
+    }
+    aggiornaBottoniSoglia();
+    document.querySelectorAll(".soglia-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const p = Storage.getPrefs();
+        p.sogliaBandita = Number(btn.dataset.soglia);
+        Storage.savePrefs(p);
+        aggiornaBottoniSoglia();
+        // Se c'è già una posizione rilevata, aggiorna subito il riquadro
+        if (doveStato) renderDoveSono();
+      });
     });
 
     document.getElementById("searchInput").addEventListener("input", renderOggi);

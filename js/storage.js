@@ -61,8 +61,9 @@ const Storage = (() => {
 
   function getPrefs() {
     try {
-      return JSON.parse(localStorage.getItem(KEY_PREFS)) || { altitudeBelow400: false };
-    } catch (e) { return { altitudeBelow400: false }; }
+      const defaults = { altitudeBelow400: false, sogliaBandita: 1000 };
+      return { ...defaults, ...(JSON.parse(localStorage.getItem(KEY_PREFS)) || {}) };
+    } catch (e) { return { altitudeBelow400: false, sogliaBandita: 1000 }; }
   }
 
   function savePrefs(prefs) {
