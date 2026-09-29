@@ -487,6 +487,276 @@
       "individualMax": 2
     },
     {
+      "id": "alzavola",
+      "speciesKey": "alzavola",
+      "speciesLabel": "Alzavola",
+      "categoryLabel": "Nessun limite quantitativo",
+      "huntType": "acquatica",
+      "windows": [
+        {
+          "from": "2026-12-15",
+          "to": "2027-01-31"
+        }
+      ],
+      "hourProfile": "acquatica",
+      "excludedDates": [
+        "2026-12-25",
+        "2026-12-26",
+        "2027-01-01",
+        "2027-01-06"
+      ],
+      "excludedWeekdays": [
+        1,
+        3
+      ],
+      "note": "Consentita solo sui laghi Verbano e Ceresio, ad almeno 100 m dalla riva/canneti. Vietato sparare verso terraferma."
+    },
+    {
+      "id": "germano_reale_acqua",
+      "speciesKey": "germano_reale",
+      "speciesLabel": "Germano reale",
+      "categoryLabel": "Nessun limite quantitativo",
+      "huntType": "acquatica",
+      "windows": [
+        {
+          "from": "2026-12-15",
+          "to": "2027-01-31"
+        }
+      ],
+      "hourProfile": "acquatica",
+      "excludedDates": [
+        "2026-12-25",
+        "2026-12-26",
+        "2027-01-01",
+        "2027-01-06"
+      ],
+      "excludedWeekdays": [
+        1,
+        3
+      ],
+      "note": "Consentita solo sui laghi Verbano e Ceresio, ad almeno 100 m dalla riva/canneti. Vietato sparare verso terraferma."
+    },
+    {
+      "id": "moriglione",
+      "speciesKey": "moriglione",
+      "speciesLabel": "Moriglione",
+      "categoryLabel": "Nessun limite quantitativo",
+      "huntType": "acquatica",
+      "windows": [
+        {
+          "from": "2026-12-15",
+          "to": "2027-01-31"
+        }
+      ],
+      "hourProfile": "acquatica",
+      "excludedDates": [
+        "2026-12-25",
+        "2026-12-26",
+        "2027-01-01",
+        "2027-01-06"
+      ],
+      "excludedWeekdays": [
+        1,
+        3
+      ],
+      "note": "Consentita solo sui laghi Verbano e Ceresio, ad almeno 100 m dalla riva/canneti. Vietato sparare verso terraferma."
+    },
+    {
+      "id": "moretta",
+      "speciesKey": "moretta",
+      "speciesLabel": "Moretta",
+      "categoryLabel": "Nessun limite quantitativo",
+      "huntType": "acquatica",
+      "windows": [
+        {
+          "from": "2026-12-15",
+          "to": "2027-01-31"
+        }
+      ],
+      "hourProfile": "acquatica",
+      "excludedDates": [
+        "2026-12-25",
+        "2026-12-26",
+        "2027-01-01",
+        "2027-01-06"
+      ],
+      "excludedWeekdays": [
+        1,
+        3
+      ],
+      "note": "Consentita solo sui laghi Verbano e Ceresio, ad almeno 100 m dalla riva/canneti. Vietato sparare verso terraferma."
+    },
+    {
+      "id": "folaga",
+      "speciesKey": "folaga",
+      "speciesLabel": "Folaga",
+      "categoryLabel": "Nessun limite quantitativo",
+      "huntType": "acquatica",
+      "windows": [
+        {
+          "from": "2026-12-15",
+          "to": "2027-01-31"
+        }
+      ],
+      "hourProfile": "acquatica",
+      "excludedDates": [
+        "2026-12-25",
+        "2026-12-26",
+        "2027-01-01",
+        "2027-01-06"
+      ],
+      "excludedWeekdays": [
+        1,
+        3
+      ],
+      "note": "Consentita solo sui laghi Verbano e Ceresio, ad almeno 100 m dalla riva/canneti. Vietato sparare verso terraferma."
+    },
+    {
+      "id": "cervo_tardo_autunnale",
+      "speciesKey": "cervo",
+      "speciesLabel": "Cervo",
+      "categoryLabel": "Caccia tardo autunnale — da pubblicare",
+      "huntType": "alta",
+      "windows": [],
+      "note": "Regolamento non ancora pubblicato dall'Ufficio della caccia e della pesca per questa stagione. Indicativamente questa caccia si svolge da metà novembre a fine dicembre, di mercoledì, sabato e domenica, dalle 7:00 alle 14:00 (dati della stagione scorsa, ancora da confermare). Verifica il sito ufficiale ti.ch/caccia, oppure ricontrolla qui in app: appena il regolamento sarà pubblicato, questa scheda verrà aggiornata con le date esatte.",
+      "subCategory": "tardo"
+    },
+    {
+      "id": "capriolo_tardo_autunnale",
+      "speciesKey": "capriolo",
+      "speciesLabel": "Capriolo",
+      "categoryLabel": "Caccia tardo autunnale — da pubblicare",
+      "huntType": "alta",
+      "windows": [],
+      "note": "Regolamento non ancora pubblicato dall'Ufficio della caccia e della pesca per questa stagione. Indicativamente questa caccia si svolge da metà novembre a fine dicembre, di mercoledì, sabato e domenica, dalle 7:00 alle 14:00 (dati della stagione scorsa, ancora da confermare). Verifica il sito ufficiale ti.ch/caccia, oppure ricontrolla qui in app: appena il regolamento sarà pubblicato, questa scheda verrà aggiornata con le date esatte.",
+      "subCategory": "tardo"
+    },
+    {
+      "id": "volpe_tardo_autunnale",
+      "speciesKey": "volpe",
+      "speciesLabel": "Volpe",
+      "categoryLabel": "Caccia speciale tardo autunnale — da pubblicare",
+      "huntType": "alta",
+      "windows": [],
+      "note": "Regolamento non ancora pubblicato dall'Ufficio della caccia e della pesca per questa stagione. Indicativamente questa caccia si svolge da metà novembre a fine dicembre, di mercoledì, sabato e domenica, dalle 7:00 alle 14:00 (dati della stagione scorsa, ancora da confermare). Verifica il sito ufficiale ti.ch/caccia, oppure ricontrolla qui in app: appena il regolamento sarà pubblicato, questa scheda verrà aggiornata con le date esatte.",
+      "subCategory": "tardo"
+    },
+    {
+      "id": "cinghiale_invernale",
+      "speciesKey": "cinghiale",
+      "speciesLabel": "Cinghiale",
+      "categoryLabel": "Caccia invernale — da pubblicare",
+      "huntType": "alta",
+      "windows": [],
+      "note": "Regolamento non ancora pubblicato dall'Ufficio della caccia e della pesca per questa stagione. Indicativamente questa caccia si svolge tra novembre e gennaio, di mercoledì, sabato e domenica (dati della stagione scorsa, ancora da confermare). Verifica il sito ufficiale ti.ch/caccia, oppure ricontrolla qui in app: appena il regolamento sarà pubblicato, questa scheda verrà aggiornata con le date esatte.",
+      "subCategory": "invernale"
+    },
+    {
+      "id": "fagiano_di_monte",
+      "speciesKey": "fagiano_di_monte",
+      "speciesLabel": "Fagiano di monte",
+      "categoryLabel": "Solo maschio",
+      "huntType": "bassa",
+      "windows": [
+        {
+          "dates": [
+            "2026-10-16",
+            "2026-10-18",
+            "2026-10-25",
+            "2026-11-01",
+            "2026-11-07",
+            "2026-11-08",
+            "2026-11-15",
+            "2026-11-22",
+            "2026-11-29",
+            "2026-11-30"
+          ]
+        }
+      ],
+      "hourProfile": "bassa",
+      "individualMax": 1,
+      "note": "Cattura della femmina vietata. Richiede cane da ferma; vietato il maschio \"in pianta\". Incompatibile lo stesso giorno con le lepri."
+    },
+    {
+      "id": "beccaccia",
+      "speciesKey": "beccaccia",
+      "speciesLabel": "Beccaccia",
+      "categoryLabel": "Nessun limite di sesso/età",
+      "huntType": "bassa",
+      "windows": [
+        {
+          "from": "2026-10-16",
+          "to": "2026-11-30"
+        }
+      ],
+      "hourProfile": "bassa",
+      "weekdays": [
+        0,
+        2,
+        3,
+        4,
+        6
+      ],
+      "extraAllowedDates": [
+        "2026-10-16",
+        "2026-11-30"
+      ],
+      "individualMax": 15,
+      "note": "Richiede cane da ferma. Incompatibile lo stesso giorno con le lepri."
+    },
+    {
+      "id": "lepre_comune",
+      "speciesKey": "lepre_comune",
+      "speciesLabel": "Lepre comune",
+      "categoryLabel": "Nessun limite di sesso/età",
+      "huntType": "bassa",
+      "windows": [
+        {
+          "dates": [
+            "2026-10-16",
+            "2026-10-18",
+            "2026-10-25",
+            "2026-11-01"
+          ]
+        }
+      ],
+      "hourProfile": "bassa",
+      "individualMax": 1,
+      "groups": [
+        "leporidi_totale"
+      ],
+      "note": "Cacciabile solo il 16, 18, 25 ottobre e 1° novembre. Vietata comunque il giorno di chiusura (30 novembre). Max 1 leporide al giorno; incompatibile lo stesso giorno con fagiano di monte, beccaccia o fagiano comune. Richiede cane da seguita."
+    },
+    {
+      "id": "lepre_variabile",
+      "speciesKey": "lepre_variabile",
+      "speciesLabel": "Lepre variabile",
+      "categoryLabel": "Nessun limite di sesso/età",
+      "huntType": "bassa",
+      "windows": [
+        {
+          "dates": [
+            "2026-10-16",
+            "2026-10-18",
+            "2026-10-25",
+            "2026-11-01",
+            "2026-11-07",
+            "2026-11-08",
+            "2026-11-15",
+            "2026-11-22",
+            "2026-11-29",
+            "2026-11-30"
+          ]
+        }
+      ],
+      "hourProfile": "bassa",
+      "individualMax": 1,
+      "groups": [
+        "leporidi_totale"
+      ],
+      "note": "Max 1 leporide al giorno; incompatibile lo stesso giorno con fagiano di monte, beccaccia o fagiano comune. Richiede cane da seguita."
+    },
+    {
       "id": "volpe_bassa",
       "speciesKey": "volpe",
       "speciesLabel": "Volpe",
@@ -836,276 +1106,6 @@
         "2026-11-30"
       ],
       "note": "Incompatibile lo stesso giorno con le lepri (vedi regole giornaliere)."
-    },
-    {
-      "id": "lepre_comune",
-      "speciesKey": "lepre_comune",
-      "speciesLabel": "Lepre comune",
-      "categoryLabel": "Nessun limite di sesso/età",
-      "huntType": "bassa",
-      "windows": [
-        {
-          "dates": [
-            "2026-10-16",
-            "2026-10-18",
-            "2026-10-25",
-            "2026-11-01"
-          ]
-        }
-      ],
-      "hourProfile": "bassa",
-      "individualMax": 1,
-      "groups": [
-        "leporidi_totale"
-      ],
-      "note": "Cacciabile solo il 16, 18, 25 ottobre e 1° novembre. Vietata comunque il giorno di chiusura (30 novembre). Max 1 leporide al giorno; incompatibile lo stesso giorno con fagiano di monte, beccaccia o fagiano comune. Richiede cane da seguita."
-    },
-    {
-      "id": "lepre_variabile",
-      "speciesKey": "lepre_variabile",
-      "speciesLabel": "Lepre variabile",
-      "categoryLabel": "Nessun limite di sesso/età",
-      "huntType": "bassa",
-      "windows": [
-        {
-          "dates": [
-            "2026-10-16",
-            "2026-10-18",
-            "2026-10-25",
-            "2026-11-01",
-            "2026-11-07",
-            "2026-11-08",
-            "2026-11-15",
-            "2026-11-22",
-            "2026-11-29",
-            "2026-11-30"
-          ]
-        }
-      ],
-      "hourProfile": "bassa",
-      "individualMax": 1,
-      "groups": [
-        "leporidi_totale"
-      ],
-      "note": "Max 1 leporide al giorno; incompatibile lo stesso giorno con fagiano di monte, beccaccia o fagiano comune. Richiede cane da seguita."
-    },
-    {
-      "id": "fagiano_di_monte",
-      "speciesKey": "fagiano_di_monte",
-      "speciesLabel": "Fagiano di monte",
-      "categoryLabel": "Solo maschio",
-      "huntType": "bassa",
-      "windows": [
-        {
-          "dates": [
-            "2026-10-16",
-            "2026-10-18",
-            "2026-10-25",
-            "2026-11-01",
-            "2026-11-07",
-            "2026-11-08",
-            "2026-11-15",
-            "2026-11-22",
-            "2026-11-29",
-            "2026-11-30"
-          ]
-        }
-      ],
-      "hourProfile": "bassa",
-      "individualMax": 1,
-      "note": "Cattura della femmina vietata. Richiede cane da ferma; vietato il maschio \"in pianta\". Incompatibile lo stesso giorno con le lepri."
-    },
-    {
-      "id": "beccaccia",
-      "speciesKey": "beccaccia",
-      "speciesLabel": "Beccaccia",
-      "categoryLabel": "Nessun limite di sesso/età",
-      "huntType": "bassa",
-      "windows": [
-        {
-          "from": "2026-10-16",
-          "to": "2026-11-30"
-        }
-      ],
-      "hourProfile": "bassa",
-      "weekdays": [
-        0,
-        2,
-        3,
-        4,
-        6
-      ],
-      "extraAllowedDates": [
-        "2026-10-16",
-        "2026-11-30"
-      ],
-      "individualMax": 15,
-      "note": "Richiede cane da ferma. Incompatibile lo stesso giorno con le lepri."
-    },
-    {
-      "id": "alzavola",
-      "speciesKey": "alzavola",
-      "speciesLabel": "Alzavola",
-      "categoryLabel": "Nessun limite quantitativo",
-      "huntType": "acquatica",
-      "windows": [
-        {
-          "from": "2026-12-15",
-          "to": "2027-01-31"
-        }
-      ],
-      "hourProfile": "acquatica",
-      "excludedDates": [
-        "2026-12-25",
-        "2026-12-26",
-        "2027-01-01",
-        "2027-01-06"
-      ],
-      "excludedWeekdays": [
-        1,
-        3
-      ],
-      "note": "Consentita solo sui laghi Verbano e Ceresio, ad almeno 100 m dalla riva/canneti. Vietato sparare verso terraferma."
-    },
-    {
-      "id": "germano_reale_acqua",
-      "speciesKey": "germano_reale",
-      "speciesLabel": "Germano reale",
-      "categoryLabel": "Nessun limite quantitativo",
-      "huntType": "acquatica",
-      "windows": [
-        {
-          "from": "2026-12-15",
-          "to": "2027-01-31"
-        }
-      ],
-      "hourProfile": "acquatica",
-      "excludedDates": [
-        "2026-12-25",
-        "2026-12-26",
-        "2027-01-01",
-        "2027-01-06"
-      ],
-      "excludedWeekdays": [
-        1,
-        3
-      ],
-      "note": "Consentita solo sui laghi Verbano e Ceresio, ad almeno 100 m dalla riva/canneti. Vietato sparare verso terraferma."
-    },
-    {
-      "id": "moriglione",
-      "speciesKey": "moriglione",
-      "speciesLabel": "Moriglione",
-      "categoryLabel": "Nessun limite quantitativo",
-      "huntType": "acquatica",
-      "windows": [
-        {
-          "from": "2026-12-15",
-          "to": "2027-01-31"
-        }
-      ],
-      "hourProfile": "acquatica",
-      "excludedDates": [
-        "2026-12-25",
-        "2026-12-26",
-        "2027-01-01",
-        "2027-01-06"
-      ],
-      "excludedWeekdays": [
-        1,
-        3
-      ],
-      "note": "Consentita solo sui laghi Verbano e Ceresio, ad almeno 100 m dalla riva/canneti. Vietato sparare verso terraferma."
-    },
-    {
-      "id": "moretta",
-      "speciesKey": "moretta",
-      "speciesLabel": "Moretta",
-      "categoryLabel": "Nessun limite quantitativo",
-      "huntType": "acquatica",
-      "windows": [
-        {
-          "from": "2026-12-15",
-          "to": "2027-01-31"
-        }
-      ],
-      "hourProfile": "acquatica",
-      "excludedDates": [
-        "2026-12-25",
-        "2026-12-26",
-        "2027-01-01",
-        "2027-01-06"
-      ],
-      "excludedWeekdays": [
-        1,
-        3
-      ],
-      "note": "Consentita solo sui laghi Verbano e Ceresio, ad almeno 100 m dalla riva/canneti. Vietato sparare verso terraferma."
-    },
-    {
-      "id": "folaga",
-      "speciesKey": "folaga",
-      "speciesLabel": "Folaga",
-      "categoryLabel": "Nessun limite quantitativo",
-      "huntType": "acquatica",
-      "windows": [
-        {
-          "from": "2026-12-15",
-          "to": "2027-01-31"
-        }
-      ],
-      "hourProfile": "acquatica",
-      "excludedDates": [
-        "2026-12-25",
-        "2026-12-26",
-        "2027-01-01",
-        "2027-01-06"
-      ],
-      "excludedWeekdays": [
-        1,
-        3
-      ],
-      "note": "Consentita solo sui laghi Verbano e Ceresio, ad almeno 100 m dalla riva/canneti. Vietato sparare verso terraferma."
-    },
-    {
-      "id": "cervo_tardo_autunnale",
-      "speciesKey": "cervo",
-      "speciesLabel": "Cervo",
-      "categoryLabel": "Caccia tardo autunnale — da pubblicare",
-      "huntType": "alta",
-      "windows": [],
-      "note": "Regolamento non ancora pubblicato dall'Ufficio della caccia e della pesca per questa stagione. Indicativamente questa caccia si svolge da metà novembre a fine dicembre, di mercoledì, sabato e domenica, dalle 7:00 alle 14:00 (dati della stagione scorsa, ancora da confermare). Verifica il sito ufficiale ti.ch/caccia, oppure ricontrolla qui in app: appena il regolamento sarà pubblicato, questa scheda verrà aggiornata con le date esatte.",
-      "subCategory": "tardo"
-    },
-    {
-      "id": "capriolo_tardo_autunnale",
-      "speciesKey": "capriolo",
-      "speciesLabel": "Capriolo",
-      "categoryLabel": "Caccia tardo autunnale — da pubblicare",
-      "huntType": "alta",
-      "windows": [],
-      "note": "Regolamento non ancora pubblicato dall'Ufficio della caccia e della pesca per questa stagione. Indicativamente questa caccia si svolge da metà novembre a fine dicembre, di mercoledì, sabato e domenica, dalle 7:00 alle 14:00 (dati della stagione scorsa, ancora da confermare). Verifica il sito ufficiale ti.ch/caccia, oppure ricontrolla qui in app: appena il regolamento sarà pubblicato, questa scheda verrà aggiornata con le date esatte.",
-      "subCategory": "tardo"
-    },
-    {
-      "id": "volpe_tardo_autunnale",
-      "speciesKey": "volpe",
-      "speciesLabel": "Volpe",
-      "categoryLabel": "Caccia speciale tardo autunnale — da pubblicare",
-      "huntType": "alta",
-      "windows": [],
-      "note": "Regolamento non ancora pubblicato dall'Ufficio della caccia e della pesca per questa stagione. Indicativamente questa caccia si svolge da metà novembre a fine dicembre, di mercoledì, sabato e domenica, dalle 7:00 alle 14:00 (dati della stagione scorsa, ancora da confermare). Verifica il sito ufficiale ti.ch/caccia, oppure ricontrolla qui in app: appena il regolamento sarà pubblicato, questa scheda verrà aggiornata con le date esatte.",
-      "subCategory": "tardo"
-    },
-    {
-      "id": "cinghiale_invernale",
-      "speciesKey": "cinghiale",
-      "speciesLabel": "Cinghiale",
-      "categoryLabel": "Caccia invernale — da pubblicare",
-      "huntType": "alta",
-      "windows": [],
-      "note": "Regolamento non ancora pubblicato dall'Ufficio della caccia e della pesca per questa stagione. Indicativamente questa caccia si svolge tra novembre e gennaio, di mercoledì, sabato e domenica (dati della stagione scorsa, ancora da confermare). Verifica il sito ufficiale ti.ch/caccia, oppure ricontrolla qui in app: appena il regolamento sarà pubblicato, questa scheda verrà aggiornata con le date esatte.",
-      "subCategory": "invernale"
     }
   ],
   "zones": {
@@ -1245,7 +1245,7 @@
   },
   "daSapere": {
     "linkRegistrazioneOnline": "https://www.eservices.ti.ch/eservices/esrv/?SRV=R9G9",
-    "linkRegistrazioneOnlineLabel": "Vai allo sportello \u00bb Annuncio selvaggina abbattuta",
+    "linkRegistrazioneOnlineLabel": "Vai allo sportello » Annuncio selvaggina abbattuta",
     "scadenze": [
       {
         "date": "2026-10-15",
@@ -1289,7 +1289,7 @@
             "testo": "Per ogni capo di fagiano di monte, beccaccia, lepre comune e lepre variabile, compresi quelli da autodenunciare, va fatta la registrazione online entro 12 ore dalla cattura, con la procedura descritta nelle disposizioni al cacciatore.",
             "art": "art. 29 cpv. 1 lett. e",
             "link": "https://www.eservices.ti.ch/eservices/esrv/?SRV=R9G9",
-            "linkLabel": "Vai allo sportello \u00bb Annuncio selvaggina abbattuta",
+            "linkLabel": "Vai allo sportello » Annuncio selvaggina abbattuta",
             "multa": "Mancato rispetto: multa disciplinare di 50 fr."
           },
           {
