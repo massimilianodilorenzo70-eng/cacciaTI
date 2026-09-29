@@ -15,6 +15,7 @@
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
     { v: "3.50", text: "Caccia bassa: due nuove sottoschede. «Prove cani» mostra i giorni e gli orari in cui la prova è permessa (art. 38); «Da sapere» raccoglie scadenze, obblighi e divieti della stagione." },
+    { v: "3.51", text: "Corretto «Da sapere» (caccia bassa): tolte alcune regole generali che non erano specifiche della caccia bassa." },
     { v: "3.49", text: "Bug fix e miglioramenti." },
     { v: "3.48", text: "Piccola sorpresa nascosta da qualche parte nell'app, per chi la esplora con attenzione." },
     { v: "3.47", text: "Nuova riga sotto la data: fase lunare (offline) e meteo del giorno (con rete, da Open-Meteo). Entrambi disattivabili da Impostazioni > Aspetto." },
