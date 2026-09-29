@@ -1154,7 +1154,6 @@
     let eggUltimaFoto = null;
     function mostraEasterEgg() {
       const foto = [
-        { src: "media/autore.jpg", didascalia: "L'autore con Luminensis Loco" },
         { src: "media/autore-2.jpg", didascalia: "L'autore con Luminensis Fuoco e Loco" },
         { src: "media/sccd.jpg", didascalia: "Società Cacciatori Chiasso e dintorni" },
       ];
