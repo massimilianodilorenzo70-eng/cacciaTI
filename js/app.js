@@ -14,6 +14,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.53", text: "Aggiunto il link diretto allo sportello online per la registrazione delle catture di caccia bassa (Da sapere)." },
     { v: "3.52", text: "Bug fix e miglioramenti." },
     { v: "3.51", text: "Corretto «Da sapere» (caccia bassa): tolte alcune regole generali che non erano specifiche della caccia bassa." },
     { v: "3.50", text: "Caccia bassa: due nuove sottoschede. «Prove cani» mostra i giorni e gli orari in cui la prova è permessa (art. 38); «Da sapere» raccoglie scadenze, obblighi e divieti della stagione." },
@@ -570,6 +571,7 @@
     return voci.map(v => `<div class="cat-card info-item">
       <div class="info-item-title">${escapeHtmlLuogo(v.titolo)}${v.art ? ` <span class="info-item-art">${escapeHtmlLuogo(v.art)}</span>` : ""}</div>
       <div class="info-item-text">${escapeHtmlLuogo(v.testo)}</div>
+      ${v.link ? `<a class="info-item-link" href="${escapeHtmlLuogo(v.link)}" target="_blank" rel="noopener">${escapeHtmlLuogo(v.linkLabel || v.link)}</a>` : ""}
       ${v.multa ? `<div class="info-item-multa">${escapeHtmlLuogo(v.multa)}</div>` : ""}
     </div>`).join("");
   }
