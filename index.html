@@ -245,6 +245,26 @@
       <label for="meteoToggle">Meteo (sotto la data, richiede rete)</label>
     </div>
 
+    <div class="section-title">Posizione e bandite</div>
+    <div class="info-box">
+      Distanza di pre-allarme per il riquadro «Dove mi trovo»: l'app avvisa quando sei
+      entro questa distanza da una bandita cantonale o federale.
+    </div>
+    <div class="altitude-toggle" style="flex-direction:column; align-items:flex-start; gap:10px;">
+      <div style="display:flex; gap:10px; width:100%;">
+        <label class="soglia-btn" data-soglia="200">
+          <input type="radio" name="sogliaBandita" value="200"> 🔴 Esperto<br><small>200 m</small>
+        </label>
+        <label class="soglia-btn" data-soglia="500">
+          <input type="radio" name="sogliaBandita" value="500"> 🟡 Standard<br><small>500 m</small>
+        </label>
+        <label class="soglia-btn" data-soglia="1000">
+          <input type="radio" name="sogliaBandita" value="1000"> 🟢 Prudente<br><small>1.000 m</small>
+        </label>
+      </div>
+      <div class="note" style="margin:0;">Una soglia bassa riduce gli avvisi anticipati: fai sempre riferimento alla segnaletica sul terreno.</div>
+    </div>
+
     <div class="section-title">Aggiorna il regolamento</div>
     <div class="info-box">
       Quando il Cantone pubblica l'aggiornamento annuale, fai convertire il nuovo regolamento
