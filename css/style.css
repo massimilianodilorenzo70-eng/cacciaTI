@@ -1347,3 +1347,20 @@ input[type="file"] { display: none; }
   font-weight: 600;
   color: var(--forest);
 }
+
+.modal-obbligo-online {
+  background: var(--gold-soft);
+  border: 1px solid var(--gold);
+  border-radius: 8px;
+  padding: 9px 11px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--ink);
+  margin: -8px 0 10px 0;
+}
+.modal-obbligo-online a {
+  display: block;
+  margin-top: 4px;
+  font-weight: 600;
+  color: var(--forest);
+}
