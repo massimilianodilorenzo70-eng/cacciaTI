@@ -14,6 +14,8 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.58.1", text: "Bug fix: il menu Quick Log (📍 Segna punto / 🎯 Abbattimento) non era più visibile all'avvio — compariva fisso sullo schermo invece di restare nascosto fino al tap sul +. Corretto." },
+    { v: "3.58", text: "Quick Log — Segna punto rapido: il pulsante + ora apre un menu a due voci. «Segna punto» salva istantaneamente coordinate GPS, altitudine, data e ora esatta con un solo tap — scegli il tipo (🦌 Abbattimento, 📍 Anschluss, ⭐ Luogo di interesse) e aggiungi una nota opzionale. Il punto compare subito nel registro con bordo tratteggiato e badge colorato; tocca «Completa» per aggiungere in seguito specie, foto, arma e tutti gli altri dettagli. Un banner in cima al registro ricorda quanti punti rapidi sono ancora da completare." },
     { v: "3.57", text: "Le foto vengono ora compresse automaticamente prima del salvataggio (massimo 1280px sul lato maggiore, qualità JPEG 72%): le foto dalla fotocamera venivano già compresse, ora la stessa compressione si applica anche alle foto importate tramite backup JSON. Backup più leggeri, spazio occupato ridotto." },
     { v: "3.56", text: "Nuova impostazione «Posizione e bandite»: scegli la distanza di pre-allarme per il riquadro «Dove mi trovo» tra tre livelli — Esperto (200 m), Standard (500 m) e Prudente (1.000 m, default). La soglia è salvata sul tuo telefono e si applica subito." },
     { v: "3.55", text: "Caccia bassa: le specie Fagiano di monte, Beccaccia, Lepre comune e Lepre variabile compaiono ora in cima alla lista. Il tab «Regole» è rinominato «Cacciabili». Quando non c'è nessuna specie aperta, un messaggio mostra la data di apertura e il conto alla rovescia in giorni." },
@@ -856,10 +858,77 @@
     const sorted = [...log].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
     if (sorted.length === 0) {
       listEl.innerHTML = `<div class="empty-state">Nessun abbattimento registrato.</div>`;
+      document.getElementById("quickLogBanner").hidden = true;
       return;
     }
+
+    // Banner "da completare" per i punti rapidi incompleti
+    const daCompletare = sorted.filter(k => k.type === "quick_point" && !k.complete);
+    const bannerEl = document.getElementById("quickLogBanner");
+    if (daCompletare.length > 0) {
+      bannerEl.hidden = false;
+      bannerEl.innerHTML = `<div class="quick-banner">
+        <span>📋 ${daCompletare.length === 1 ? "1 punto rapido da completare" : daCompletare.length + " punti rapidi da completare"}</span>
+      </div>`;
+    } else {
+      bannerEl.hidden = true;
+    }
+
     const guns = Storage.getGuns();
     for (const k of sorted) {
+      // Card punto rapido (Quick Log)
+      if (k.type === "quick_point") {
+        const tipoLabel  = { abbattimento: "🦌 Abbattimento", anschluss: "📍 Anschluss", luogo: "⭐ Luogo" }[k.pointType] || k.pointType;
+        const tipoClass  = { abbattimento: "badge-abbattimento", anschluss: "badge-anschluss", luogo: "badge-luogo" }[k.pointType] || "";
+        const coordsHtml = k.coords
+          ? `<div><b>Posizione GPS:</b> ${k.coords.lat.toFixed(5)}, ${k.coords.lon.toFixed(5)}`
+            + (k.coords.acc  ? ` (±${k.coords.acc} m)` : "")
+            + (k.coords.alt  ? ` · ${k.coords.alt} m` : "")
+            + ` — <a href="https://www.google.com/maps?q=${k.coords.lat},${k.coords.lon}" target="_blank" rel="noopener">apri nelle mappe</a></div>`
+          : `<div style="color:var(--ink-soft)">Nessuna coordinata GPS salvata</div>`;
+        const notaHtml = k.note ? `<div><b>Nota:</b> ${k.note}</div>` : "";
+        const oraHtml  = k.time ? ` alle ${k.time}` : "";
+
+        const item = document.createElement("div");
+        item.className = "log-item quick-point";
+        item.innerHTML = `
+          <div class="info" style="flex:1">
+            <span class="log-type-badge ${tipoClass}">${tipoLabel}</span>
+            <div class="date">${k.date}${oraHtml}</div>
+            <div class="sp">Punto rapido</div>
+            <details class="log-extra"><summary>Dettagli</summary>
+              ${coordsHtml}${notaHtml}
+            </details>
+          </div>
+          <div class="log-actions">
+            ${!k.complete ? `<button class="edit complete-btn">Completa</button>` : ""}
+            <button class="del">Elimina</button>
+          </div>
+        `;
+        if (!k.complete) {
+          item.querySelector(".complete-btn").addEventListener("click", () => {
+            // Apre il modulo completo pre-selezionando la data e le coordinate
+            openModal(null);
+            // Pre-compila data e ora
+            document.getElementById("modalDate").value = k.date;
+            // Pre-compila coordinate se presenti
+            if (k.coords) impostaPosizioneModulo(k.coords);
+            // Pre-compila nota
+            if (k.note) document.getElementById("modalNote").value = k.note;
+            // Segna come "completato in lavorazione" — sarà rimosso al salvataggio
+            item.dataset.quickId = k.id;
+          });
+        }
+        item.querySelector(".del").addEventListener("click", async () => {
+          if (await showConfirm("Eliminare questo punto rapido?")) {
+            Storage.deleteKill(k.id);
+            renderRegistro();
+          }
+        });
+        listEl.appendChild(item);
+        continue;
+      }
+
       const cat = regData.categories.find(c => c.id === k.categoryId);
 
       // Dettagli facoltativi (foto, arma, munizione, peso), mostrati solo se presenti.
@@ -1643,6 +1712,98 @@
     currentPhotoRemoved = false;
     nascondiAnteprimaFoto();
     document.getElementById("modalPhotoStatus").hidden = true;
+  }
+
+  // ---------- Quick Log ----------
+  let quickGpsResult = null; // posizione rilevata (o null se ancora in attesa)
+
+  function openQuickLog() {
+    quickGpsResult = null;
+    // Reset tipo punto
+    document.querySelectorAll(".quick-type-btn").forEach(b => b.classList.remove("active"));
+    document.querySelector(".quick-type-btn[data-type='abbattimento']").classList.add("active");
+    // Reset nota
+    document.getElementById("quickNote").value = "";
+    // Stato GPS: avvia subito
+    const dot  = document.getElementById("quickGpsDot");
+    const text = document.getElementById("quickGpsText");
+    dot.className  = "quick-gps-dot";
+    text.textContent = "⏳ Rilevamento GPS…";
+    document.getElementById("quickLogBackdrop").classList.add("active");
+    getPosition()
+      .then(pos => {
+        quickGpsResult = pos;
+        dot.className    = "quick-gps-dot ok";
+        const lat = pos.coords.latitude.toFixed(5);
+        const lon = pos.coords.longitude.toFixed(5);
+        const alt = pos.coords.altitude != null ? ` · ${Math.round(pos.coords.altitude)} m` : "";
+        text.textContent = `✓ ${lat}, ${lon}${alt}`;
+      })
+      .catch(() => {
+        dot.className    = "quick-gps-dot error";
+        text.textContent = "⚠ GPS non disponibile — il punto sarà salvato senza coordinate.";
+      });
+  }
+
+  function closeQuickLog() {
+    document.getElementById("quickLogBackdrop").classList.remove("active");
+    quickGpsResult = null;
+  }
+
+  function selectedQuickType() {
+    const active = document.querySelector(".quick-type-btn.active");
+    return active ? active.dataset.type : "abbattimento";
+  }
+
+  async function saveQuickLog() {
+    const tipo  = selectedQuickType();
+    const nota  = document.getElementById("quickNote").value.trim();
+    const now   = new Date();
+    const iso   = now.toISOString().slice(0, 10);
+    const time  = now.toTimeString().slice(0, 5);
+
+    const entry = {
+      id:         "q_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6),
+      type:       "quick_point",
+      pointType:  tipo,
+      date:       iso,
+      time:       time,
+      note:       nota,
+      complete:   false,
+      createdAt:  now.toISOString(),
+    };
+
+    if (quickGpsResult) {
+      const pos = quickGpsResult;
+      entry.coords = {
+        lat: pos.coords.latitude,
+        lon: pos.coords.longitude,
+        acc: Math.round(pos.coords.accuracy),
+        ...(pos.coords.altitude != null ? { alt: Math.round(pos.coords.altitude) } : {}),
+      };
+    }
+
+    Storage.addKill(entry); // riusa addKill: salva in coda al log
+    closeQuickLog();
+    renderRegistro();
+    renderOggi();
+    // Porta l'utente al registro così vede subito il punto salvato
+    document.querySelector(".tab-btn[data-view='registro']").click();
+  }
+
+  function setupQuickLog() {
+    // Bottoni tipo punto
+    document.querySelectorAll(".quick-type-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".quick-type-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+      });
+    });
+    document.getElementById("quickLogCancel").addEventListener("click", closeQuickLog);
+    document.getElementById("quickLogBackdrop").addEventListener("click", e => {
+      if (e.target === document.getElementById("quickLogBackdrop")) closeQuickLog();
+    });
+    document.getElementById("quickLogSave").addEventListener("click", saveQuickLog);
   }
 
   function setupPhoto() {
@@ -2670,7 +2831,30 @@
       b.addEventListener("click", () => switchView(b.dataset.view));
     });
 
-    document.getElementById("fabAdd").addEventListener("click", () => openModal(null));
+    // FAB: apre menu a due voci (Segna punto / Abbattimento completo)
+    const fabBtn          = document.getElementById("fabAdd");
+    const fabMenu         = document.getElementById("fabMenu");
+    const fabMenuBackdrop = document.getElementById("fabMenuBackdrop");
+
+    function closeFabMenu() {
+      fabMenu.hidden = true;
+      fabMenuBackdrop.hidden = true;
+    }
+    fabBtn.addEventListener("click", () => {
+      const isOpen = !fabMenu.hidden;
+      if (isOpen) { closeFabMenu(); return; }
+      fabMenu.hidden = false;
+      fabMenuBackdrop.hidden = false;
+    });
+    fabMenuBackdrop.addEventListener("click", closeFabMenu);
+    document.getElementById("fabFull").addEventListener("click", () => {
+      closeFabMenu();
+      openModal(null);
+    });
+    document.getElementById("fabQuick").addEventListener("click", () => {
+      closeFabMenu();
+      openQuickLog();
+    });
 
     document.getElementById("modalGunManageLink").addEventListener("click", () => {
       const huntType = huntTypeDelModulo(document.getElementById("modalCategory").value);
@@ -2873,6 +3057,7 @@
     })();
 
     setupPhoto();
+    setupQuickLog();
 
     document.getElementById("modalGpsBtn").addEventListener("click", async () => {
       const btn = document.getElementById("modalGpsBtn");
