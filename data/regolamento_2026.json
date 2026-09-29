@@ -1244,6 +1244,8 @@
     ]
   },
   "daSapere": {
+    "linkRegistrazioneOnline": "https://www.eservices.ti.ch/eservices/esrv/?SRV=R9G9",
+    "linkRegistrazioneOnlineLabel": "Vai allo sportello \u00bb Annuncio selvaggina abbattuta",
     "scadenze": [
       {
         "date": "2026-10-15",
