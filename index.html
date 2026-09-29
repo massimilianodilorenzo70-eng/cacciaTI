@@ -3,6 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Redirect canonico: /index.html → / (evita duplicati nelle statistiche e nel SEO) -->
+<script>
+  if (location.pathname.endsWith('/index.html')) {
+    location.replace(location.href.replace('/index.html', '/'));
+  }
+</script>
+<link rel="canonical" href="https://massimilianodilorenzo70-eng.github.io/cacciaTI/">
 <title>cacciaTI — Regolamento caccia Ticino, specie del giorno e registro abbattimenti</title>
 <meta name="description" content="App gratuita per la caccia in Canton Ticino: cosa è aperto oggi, orari, quote, contingenti aggiornati, controllo posizione rispetto alle bandite cantonali e federali, registro abbattimenti con GPS, SOS alla Rega. Funziona offline.">
 <meta name="keywords" content="caccia Ticino, regolamento caccia, Canton Ticino, specie cacciabili, bandite cantonali, registro abbattimenti, app caccia, caccia svizzera, selvaggina Ticino">
