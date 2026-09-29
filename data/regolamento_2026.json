@@ -1148,5 +1148,211 @@
     "_caccia_alta": "In tutta la caccia alta, nel distretto di Bellinzona la caccia è chiusa nell'area delimitata da autostrada A2, strada cantonale e argine, tra i ponti Monte Carasso-Bellinzona e Arbedo-Gorduno.",
     "_caccia_bassa": "Caccia bassa: permessa su tutto il territorio cantonale, salvo le eccezioni indicate per singola specie.",
     "_caccia_acquatica": "Caccia acquatica: permessa sui laghi Verbano e Ceresio ad almeno 100 m dalla riva e dai canneti. Vietati gli spari in direzione della terraferma."
+  },
+  "proveCani": {
+    "articolo": "art. 38",
+    "finestre": [
+      {
+        "id": "agosto",
+        "label": "4–23 agosto",
+        "from": "2026-08-04",
+        "to": "2026-08-23",
+        "weekdays": [
+          2,
+          6,
+          0
+        ],
+        "hours": [
+          [
+            "07:00",
+            "17:30"
+          ]
+        ],
+        "note": "Solo sotto i 1'300 mslm."
+      },
+      {
+        "id": "autunno",
+        "label": "29 settembre – 11 ottobre",
+        "from": "2026-09-29",
+        "to": "2026-10-11",
+        "weekdays": [
+          2,
+          4,
+          6,
+          0
+        ],
+        "hours": [
+          [
+            "07:00",
+            "17:30"
+          ]
+        ]
+      },
+      {
+        "id": "bassa",
+        "label": "17 ottobre – 19 novembre",
+        "from": "2026-10-17",
+        "to": "2026-11-19",
+        "weekdays": [
+          2,
+          4,
+          6
+        ],
+        "hourProfile": "bassa",
+        "note": "Negli orari previsti per la caccia bassa."
+      }
+    ],
+    "eccezioni": [
+      {
+        "date": "2026-11-14",
+        "text": "Sabato 14 novembre la prova è esclusa nelle zone dove è aperta la caccia tardo autunnale al cervo e al capriolo e la caccia invernale al cinghiale."
+      }
+    ],
+    "regole": [
+      {
+        "titolo": "Dove è vietata",
+        "testo": "Nelle zone chiuse alla caccia e nei campi coltivati la prova dei cani è vietata.",
+        "art": "art. 38 cpv. 2"
+      },
+      {
+        "titolo": "Chi può farla",
+        "testo": "Anche i proprietari di cani da caccia domiciliati o dimoranti nel Cantone, abilitati alla caccia ma senza autorizzazione di caccia bassa.",
+        "art": "art. 38 cpv. 3"
+      },
+      {
+        "titolo": "Cani liberi",
+        "testo": "Fuori dai giorni di prova e dall'esercizio venatorio i cani non possono vagare. I cani vaganti senza sorveglianza che rincorrono la selvaggina possono essere abbattuti dagli agenti della polizia della caccia.",
+        "art": "art. 37",
+        "multa": "Lasciare vagare cani senza sorveglianza: multa disciplinare di 100 fr."
+      },
+      {
+        "titolo": "Bandite e zone protette",
+        "testo": "Nelle zone in cui la caccia è vietata i cani vanno tenuti al guinzaglio, salvo autorizzazione speciale.",
+        "art": "art. 36",
+        "multa": "Nelle bandite cantonali: multa disciplinare di 150 fr."
+      },
+      {
+        "titolo": "Quanti cani e con quali mezzi",
+        "testo": "Al massimo 3 cani per cacciatore. Vietati sui cani i dispositivi a scarica elettrica, quelli che emettono segnali acustici e quelli che agiscono con sostanze chimiche.",
+        "art": "art. 49 lett. f, i"
+      },
+      {
+        "titolo": "Segugi a novembre",
+        "testo": "In caccia bassa sono vietati i segugi sotto i 1'600 mslm dal 16 al 30 novembre, nelle zone dove sono aperte la caccia tardo autunnale al cervo e al capriolo e la caccia speciale al cinghiale.",
+        "art": "art. 35 cpv. 2"
+      }
+    ]
+  },
+  "daSapere": {
+    "scadenze": [
+      {
+        "date": "2026-10-15",
+        "time": "07:00",
+        "label": "Vigilia dell'apertura: si può partire per le zone di caccia con patente, fucile e munizioni dopo le 07:00, dall'ultimo posto autorizzato ai veicoli a motore.",
+        "art": "art. 40 cpv. 1"
+      },
+      {
+        "date": "2026-10-16",
+        "label": "Apertura della caccia bassa: permessa a tutte le specie cacciabili. Orario 08:00–18:30.",
+        "art": "art. 39, 41"
+      },
+      {
+        "date": "2026-10-25",
+        "label": "Cambio d'orario: da oggi si caccia dalle 07:30 alle 16:30.",
+        "art": "art. 41"
+      },
+      {
+        "date": "2026-11-30",
+        "label": "Chiusura: vietata la caccia alla lepre comune. Ultimo giorno del divieto di fototrappole, visori notturni e termocamere per chi caccia in bassa.",
+        "art": "art. 39, 49 lett. m"
+      },
+      {
+        "date": "2026-12-01",
+        "time": "12:00",
+        "label": "Rientro dalle zone di caccia entro le 12:00, con patente, fucile e munizioni.",
+        "art": "art. 40 cpv. 2"
+      },
+      {
+        "date": "2026-12-15",
+        "label": "Ultimo giorno per inviare il foglio di controllo (e il duplicato, se previsto) all'Ufficio della caccia e della pesca: 15 giorni dalla chiusura.",
+        "art": "art. 29 cpv. 1 lett. g"
+      }
+    ],
+    "sezioni": [
+      {
+        "titolo": "Obblighi",
+        "voci": [
+          {
+            "titolo": "Registrazione online entro 12 ore",
+            "testo": "Per ogni capo di fagiano di monte, beccaccia, lepre comune e lepre variabile, compresi quelli da autodenunciare, va fatta la registrazione online entro 12 ore dalla cattura, con la procedura descritta nelle disposizioni al cacciatore.",
+            "art": "art. 29 cpv. 1 lett. e",
+            "multa": "Mancato rispetto: multa disciplinare di 50 fr."
+          },
+          {
+            "titolo": "Foglio di controllo",
+            "testo": "Iscrivi subito sul posto della cattura, con inchiostro indelebile: giorno, ora, comune e luogo, specie, età e sesso. Le correzioni sono ammesse solo con l'autorizzazione di un guardacaccia o dell'Ufficio della caccia e della pesca.",
+            "art": "art. 29 cpv. 1 lett. a"
+          },
+          {
+            "titolo": "Capi da autodenunciare",
+            "testo": "In caccia bassa vanno segnalati subito all'Ufficio della caccia e della pesca o a un agente della polizia della caccia, che provvedono al sequestro.",
+            "art": "art. 29 cpv. 1 lett. f"
+          },
+          {
+            "titolo": "Indumenti ad alta visibilità",
+            "testo": "In caccia bassa e acquatica è obbligatorio indossare indumenti ad alta visibilità. Novità in vigore dal 3 luglio 2026.",
+            "art": "art. 53 lett. l",
+            "multa": "Inosservanza: multa disciplinare di 150 fr."
+          },
+          {
+            "titolo": "Cane da ferma e cane da seguita",
+            "testo": "Fagiano di monte e beccaccia si cacciano solo con il cane da ferma. Lepre comune e lepre variabile solo con il cane da seguita.",
+            "art": "art. 53 lett. h"
+          },
+          {
+            "titolo": "Ricerca del capo ferito",
+            "testo": "Cerca, per quanto possibile, i capi potenzialmente feriti, se serve con un cane da traccia abilitato, dopo aver avvisato un agente della polizia della caccia o l'Ufficio. Se interrompi la ricerca perdi ogni diritto sul capo.",
+            "art": "art. 54 cpv. 1"
+          }
+        ]
+      },
+      {
+        "titolo": "Divieti",
+        "voci": [
+          {
+            "titolo": "Fototrappole, visori e termocamere",
+            "testo": "Da 3 giorni prima della caccia alta fino al 14 novembre è vietato portare con sé fototrappole, apparecchi per l'intensificazione della luce residua, camere termiche e strumenti simili. Chi caccia in bassa è soggetto al divieto fino al 30 novembre. Visori e termocamere nei periodi vietati comportano il ritiro immediato della patente.",
+            "art": "art. 49 lett. m, art. 67b lett. c"
+          },
+          {
+            "titolo": "Richiami e foraggiamento",
+            "testo": "È vietato adescare la selvaggina con richiami o foraggiamenti.",
+            "art": "art. 53 lett. i",
+            "multa": "Multa disciplinare di 200 fr."
+          },
+          {
+            "titolo": "Distanze e tiro",
+            "testo": "Niente caccia entro 50 m da edifici abitati, campeggi e percorsi vita, né a meno di 50 m da autostrade, ferrovie e strade cantonali. Niente tiri oltre i 250 m. Non si spara da veicoli e non si portano armi cariche su di essi.",
+            "art": "art. 53 lett. a–d"
+          },
+          {
+            "titolo": "Arma e gruppi",
+            "testo": "Fucile a pallini, una sola arma. Gruppi di al massimo 4 cacciatori e nessuna partecipazione attiva di persone senza patente, salvo autorizzazione specifica.",
+            "art": "art. 45, 48, 49 lett. a–b"
+          },
+          {
+            "titolo": "Bandite",
+            "testo": "Si attraversano solo lungo le strade e i sentieri principali marcati, con l'arma scarica e i cani al guinzaglio. Cacciare in bandita comporta il ritiro immediato della patente.",
+            "art": "art. 10 cpv. 3, art. 67b lett. d"
+          },
+          {
+            "titolo": "Reati gravi con ritiro immediato della patente",
+            "testo": "Cacciare in giorni o orari vietati; usare armi o mezzi ausiliari vietati; cacciare in bandita; omettere o falsificare l'iscrizione sul foglio di controllo o scrivere dati non veritieri; opporsi a un agente della polizia della caccia; gravi mancanze nelle regole di sicurezza con le armi.",
+            "art": "art. 67b"
+          }
+        ]
+      }
+    ],
+    "avviso": "Riassunto del regolamento (RT 922.110, stato 3 luglio 2026). Fa stato il testo ufficiale."
   }
 }
