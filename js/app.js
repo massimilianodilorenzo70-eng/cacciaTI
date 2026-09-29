@@ -6,6 +6,7 @@
   let prefs = Storage.getPrefs();
   let selectedHunt = null; // 'alta' | 'bassa' | 'acquatica' — scelto dall'utente o dedotto alla prima apertura
   let altaSubView = "stagione"; // 'stagione' | 'tardo' | 'invernale' — solo per Caccia alta
+  let bassaSubView = "regole"; // 'regole' | 'prove' | 'dasapere' — solo per Caccia bassa
   let contingenteData = null; // dati ufficiali camoscio/capriolo, se disponibili
 
   const HUNT_LABELS = { alta: "Caccia alta", bassa: "Caccia bassa", acquatica: "Caccia acquatica" };
@@ -13,6 +14,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.50", text: "Caccia bassa: due nuove sottoschede. «Prove cani» mostra i giorni e gli orari in cui la prova è permessa (art. 38); «Da sapere» raccoglie scadenze, obblighi e divieti della stagione." },
     { v: "3.49", text: "Bug fix e miglioramenti." },
     { v: "3.48", text: "Piccola sorpresa nascosta da qualche parte nell'app, per chi la esplora con attenzione." },
     { v: "3.47", text: "Nuova riga sotto la data: fase lunare (offline) e meteo del giorno (con rete, da Open-Meteo). Entrambi disattivabili da Impostazioni > Aspetto." },
@@ -221,6 +223,20 @@
     const subTabs = document.getElementById("altaSubTabs");
     subTabs.hidden = selectedHunt !== "alta";
     subTabs.querySelectorAll(".subtab").forEach(b => b.classList.toggle("active", b.dataset.sub === altaSubView));
+
+    // Caccia bassa: Regole / Prove cani / Da sapere. Le ultime due compaiono
+    // solo se il regolamento in uso contiene i relativi dati (un regolamento
+    // importato a mano, più vecchio, potrebbe non averli).
+    const haProve = !!regData.proveCani;
+    const haDaSapere = !!regData.daSapere;
+    const bassaTabs = document.getElementById("bassaSubTabs");
+    bassaTabs.querySelector('[data-sub="prove"]').hidden = !haProve;
+    bassaTabs.querySelector('[data-sub="dasapere"]').hidden = !haDaSapere;
+    if ((bassaSubView === "prove" && !haProve) || (bassaSubView === "dasapere" && !haDaSapere)) {
+      bassaSubView = "regole";
+    }
+    bassaTabs.hidden = selectedHunt !== "bassa" || (!haProve && !haDaSapere);
+    bassaTabs.querySelectorAll(".subtab").forEach(b => b.classList.toggle("active", b.dataset.sub === bassaSubView));
     renderDoveSono();
   }
 
@@ -406,6 +422,15 @@
 
     renderHuntTabs(results);
 
+    // Prove cani e Da sapere non sono elenchi di specie: niente ricerca, pannello dedicato
+    const pannelloBassa = selectedHunt === "bassa" && bassaSubView !== "regole";
+    const searchRow = document.querySelector(".search-row");
+    if (searchRow) searchRow.style.display = pannelloBassa ? "none" : "";
+    if (pannelloBassa) {
+      container.appendChild(bassaSubView === "prove" ? renderProveCani(iso) : renderDaSapere(iso));
+      return;
+    }
+
     const query = (document.getElementById("searchInput").value || "").trim().toLowerCase();
 
     let sectionResults = results.filter(r => r.category.huntType === selectedHunt);
@@ -470,6 +495,182 @@
         container.appendChild(renderCatCard(r));
       }
     }
+  }
+
+  // ---------- Caccia bassa: Prove cani e Da sapere ----------
+
+  const GIORNI_LUNGHI = ["domenica", "lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato"];
+  const GIORNI_BREVI = ["dom", "lun", "mar", "mer", "gio", "ven", "sab"];
+  const MESI_LUNGHI = ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio",
+    "agosto", "settembre", "ottobre", "novembre", "dicembre"];
+  const MESI_BREVI = ["gen", "feb", "mar", "apr", "mag", "giu", "lug", "ago", "set", "ott", "nov", "dic"];
+  const AVVISO_BASSA = "Riassunto del regolamento. Fa stato il testo ufficiale.";
+
+  function dataLunga(iso) {
+    const d = RulesEngine.parseISO(iso);
+    return `${GIORNI_LUNGHI[d.getDay()]} ${d.getDate()} ${MESI_LUNGHI[d.getMonth()]}`;
+  }
+
+  function oreProfilo(profilo, iso) {
+    const voci = (regData.hourProfiles || {})[profilo] || [];
+    const v = voci.find(e => iso >= e.from && iso <= e.to);
+    return v ? v.windows : null;
+  }
+
+  function testoOre(windows) {
+    return windows ? windows.map(([a, b]) => `${a}–${b}`).join(" e ") : "orari da verificare";
+  }
+
+  function oreFinestra(f, iso) {
+    return f.hours || (f.hourProfile ? oreProfilo(f.hourProfile, iso) : null);
+  }
+
+  function elencoGiorniSettimana(weekdays) {
+    const nomi = [...weekdays]
+      .sort((a, b) => ((a + 6) % 7) - ((b + 6) % 7))
+      .map(n => GIORNI_LUNGHI[n]);
+    return nomi.length > 1 ? nomi.slice(0, -1).join(", ") + " e " + nomi[nomi.length - 1] : (nomi[0] || "");
+  }
+
+  // Tutti i giorni di calendario di una finestra di prova (date ISO)
+  function giorniProva(f) {
+    const out = [];
+    const d = RulesEngine.parseISO(f.from);
+    const fine = RulesEngine.parseISO(f.to);
+    while (d <= fine) {
+      if ((f.weekdays || []).includes(d.getDay())) out.push(RulesEngine.toISO(d));
+      d.setDate(d.getDate() + 1);
+    }
+    return out;
+  }
+
+  function provaCaniDelGiorno(pc, iso) {
+    const d = RulesEngine.parseISO(iso);
+    for (const f of pc.finestre || []) {
+      if (iso >= f.from && iso <= f.to && (f.weekdays || []).includes(d.getDay())) {
+        return { finestra: f, ore: oreFinestra(f, iso) };
+      }
+    }
+    return null;
+  }
+
+  function prossimaProvaCani(pc, iso) {
+    let prossimo = null;
+    for (const f of pc.finestre || []) {
+      for (const g of giorniProva(f)) {
+        if (g > iso && (!prossimo || g < prossimo)) prossimo = g;
+      }
+    }
+    return prossimo;
+  }
+
+  function renderVoci(voci) {
+    return voci.map(v => `<div class="cat-card info-item">
+      <div class="info-item-title">${escapeHtmlLuogo(v.titolo)}${v.art ? ` <span class="info-item-art">${escapeHtmlLuogo(v.art)}</span>` : ""}</div>
+      <div class="info-item-text">${escapeHtmlLuogo(v.testo)}</div>
+      ${v.multa ? `<div class="info-item-multa">${escapeHtmlLuogo(v.multa)}</div>` : ""}
+    </div>`).join("");
+  }
+
+  function avvisoBassa() {
+    const testo = (regData.daSapere && regData.daSapere.avviso) || AVVISO_BASSA;
+    return `<div class="info-box">${escapeHtmlLuogo(testo)}</div>`;
+  }
+
+  function renderProveCani(iso) {
+    const pc = regData.proveCani;
+    const wrap = document.createElement("div");
+    wrap.className = "bassa-panel";
+
+    const oggi = provaCaniDelGiorno(pc, iso);
+    const ecc = (pc.eccezioni || []).find(e => e.date === iso);
+    let stato;
+    if (oggi) {
+      stato = `<div class="prova-status ok">
+        <div class="prova-status-title">✓ Prova cani consentita</div>
+        <div class="prova-status-sub">${escapeHtmlLuogo(dataLunga(iso))} · ${escapeHtmlLuogo(testoOre(oggi.ore))}</div>
+        ${oggi.finestra.note ? `<div class="prova-status-sub">${escapeHtmlLuogo(oggi.finestra.note)}</div>` : ""}
+        ${ecc ? `<div class="prova-warn">${escapeHtmlLuogo(ecc.text)}</div>` : ""}
+      </div>`;
+    } else {
+      const prossimo = prossimaProvaCani(pc, iso);
+      stato = `<div class="prova-status no">
+        <div class="prova-status-title">Nessuna prova cani in questa data</div>
+        <div class="prova-status-sub">${prossimo
+          ? `Prossimo giorno di prova: ${escapeHtmlLuogo(dataLunga(prossimo))}`
+          : "Non ci sono altri giorni di prova quest'anno."}</div>
+      </div>`;
+    }
+
+    const finestre = (pc.finestre || []).map(f => {
+      const chips = giorniProva(f).map(g => {
+        const d = RulesEngine.parseISO(g);
+        const isEcc = (pc.eccezioni || []).some(e => e.date === g);
+        const cls = ["prova-chip"];
+        if (g === iso) cls.push("sel"); else if (g < iso) cls.push("past");
+        if (isEcc) cls.push("ecc");
+        return `<button type="button" class="${cls.join(" ")}" data-iso="${g}">${GIORNI_BREVI[d.getDay()]} ${d.getDate()}${isEcc ? "*" : ""}</button>`;
+      }).join("");
+      const regola = elencoGiorniSettimana(f.weekdays || []) + (f.hours ? " · " + testoOre(f.hours) : "");
+      return `<div class="prova-finestra">
+        <div class="prova-finestra-titolo">${escapeHtmlLuogo(f.label)}</div>
+        <div class="prova-finestra-regola">${escapeHtmlLuogo(regola)}${f.note ? " · " + escapeHtmlLuogo(f.note) : ""}</div>
+        <div class="prova-chips">${chips}</div>
+      </div>`;
+    }).join("");
+
+    const noteEcc = (pc.eccezioni || []).map(e =>
+      `<div class="prova-nota">* ${escapeHtmlLuogo(e.text)}</div>`).join("");
+
+    wrap.innerHTML = stato +
+      `<div class="section-title">Giorni di prova ${escapeHtmlLuogo(regData.regulationYear)} (${escapeHtmlLuogo(pc.articolo || "")})</div>` +
+      `<div class="prova-suggerimento">Tocca un giorno per vedere le regole di quella data.</div>` +
+      finestre + noteEcc +
+      `<div class="section-title">Regole sui cani</div>` + renderVoci(pc.regole || []) +
+      avvisoBassa();
+
+    wrap.addEventListener("click", (e) => {
+      const chip = e.target.closest(".prova-chip");
+      if (!chip) return;
+      selectedDate = RulesEngine.parseISO(chip.dataset.iso);
+      document.getElementById("dateInput").value = chip.dataset.iso;
+      renderOggi();
+    });
+    return wrap;
+  }
+
+  function renderDaSapere(iso) {
+    const ds = regData.daSapere;
+    const wrap = document.createElement("div");
+    wrap.className = "bassa-panel";
+    const rif = RulesEngine.parseISO(iso);
+
+    const scad = [...(ds.scadenze || [])]
+      .sort((a, b) => (a.date + (a.time || "")).localeCompare(b.date + (b.time || "")));
+    const prossima = scad.find(x => x.date >= iso);
+    const righe = scad.map(x => {
+      const d = RulesEngine.parseISO(x.date);
+      const diff = Math.round((d - rif) / 86400000);
+      const cls = ["dasapere-scad"];
+      if (diff < 0) cls.push("past"); else if (x === prossima) cls.push("next");
+      const quando = diff < 0 ? "passata" : diff === 0 ? "oggi" : diff === 1 ? "domani" : `tra ${diff} giorni`;
+      return `<div class="${cls.join(" ")}">
+        <div class="dasapere-data"><div class="dasapere-gg">${d.getDate()}</div><div class="dasapere-mese">${MESI_BREVI[d.getMonth()]}</div></div>
+        <div class="dasapere-testo">
+          <div>${escapeHtmlLuogo(x.label)}</div>
+          <div class="dasapere-meta">${x.time ? `ore ${escapeHtmlLuogo(x.time)} · ` : ""}${quando}${x.art ? ` · ${escapeHtmlLuogo(x.art)}` : ""}</div>
+        </div>
+      </div>`;
+    }).join("");
+
+    const sezioni = (ds.sezioni || []).map(sec =>
+      `<div class="section-title">${escapeHtmlLuogo(sec.titolo)}</div>` + renderVoci(sec.voci || [])).join("");
+
+    wrap.innerHTML =
+      `<div class="section-title" style="margin-top:0">Scadenze</div>` +
+      `<div class="prova-suggerimento">Contate dal giorno scelto: ${escapeHtmlLuogo(dataLunga(iso))}.</div>` +
+      righe + sezioni + avvisoBassa();
+    return wrap;
   }
 
   function isUnlockedOpen(r) {
@@ -2366,6 +2567,14 @@
       if (!btn) return;
       selectedHunt = btn.dataset.hunt;
       altaSubView = "stagione"; // si riparte sempre dalla stagione in corso
+      bassaSubView = "regole";
+      renderOggi();
+    });
+
+    document.getElementById("bassaSubTabs").addEventListener("click", (e) => {
+      const btn = e.target.closest(".subtab");
+      if (!btn) return;
+      bassaSubView = btn.dataset.sub;
       renderOggi();
     });
 
