@@ -14,6 +14,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.52", text: "Bug fix e miglioramenti." },
     { v: "3.51", text: "Corretto «Da sapere» (caccia bassa): tolte alcune regole generali che non erano specifiche della caccia bassa." },
     { v: "3.50", text: "Caccia bassa: due nuove sottoschede. «Prove cani» mostra i giorni e gli orari in cui la prova è permessa (art. 38); «Da sapere» raccoglie scadenze, obblighi e divieti della stagione." },
     { v: "3.49", text: "Bug fix e miglioramenti." },
@@ -1126,12 +1127,17 @@
     }
 
     let eggTimer = null;
+    let eggUltimaFoto = null;
     function mostraEasterEgg() {
       const foto = [
         { src: "media/autore.jpg", didascalia: "L'autore con Luminensis Loco" },
         { src: "media/autore-2.jpg", didascalia: "L'autore con Luminensis Fuoco e Loco" },
+        { src: "media/sccd.jpg", didascalia: "Società Cacciatori Chiasso e dintorni" },
       ];
-      const scelta = foto[Math.floor(Math.random() * foto.length)];
+      // Non ripete la stessa foto due volte di fila (se ce n'è più di una)
+      const scelte = foto.length > 1 ? foto.filter(f => f.src !== eggUltimaFoto) : foto;
+      const scelta = scelte[Math.floor(Math.random() * scelte.length)];
+      eggUltimaFoto = scelta.src;
       document.getElementById("easterEggImg").src = scelta.src;
       document.getElementById("easterEggCaption").textContent = scelta.didascalia;
 
