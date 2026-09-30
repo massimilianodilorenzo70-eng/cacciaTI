@@ -14,6 +14,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.63", text: "Quote e prerequisiti (es. «Quota raggiunta», capo richiesto prima) contano ora solo i capi della stagione del regolamento caricato: i capi degli anni precedenti restano nel registro e nelle statistiche ma non bloccano più la nuova stagione." },
     { v: "3.62", text: "L'icona della beccaccia ha ora lo sfondo trasparente: nel modal «Segna punto» e nel menu + non si vede più il riquadro bianco (tema chiaro) o nero (tema scuro) attorno alla silhouette." },
     { v: "3.61", text: "La silhouette della beccaccia compare ora anche nel modal «Segna punto» quando si è in caccia bassa, sia sul bottone Abbattimento che nel menu +. In tema scuro l'icona si inverte automaticamente per restare leggibile." },
     { v: "3.60", text: "Il pulsante + mostra icone diverse in base al tipo di caccia selezionato: in caccia bassa compare la silhouette della beccaccia (PhyloPic, Public Domain), nelle altre cacce il cervo 🦌." },
@@ -847,7 +848,7 @@
 
   function renderRegistro() {
     const capsBox = document.getElementById("capsSummary");
-    const log = Storage.getLog();
+    const log = RulesEngine.seasonLog(regData, Storage.getLog());
     capsBox.innerHTML = "";
     for (const [groupId, cap] of Object.entries(regData.groupCaps)) {
       const count = RulesEngine.seasonCountByGroup(log, regData.categories, groupId);
