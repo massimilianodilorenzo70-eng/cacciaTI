@@ -14,6 +14,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.64.1", text: "Controlli sul calendario: un regolamento importato con i giorni indicativi («provisorio») scritti male viene ora rifiutato invece di mandare in errore l'app, e i giorni indicativi non validi vengono ignorati. Il meteo dice anche quando la data è troppo indietro (oltre 3 mesi) per avere il dato." },
     { v: "3.64", text: "Nuovo calendario della stagione sotto le schede del tipo di caccia (Settembrina, Tardo autunnale, Invernale cinghiale, Caccia bassa, Caccia acquatica): settimane compatte con i giorni di apertura, chiuso di default e apribile con un tocco. Toccando un giorno cambiano la data in alto, il meteo e le specie sotto. Per il tardo autunnale e il cinghiale invernale, senza regolamento ufficiale, mostra i giorni indicativi dell'anno scorso segnati come provvisori (da confermare dopo la pubblicazione del regolamento). Il meteo dice quando la previsione non è ancora disponibile (oltre 15 giorni)." },
     { v: "3.63.6", text: "Su Edge per Android l'invito a installare l'app non propone più il pulsante «Installa» (Android lo blocca con l'avviso «App non sicura bloccata»): consiglia invece di aprire il sito in Chrome. Su Samsung Internet il pulsante resta, con un consiglio in caso di blocco. Su Chrome e sugli altri browser non cambia nulla." },
     { v: "3.63.5", text: "Completando un punto rapido dal Registro, il modulo si apre ora nel tipo di caccia in cui l'avevi segnato (specie, arma e munizione di quella caccia), anche se in quel momento è attiva un'altra scheda. I punti segnati prima di questa versione seguono ancora la scheda attiva." },
@@ -196,6 +197,15 @@
   // invernale) usa le date indicative della stagione scorsa, segnalate come tali.
   let calAperto = false; // di norma chiuso: si apre con un tocco sul titolo
 
+  // Vero se i giorni indicativi di una categoria sono scritti bene
+  // (da, a, giorni della settimana 0-6, orari facoltativi).
+  function provvisorioValido(pv) {
+    const iso = /^\d{4}-\d{2}-\d{2}$/;
+    return !!pv && iso.test(pv.from || "") && iso.test(pv.to || "") &&
+      Array.isArray(pv.weekdays) && pv.weekdays.every(n => Number.isInteger(n) && n >= 0 && n <= 6) &&
+      (pv.ore === undefined || (Array.isArray(pv.ore) && pv.ore.every(o => Array.isArray(o) && o.length === 2)));
+  }
+
   function categorieDellaSezione() {
     let cats = (regData.categories || []).filter(c => c.huntType === selectedHunt);
     if (selectedHunt === "alta") {
@@ -226,7 +236,7 @@
           if (RulesEngine.evaluateCategory(regData, cat, [], cur, iso, null, prefs).dateOpen) giorni.add(iso);
           cur.setDate(cur.getDate() + 1);
         }
-      } else if (cat.provisorio) {
+      } else if (provvisorioValido(cat.provisorio)) {
         provvisorio = true;
         const cur = RulesEngine.parseISO(cat.provisorio.from), fine = RulesEngine.parseISO(cat.provisorio.to);
         while (cur <= fine) {
@@ -531,10 +541,12 @@
     // (es. il calendario delle cacce autunnali) lo si dice, invece di "non disponibile".
     const giorniAvanti = Math.round((RulesEngine.parseISO(RulesEngine.toISO(date)) -
       RulesEngine.parseISO(RulesEngine.toISO(new Date()))) / 86400000);
-    if (showMeteo && giorniAvanti > 15) {
+    if (showMeteo && (giorniAvanti > 15 || giorniAvanti < -90)) {
+      // oltre 15 giorni avanti la previsione non c'è ancora; oltre ~3 mesi indietro il servizio non ha il dato
+      const avanti = giorniAvanti > 15;
       document.getElementById("meteoBlock").innerHTML = `<span class="am-icon">\u{1F552}</span>` +
-        `<div><div class="am-label">Previsione non ancora uscita</div>` +
-        `<div class="am-sub">Disponibile 15 giorni prima</div></div>`;
+        `<div><div class="am-label">${avanti ? "Previsione non ancora uscita" : "Meteo non più disponibile"}</div>` +
+        `<div class="am-sub">${avanti ? "Disponibile 15 giorni prima" : "Solo gli ultimi 3 mesi"}</div></div>`;
     } else if (showMeteo) {
       fetchMeteo(date).then(m => {
         if (date !== selectedDate) return; // nel frattempo hai cambiato giorno: risposta superata
@@ -570,7 +582,7 @@
     // niente registrazione): servono solo a orientarsi.
     for (const r of results) {
       const pv = r.category.provisorio;
-      if (pv && !(r.category.windows && r.category.windows.length)) {
+      if (provvisorioValido(pv) && !(r.category.windows && r.category.windows.length)) {
         r.provvisorio = true;
         r.provvisorioAperto = iso >= pv.from && iso <= pv.to && pv.weekdays.includes(selectedDate.getDay());
         if (pv.ore) r.hoursToday = testoOre(pv.ore) + " (indicativo)";
@@ -2904,6 +2916,9 @@
           typeof c.speciesLabel !== "string" || typeof c.categoryLabel !== "string" ||
           !Array.isArray(c.windows)) {
         return "una categoria è incompleta (" + (c && c.id ? c.id : "senza id") + ")";
+      }
+      if (c.provisorio !== undefined && !provvisorioValido(c.provisorio)) {
+        return "i giorni indicativi («provisorio») della categoria " + c.id + " non sono scritti bene";
       }
     }
     try {
