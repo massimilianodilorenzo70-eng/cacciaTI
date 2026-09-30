@@ -2851,7 +2851,7 @@
       if (!iconEl) return;
       if (selectedHunt === "bassa") {
         iconEl.innerHTML = `<img src="icons/beccaccia.png" alt="beccaccia"
-          style="width:34px;height:auto;filter:brightness(0);display:block;">`;
+          style="width:36px;height:auto;display:block;">`;
       } else {
         iconEl.textContent = "🦌";
       }
