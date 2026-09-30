@@ -14,6 +14,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.60", text: "Il pulsante + mostra icone diverse in base al tipo di caccia selezionato: in caccia bassa compare la silhouette della beccaccia (PhyloPic, Public Domain), nelle altre cacce il cervo 🦌." },
     { v: "3.59", text: "Bug fix Quick Log: dopo aver completato un punto rapido con il modulo abbattimento, il punto rapido originale veniva mantenuto nel registro invece di essere eliminato automaticamente. Ora viene rimosso non appena l'abbattimento completo è salvato." },
     { v: "3.58.1", text: "Bug fix: il menu Quick Log (📍 Segna punto / 🦌 Abbattimento) non era più visibile all'avvio — compariva fisso sullo schermo invece di restare nascosto fino al tap sul +. Corretto." },
     { v: "3.58", text: "Quick Log — Segna punto rapido: il pulsante + ora apre un menu a due voci. «Segna punto» salva istantaneamente coordinate GPS, altitudine, data e ora esatta con un solo tap — scegli il tipo (🦌 Abbattimento, 📍 Anschluss, ⭐ Luogo di interesse) e aggiungi una nota opzionale. Il punto compare subito nel registro con bordo tratteggiato e badge colorato; tocca «Completa» per aggiungere in seguito specie, foto, arma e tutti gli altri dettagli. Un banner in cima al registro ricorda quanti punti rapidi sono ancora da completare." },
@@ -2845,9 +2846,21 @@
       fabMenu.hidden = true;
       fabMenuBackdrop.hidden = true;
     }
+    function aggiornaIconaFab() {
+      const iconEl = document.querySelector("#fabFull .fab-menu-icon");
+      if (!iconEl) return;
+      if (selectedHunt === "bassa") {
+        iconEl.innerHTML = `<img src="icons/beccaccia.png" alt="beccaccia"
+          style="width:34px;height:auto;filter:brightness(0);display:block;">`;
+      } else {
+        iconEl.textContent = "🦌";
+      }
+    }
+
     fabBtn.addEventListener("click", () => {
       const isOpen = !fabMenu.hidden;
       if (isOpen) { closeFabMenu(); return; }
+      aggiornaIconaFab();
       fabMenu.hidden = false;
       fabMenuBackdrop.hidden = false;
     });
