@@ -14,6 +14,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.63.3", text: "Nel Registro, un punto «Abbattimento» segnato in caccia bassa mostra ora la beccaccia (come nel pannello «Segna punto») invece del cervo. I punti già salvati prima di questa versione restano con il cervo." },
     { v: "3.63.2", text: "Revisione generale del codice, con queste correzioni: il contingente ufficiale di una stagione precedente non vale più per la nuova; l'importazione del nuovo regolamento non dà più un falso errore e rifiuta i file incompleti; il Registro mostra sempre tutte le stagioni; le statistiche non contano più i punti «Segna punto» come capi; il ripristino del backup mantiene i punti GPS e non fonde più capi identici; «Salva subito» aggiunge le coordinate appena il GPS risponde; la data di un punto salvato dopo mezzanotte è quella giusta; il meteo non mostra più il giorno sbagliato; note, munizioni e nomi dei fucili sono protetti da caratteri speciali; l'app non si ricarica più mentre stai compilando un modulo; miglioramenti alla memoria delle foto e al salvataggio del backup." },
     { v: "3.63.1", text: "Correzioni di sicurezza dei dati: se il registro sul telefono risulta illeggibile ne viene conservata una copia invece di sovrascriverlo; se un capo o un punto non si riesce a salvare (memoria piena) l'app ora lo segnala invece di far finta di niente; eliminato un errore nascosto nella riproduzione del video demo." },
     { v: "3.63", text: "Quote e prerequisiti (es. «Quota raggiunta», capo richiesto prima) contano ora solo i capi della stagione del regolamento caricato: i capi degli anni precedenti restano nel registro e nelle statistiche ma non bloccano più la nuova stagione." },
@@ -898,7 +899,11 @@
     for (const k of sorted) {
       // Card punto rapido (Quick Log)
       if (k.type === "quick_point") {
-        const tipoLabel  = { abbattimento: "🦌 Abbattimento", anschluss: "📍 Anschluss", luogo: "⭐ Luogo" }[k.pointType] || escapeHtmlLuogo(k.pointType);
+        // Abbattimento: beccaccia se il punto è stato segnato in caccia bassa (come nel pannello «Segna punto»)
+        const iconaAbb = k.huntType === "bassa"
+          ? `<img src="icons/beccaccia.png" alt="" class="fab-beccaccia-img" style="height:1.15em;width:auto;vertical-align:-0.2em">`
+          : "🦌";
+        const tipoLabel  = { abbattimento: `${iconaAbb} Abbattimento`, anschluss: "📍 Anschluss", luogo: "⭐ Luogo" }[k.pointType] || escapeHtmlLuogo(k.pointType);
         const tipoClass  = { abbattimento: "badge-abbattimento", anschluss: "badge-anschluss", luogo: "badge-luogo" }[k.pointType] || "";
         const coordsHtml = k.coords
           ? `<div><b>Posizione GPS:</b> ${k.coords.lat.toFixed(5)}, ${k.coords.lon.toFixed(5)}`
@@ -1807,6 +1812,7 @@
       id:         "q_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6),
       type:       "quick_point",
       pointType:  tipo,
+      huntType:   selectedHunt, // serve a mostrare l'icona giusta (beccaccia / cervo) nel Registro
       date:       iso,
       time:       time,
       note:       nota,
@@ -3083,6 +3089,7 @@
               id: (typeof k.id === "string" && k.id) || "q_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6),
               type: "quick_point",
               pointType: TIPI_PUNTO.includes(k.pointType) ? k.pointType : "luogo",
+              ...(HUNT_ORDER.includes(k.huntType) ? { huntType: k.huntType } : {}),
               date: k.date,
               time: typeof k.time === "string" ? k.time : "",
               note: typeof k.note === "string" ? k.note : "",
