@@ -14,6 +14,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.63.2", text: "Il contingente ufficiale letto in una stagione precedente non viene più applicato alla nuova: prima di essere aggiornato, un vecchio «CHIUSO» poteva segnare come chiusa una categoria in realtà aperta." },
     { v: "3.63.1", text: "Correzioni di sicurezza dei dati: se il registro sul telefono risulta illeggibile ne viene conservata una copia invece di sovrascriverlo; se un capo o un punto non si riesce a salvare (memoria piena) l'app ora lo segnala invece di far finta di niente; eliminato un errore nascosto nella riproduzione del video demo." },
     { v: "3.63", text: "Quote e prerequisiti (es. «Quota raggiunta», capo richiesto prima) contano ora solo i capi della stagione del regolamento caricato: i capi degli anni precedenti restano nel registro e nelle statistiche ma non bloccano più la nuova stagione." },
     { v: "3.62", text: "L'icona della beccaccia ha ora lo sfondo trasparente: nel modal «Segna punto» e nel menu + non si vede più il riquadro bianco (tema chiaro) o nero (tema scuro) attorno alla silhouette." },
@@ -135,6 +136,10 @@
 
   function contingenteFor(key) {
     if (!contingenteData || !contingenteData.items) return null;
+    // Un dato letto in una stagione precedente (es. CHIUSO di fine stagione)
+    // non deve valere per quella nuova: lo ignoriamo finché lo scraper non lo aggiorna.
+    const anno = String(regData && regData.regulationYear || "");
+    if (anno && !String(contingenteData.fetchedAt || "").startsWith(anno)) return null;
     return contingenteData.items.find(it => it.contingenteKey === key) || null;
   }
 
