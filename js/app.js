@@ -14,6 +14,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.63.5", text: "Completando un punto rapido dal Registro, il modulo si apre ora nel tipo di caccia in cui l'avevi segnato (specie, arma e munizione di quella caccia), anche se in quel momento è attiva un'altra scheda. I punti segnati prima di questa versione seguono ancora la scheda attiva." },
     { v: "3.63.4", text: "Le coordinate mostrate (pannello «Segna punto», dettagli del Registro, modulo di registrazione) hanno ora anche il formato svizzero CH1903+ / LV95, oltre a latitudine e longitudine: si ritrova il punto direttamente sulle carte di swisstopo e del Cantone. Il formato svizzero compare solo per punti in Svizzera." },
     { v: "3.63.3", text: "Nel Registro, un punto «Abbattimento» segnato in caccia bassa mostra ora la beccaccia (come nel pannello «Segna punto») invece del cervo; i punti già salvati restano con il cervo. Aggiunto il conteggio anonimo delle nuove installazioni dell'app (una sola volta per installazione, nessun dato personale) e sistemato il conteggio anonimo delle aperture, che poteva non partire quando il contatore si caricava più lentamente dell'app." },
     { v: "3.63.2", text: "Revisione generale del codice, con queste correzioni: il contingente ufficiale di una stagione precedente non vale più per la nuova; l'importazione del nuovo regolamento non dà più un falso errore e rifiuta i file incompleti; il Registro mostra sempre tutte le stagioni; le statistiche non contano più i punti «Segna punto» come capi; il ripristino del backup mantiene i punti GPS e non fonde più capi identici; «Salva subito» aggiunge le coordinate appena il GPS risponde; la data di un punto salvato dopo mezzanotte è quella giusta; il meteo non mostra più il giorno sbagliato; note, munizioni e nomi dei fucili sono protetti da caratteri speciali; l'app non si ricarica più mentre stai compilando un modulo; miglioramenti alla memoria delle foto e al salvataggio del backup." },
@@ -936,7 +937,10 @@
         if (!k.complete) {
           item.querySelector(".complete-btn").addEventListener("click", () => {
             // Apre il modulo completo pre-compilato con i dati del punto rapido
-            openModal(null);
+            // Il modulo si apre nel tipo di caccia in cui il punto è stato segnato,
+            // anche se ora è attiva un'altra scheda (i punti vecchi, senza questa
+            // informazione, seguono la scheda attiva)
+            openModal(null, HUNT_ORDER.includes(k.huntType) ? k.huntType : null);
             document.getElementById("modalDate").value = k.date;
             if (k.coords) impostaPosizioneModulo(k.coords);
             if (k.note) document.getElementById("modalNote").value = k.note;
@@ -1665,9 +1669,13 @@
 
   // ---------- Modale registrazione ----------
 
+  // Tipo di caccia imposto al modulo (es. completando un punto rapido segnato in
+  // un'altra caccia rispetto a quella aperta ora); null = vale la scheda attiva.
+  let huntTypeModulo = null;
+
   function huntTypeDelModulo(preselectId) {
     const pre = preselectId ? regData.categories.find(c => c.id === preselectId) : null;
-    return (pre && pre.huntType) || selectedHunt || "alta";
+    return (pre && pre.huntType) || huntTypeModulo || selectedHunt || "alta";
   }
 
   function populateModalCategories(preselectId) {
@@ -2585,7 +2593,8 @@
     }
   }
 
-  function openModal(preselectId) {
+  function openModal(preselectId, huntTypeForzato) {
+    huntTypeModulo = huntTypeForzato || null;
     editingKillId = null;
     completingQuickId = null;
     resetPhotoUI();
@@ -2625,6 +2634,7 @@
     const k = Storage.getLog().find(x => x.id === killId);
     if (!k) return;
     editingKillId = killId;
+    huntTypeModulo = null;
 
     populateModalCategories(k.categoryId);
     document.getElementById("modalTitle").textContent = "Modifica abbattimento";
