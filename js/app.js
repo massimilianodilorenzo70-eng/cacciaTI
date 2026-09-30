@@ -908,7 +908,7 @@
         const tipoClass  = { abbattimento: "badge-abbattimento", anschluss: "badge-anschluss", luogo: "badge-luogo" }[k.pointType] || "";
         const coordsHtml = k.coords
           ? (testoLv95(k.coords.lat, k.coords.lon)
-              ? `<div><b>Coordinate CH1903+ / LV95:</b> ${testoLv95(k.coords.lat, k.coords.lon)}</div>` : "")
+              ? `<div><b>LV95:</b> ${testoLv95(k.coords.lat, k.coords.lon)}</div>` : "")
             + `<div><b>Posizione GPS:</b> ${k.coords.lat.toFixed(5)}, ${k.coords.lon.toFixed(5)}`
             + (k.coords.acc  ? ` (±${k.coords.acc} m)` : "")
             + (k.coords.alt  ? ` · ${k.coords.alt} m` : "")
@@ -970,7 +970,7 @@
       if (k.coords) {
         const { lat, lon, acc } = k.coords;
         const lv95 = testoLv95(lat, lon);
-        if (lv95) righeDettagli.push(`<div><b>Coordinate CH1903+ / LV95:</b> ${lv95}</div>`);
+        if (lv95) righeDettagli.push(`<div><b>LV95:</b> ${lv95}</div>`);
         righeDettagli.push(
           `<div><b>Posizione GPS:</b> ${lat.toFixed(5)}, ${lon.toFixed(5)}` +
           (acc ? ` (±${Math.round(acc)} m)` : "") +
@@ -2560,7 +2560,7 @@
       const lv95 = testoLv95(coords.lat, coords.lon);
       info.innerHTML = `📍 Posizione salvata: ${coords.lat.toFixed(5)}, ${coords.lon.toFixed(5)}` +
         (coords.acc ? ` (±${Math.round(coords.acc)} m)` : "") +
-        (lv95 ? `<br>Coordinate CH1903+ / LV95: ${lv95}` : "") +
+        (lv95 ? `<br>LV95: ${lv95}` : "") +
         `<br><a href="#" id="modalGpsFill">compila il luogo</a> · <a href="#" id="modalGpsRemove">rimuovi</a>`;
       btn.textContent = "📍 Aggiorna la posizione";
       const compila = document.getElementById("modalGpsFill");
