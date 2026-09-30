@@ -14,6 +14,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.63.4", text: "Conteggio anonimo delle nuove installazioni dell'app (una sola volta per installazione, nessun dato personale). Sistemato anche il conteggio anonimo delle aperture da icona/browser, che poteva non partire quando il contatore si caricava più lentamente dell'app." },
     { v: "3.63.3", text: "Nel Registro, un punto «Abbattimento» segnato in caccia bassa mostra ora la beccaccia (come nel pannello «Segna punto») invece del cervo. I punti già salvati prima di questa versione restano con il cervo." },
     { v: "3.63.2", text: "Revisione generale del codice, con queste correzioni: il contingente ufficiale di una stagione precedente non vale più per la nuova; l'importazione del nuovo regolamento non dà più un falso errore e rifiuta i file incompleti; il Registro mostra sempre tutte le stagioni; le statistiche non contano più i punti «Segna punto» come capi; il ripristino del backup mantiene i punti GPS e non fonde più capi identici; «Salva subito» aggiunge le coordinate appena il GPS risponde; la data di un punto salvato dopo mezzanotte è quella giusta; il meteo non mostra più il giorno sbagliato; note, munizioni e nomi dei fucili sono protetti da caratteri speciali; l'app non si ricarica più mentre stai compilando un modulo; miglioramenti alla memoria delle foto e al salvataggio del backup." },
     { v: "3.63.1", text: "Correzioni di sicurezza dei dati: se il registro sul telefono risulta illeggibile ne viene conservata una copia invece di sovrascriverlo; se un capo o un punto non si riesce a salvare (memoria piena) l'app ora lo segnala invece di far finta di niente; eliminato un errore nascosto nella riproduzione del video demo." },
@@ -2786,6 +2787,7 @@
     window.addEventListener("appinstalled", () => {
       deferredInstall = null;
       hideInstallBanner();
+      segnalaInstallazione();
     });
 
     if (isIOS() && !isStandalone()) {
@@ -2819,12 +2821,57 @@
   // Conta le aperture, non le persone: per le persone distinte guarda la
   // colonna "visitatori unici" di quella riga.
   function segnalaModalitaUso() {
-    if (typeof window.goatcounter === "undefined" || !window.goatcounter.count) return;
     const path = isStandalone() ? "/app-installata" : "/nel-browser";
     // piccolo ritardo: lascia caricare lo script del contatore
-    setTimeout(() => {
-      try { window.goatcounter.count({ path, title: path, event: false }); } catch (e) {}
-    }, 1500);
+    setTimeout(() => { goatcounterConta({ path, title: path, event: false }); }, 1500);
+  }
+
+  // Invia un conteggio a GoatCounter appena il suo script è pronto: aspetta fino
+  // a ~15 secondi (lo script del contatore si carica in modo asincrono, e può
+  // non esserci ancora quando l'app parte). Senza rete o con il contatore
+  // bloccato non succede nulla. Restituisce true se il conteggio è partito.
+  function goatcounterConta(dati) {
+    return new Promise((resolve) => {
+      let tentativi = 0;
+      const prova = () => {
+        if (window.goatcounter && typeof window.goatcounter.count === "function") {
+          try { window.goatcounter.count(dati); resolve(true); } catch (e) { resolve(false); }
+        } else if (++tentativi < 30) {
+          setTimeout(prova, 500);
+        } else {
+          resolve(false);
+        }
+      };
+      prova();
+    });
+  }
+
+  // Conta le NUOVE installazioni dell'app: in GoatCounter compaiono come evento
+  // «/installazione-app» (Pages, riga con l'etichetta evento); il numero di
+  // visite di quella riga cresce di uno a ogni nuova installazione.
+  // Una volta sola per installazione (segnato nel telefono), così l'app aperta
+  // ogni giorno non gonfia il numero.
+  const KEY_INSTALL_COUNTED = "cacciaTI_install_counted";
+  function segnalaInstallazione() {
+    try {
+      if (localStorage.getItem(KEY_INSTALL_COUNTED)) return;
+      localStorage.setItem(KEY_INSTALL_COUNTED, "1");
+    } catch (e) { return; }
+    goatcounterConta({ path: "/installazione-app", title: "Nuova installazione app", event: true });
+  }
+
+  // Primo avvio dall'icona (serve su iPhone, dove il browser non segnala
+  // l'installazione, e come rete di sicurezza su Android). Chi usava già l'app
+  // prima di questa funzione (manleva già accettata) non è una nuova
+  // installazione: si segna e basta, senza contarlo. Su iPhone l'app installata
+  // parte con dati vuoti, quindi una nuova installazione risulta sempre "nuova".
+  function controllaPrimoAvvioInstallata() {
+    if (!isStandalone()) return;
+    try {
+      if (localStorage.getItem(KEY_INSTALL_COUNTED)) return;
+      if (Storage.hasAckedDisclaimer()) { localStorage.setItem(KEY_INSTALL_COUNTED, "1"); return; }
+    } catch (e) { return; }
+    segnalaInstallazione();
   }
 
   // Chiede al browser di non cancellare i dati dell'app sotto pressione di
@@ -2840,6 +2887,7 @@
   async function init() {
     setupInstallPrompt(); // subito, per non perdere l'evento del browser
     segnalaModalitaUso();
+    controllaPrimoAvvioInstallata();
     chiediConservazionePersistente();
 
     if (!Storage.hasAckedDisclaimer()) {
