@@ -193,7 +193,7 @@
   // (lunedì-domenica) con i giorni di apertura evidenziati e cliccabili.
   // Dove il regolamento non è ancora uscito (tardo autunnale, cinghiale
   // invernale) usa le date indicative della stagione scorsa, segnalate come tali.
-  let calAperto = true;
+  let calAperto = false; // di norma chiuso: si apre con un tocco sul titolo
 
   function categorieDellaSezione() {
     let cats = (regData.categories || []).filter(c => c.huntType === selectedHunt);
@@ -290,7 +290,7 @@
     const det = document.createElement("details");
     det.className = "cal-box";
     det.open = calAperto;
-    det.innerHTML = `<summary>📅 Calendario · ${escapeHtmlLuogo(nomeSezione)}</summary>
+    det.innerHTML = `<summary>📅 Calendario · ${escapeHtmlLuogo(nomeSezione)}${provvisorio ? ' <span class="cal-badge">provvisorio</span>' : ""}</summary>
       ${provvisorio ? `<div class="cal-nota">Date indicative dell'anno scorso: da confermare dopo la pubblicazione del regolamento.</div>` : ""}
       <div class="cal-grid">${html}</div>
       <div class="cal-legend"><span><i class="${provvisorio ? "prov" : "open"}"></i>${provvisorio ? "giorno indicativo" : "aperto"}</span><span><i></i>chiuso</span><span><i class="today"></i>oggi</span></div>`;
@@ -526,7 +526,15 @@
 
     inner.innerHTML = html;
 
-    if (showMeteo) {
+    // Le previsioni arrivano al massimo a 15 giorni da oggi: per date più lontane
+    // (es. il calendario delle cacce autunnali) lo si dice, invece di "non disponibile".
+    const giorniAvanti = Math.round((RulesEngine.parseISO(RulesEngine.toISO(date)) -
+      RulesEngine.parseISO(RulesEngine.toISO(new Date()))) / 86400000);
+    if (showMeteo && giorniAvanti > 15) {
+      document.getElementById("meteoBlock").innerHTML = `<span class="am-icon">\u{1F552}</span>` +
+        `<div><div class="am-label">Previsione non ancora uscita</div>` +
+        `<div class="am-sub">Disponibile 15 giorni prima</div></div>`;
+    } else if (showMeteo) {
       fetchMeteo(date).then(m => {
         if (date !== selectedDate) return; // nel frattempo hai cambiato giorno: risposta superata
         const el = document.getElementById("meteoBlock");
@@ -554,6 +562,19 @@
     const now = RulesEngine.toISO(new Date()) === iso ? RulesEngine.nowHHMM(new Date()) : null;
     const log = Storage.getLog();
     const results = RulesEngine.evaluateAll(regData, log, selectedDate, now, prefs);
+
+    // Cacce senza regolamento ufficiale ancora pubblicato (tardo autunnale,
+    // cinghiale invernale): si usano i giorni indicativi dell'anno scorso, segnati
+    // come provvisori. Non contano mai come «aperto» (niente riquadro Aperto oggi,
+    // niente registrazione): servono solo a orientarsi.
+    for (const r of results) {
+      const pv = r.category.provisorio;
+      if (pv && !(r.category.windows && r.category.windows.length)) {
+        r.provvisorio = true;
+        r.provvisorioAperto = iso >= pv.from && iso <= pv.to && pv.weekdays.includes(selectedDate.getDay());
+        if (pv.ore) r.hoursToday = testoOre(pv.ore) + " (indicativo)";
+      }
+    }
 
     renderApertoOra(results, now !== null);
 
@@ -598,9 +619,21 @@
       return;
     }
 
+    // Sezione ancora senza regolamento ufficiale: banner dedicato, sempre "provvisorio"
+    const tuttiProvvisori = sectionResults.every(r => r.provvisorio);
+    if (tuttiProvvisori) {
+      const banner = document.createElement("div");
+      banner.className = "info-box";
+      const giornoIndicativo = sectionResults.some(r => r.provvisorioAperto);
+      banner.innerHTML = giornoIndicativo
+        ? `🗓️ <b>Giorno indicativo del ${formatDateCH(iso)}</b><br>Secondo le date dell'anno scorso qui si caccia. Provvisorio: da confermare dopo la pubblicazione del regolamento ufficiale.`
+        : `<b>Nessuna caccia il ${formatDateCH(iso)}</b> secondo le date indicative dell'anno scorso. Provvisorio: da confermare dopo la pubblicazione del regolamento ufficiale.`;
+      container.appendChild(banner);
+    }
+
     // Se nel giorno scelto non c'è nulla di aperto, lo dice chiaramente in cima
     const anyOpen = sectionResults.some(isOpenNow);
-    if (!anyOpen) {
+    if (!anyOpen && !tuttiProvvisori) {
       const nomeSezione = selectedHunt === "alta" && altaSubView === "tardo" ? "caccia tardo autunnale"
         : selectedHunt === "alta" && altaSubView === "invernale" ? "caccia invernale al cinghiale"
         : selectedHunt === "alta" ? "caccia settembrina"
@@ -900,6 +933,13 @@
     // scrivere "ora", che altrimenti sembrerebbe riferirsi al momento attuale.
     const isToday = RulesEngine.toISO(selectedDate) === RulesEngine.toISO(new Date());
     const dataScelta = formatDateCH(RulesEngine.toISO(selectedDate));
+
+    // Senza regolamento ufficiale: solo un'indicazione, mai "aperta" vera e propria
+    if (r.provvisorio) {
+      return r.provvisorioAperto
+        ? { label: "Aperta · provvisorio", cls: "status-check", sub: "Giorno indicativo dell'anno scorso: da confermare." }
+        : { label: "Chiusa · provvisorio", cls: "status-check" };
+    }
 
     // Il contingente ufficiale chiuso prevale su tutto il resto: anche se il
     // regolamento direbbe che è ancora aperta, sul terreno non lo è più.
