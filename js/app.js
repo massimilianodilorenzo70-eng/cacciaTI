@@ -14,6 +14,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.63.2", text: "Revisione generale del codice, con queste correzioni: il contingente ufficiale di una stagione precedente non vale più per la nuova; l'importazione del nuovo regolamento non dà più un falso errore e rifiuta i file incompleti; il Registro mostra sempre tutte le stagioni; le statistiche non contano più i punti «Segna punto» come capi; il ripristino del backup mantiene i punti GPS e non fonde più capi identici; «Salva subito» aggiunge le coordinate appena il GPS risponde; la data di un punto salvato dopo mezzanotte è quella giusta; il meteo non mostra più il giorno sbagliato; note, munizioni e nomi dei fucili sono protetti da caratteri speciali; l'app non si ricarica più mentre stai compilando un modulo; miglioramenti alla memoria delle foto e al salvataggio del backup." },
     { v: "3.63.1", text: "Correzioni di sicurezza dei dati: se il registro sul telefono risulta illeggibile ne viene conservata una copia invece di sovrascriverlo; se un capo o un punto non si riesce a salvare (memoria piena) l'app ora lo segnala invece di far finta di niente; eliminato un errore nascosto nella riproduzione del video demo." },
     { v: "3.63", text: "Quote e prerequisiti (es. «Quota raggiunta», capo richiesto prima) contano ora solo i capi della stagione del regolamento caricato: i capi degli anni precedenti restano nel registro e nelle statistiche ma non bloccano più la nuova stagione." },
     { v: "3.62", text: "L'icona della beccaccia ha ora lo sfondo trasparente: nel modal «Segna punto» e nel menu + non si vede più il riquadro bianco (tema chiaro) o nero (tema scuro) attorno alla silhouette." },
@@ -135,6 +136,10 @@
 
   function contingenteFor(key) {
     if (!contingenteData || !contingenteData.items) return null;
+    // Un dato letto in una stagione precedente (es. CHIUSO di fine stagione)
+    // non deve valere per quella nuova: lo ignoriamo finché lo scraper non lo aggiorna.
+    const anno = String(regData && regData.regulationYear || "");
+    if (anno && !String(contingenteData.fetchedAt || "").startsWith(anno)) return null;
     return contingenteData.items.find(it => it.contingenteKey === key) || null;
   }
 
@@ -402,6 +407,7 @@
 
     if (showMeteo) {
       fetchMeteo(date).then(m => {
+        if (date !== selectedDate) return; // nel frattempo hai cambiato giorno: risposta superata
         const el = document.getElementById("meteoBlock");
         if (!el) return;
         if (!m) {
@@ -466,7 +472,7 @@
     }
 
     if (sectionResults.length === 0) {
-      container.innerHTML = `<div class="empty-state">Nessuna specie corrisponde alla ricerca.</div>`;
+      container.innerHTML = `<div class="empty-state">${query ? "Nessuna specie corrisponde alla ricerca." : "Nessuna categoria in questa sezione."}</div>`;
       return;
     }
 
@@ -500,7 +506,7 @@
         );
         const giorniTesto = giorniMancanti === 1 ? "1 giorno" : `${giorniMancanti} giorni`;
         banner.innerHTML =
-          `🗓️ <b>Nessuna specie cacciabile oggi</b><br>` +
+          `🗓️ <b>Nessuna specie cacciabile ${now !== null ? "oggi" : "in questa data"}</b><br>` +
           `La ${nomeSezione} apre il <b>${formatDateCH(primaApertura)}</b> — mancano <b>${giorniTesto}</b>.`;
       } else {
         banner.innerHTML = `<b>Nessuna categoria aperta</b> in ${nomeSezione} il ${formatDateCH(iso)}.`;
@@ -831,13 +837,20 @@
 
   // Carica le miniature dopo aver disegnato l'elenco: la lettura da IndexedDB
   // è asincrona, quindi le schede compaiono subito e le foto un istante dopo.
+  let anteprimeUrls = [];   // collegamenti alle miniature già create, da rilasciare al prossimo disegno
+  let anteprimeToken = 0;
   async function caricaAnteprimeFoto(container) {
+    anteprimeUrls.forEach(u => URL.revokeObjectURL(u));
+    anteprimeUrls = [];
+    const token = ++anteprimeToken;
     const imgs = container.querySelectorAll(".log-photo-thumb[data-photo-id]");
     for (const img of imgs) {
       try {
         const blob = await Storage.getPhoto(img.dataset.photoId);
+        if (token !== anteprimeToken) return; // nel frattempo la lista è stata ridisegnata
         if (blob) {
           img.src = URL.createObjectURL(blob);
+          anteprimeUrls.push(img.src);
           img.addEventListener("click", () => {
             document.getElementById("photoLightboxImg").src = img.src;
             document.getElementById("photoLightbox").classList.add("active");
@@ -849,10 +862,11 @@
 
   function renderRegistro() {
     const capsBox = document.getElementById("capsSummary");
-    const log = RulesEngine.seasonLog(regData, Storage.getLog());
+    const log = Storage.getLog();
+    const logStagione = RulesEngine.seasonLog(regData, log); // i limiti valgono solo per la stagione in corso
     capsBox.innerHTML = "";
     for (const [groupId, cap] of Object.entries(regData.groupCaps)) {
-      const count = RulesEngine.seasonCountByGroup(log, regData.categories, groupId);
+      const count = RulesEngine.seasonCountByGroup(logStagione, regData.categories, groupId);
       const chip = document.createElement("span");
       chip.className = "cap-chip";
       chip.textContent = `${cap.label}: ${count}/${cap.max}`;
@@ -884,7 +898,7 @@
     for (const k of sorted) {
       // Card punto rapido (Quick Log)
       if (k.type === "quick_point") {
-        const tipoLabel  = { abbattimento: "🦌 Abbattimento", anschluss: "📍 Anschluss", luogo: "⭐ Luogo" }[k.pointType] || k.pointType;
+        const tipoLabel  = { abbattimento: "🦌 Abbattimento", anschluss: "📍 Anschluss", luogo: "⭐ Luogo" }[k.pointType] || escapeHtmlLuogo(k.pointType);
         const tipoClass  = { abbattimento: "badge-abbattimento", anschluss: "badge-anschluss", luogo: "badge-luogo" }[k.pointType] || "";
         const coordsHtml = k.coords
           ? `<div><b>Posizione GPS:</b> ${k.coords.lat.toFixed(5)}, ${k.coords.lon.toFixed(5)}`
@@ -892,8 +906,8 @@
             + (k.coords.alt  ? ` · ${k.coords.alt} m` : "")
             + ` — <a href="https://www.google.com/maps?q=${k.coords.lat},${k.coords.lon}" target="_blank" rel="noopener">apri nelle mappe</a></div>`
           : `<div style="color:var(--ink-soft)">Nessuna coordinata GPS salvata</div>`;
-        const notaHtml = k.note ? `<div><b>Nota:</b> ${k.note}</div>` : "";
-        const oraHtml  = k.time ? ` alle ${k.time}` : "";
+        const notaHtml = k.note ? `<div><b>Nota:</b> ${escapeHtmlLuogo(k.note)}</div>` : "";
+        const oraHtml  = k.time ? ` alle ${escapeHtmlLuogo(k.time)}` : "";
 
         const item = document.createElement("div");
         item.className = "log-item quick-point";
@@ -939,9 +953,9 @@
       if (k.photoId) righeDettagli.push(`<div class="log-photo-row"><img class="log-photo-thumb" data-photo-id="${k.photoId}" alt="Foto dell'abbattimento"></div>`);
       if (k.gunId) {
         const gun = guns.find(g => g.id === k.gunId);
-        righeDettagli.push(`<div><b>Arma:</b> ${gun ? (gun.name ? gun.name + " — " : "") + descrizioneFucile(gun) : "(eliminata dall'elenco)"}</div>`);
+        righeDettagli.push(`<div><b>Arma:</b> ${gun ? (gun.name ? escapeHtmlLuogo(gun.name) + " — " : "") + descrizioneFucile(gun) : "(eliminata dall'elenco)"}</div>`);
       }
-      if (k.ammoType) righeDettagli.push(`<div><b>Munizione:</b> ${k.ammoType}</div>`);
+      if (k.ammoType) righeDettagli.push(`<div><b>Munizione:</b> ${escapeHtmlLuogo(k.ammoType)}</div>`);
       if (k.bulletWeight) righeDettagli.push(`<div><b>Peso palla:</b> ${k.bulletWeight} ${k.bulletWeightUnit === "gr" ? "grani" : "grammi"}</div>`);
       if (k.district) righeDettagli.push(`<div><b>Distretto:</b> ${escapeHtmlLuogo(k.district)}</div>`);
       if (k.place) righeDettagli.push(`<div><b>Luogo:</b> ${escapeHtmlLuogo(k.place)}</div>`);
@@ -963,8 +977,8 @@
       item.innerHTML = `
         <div class="info">
           <div class="date">${k.date}</div>
-          <div class="sp">${cat ? cat.speciesLabel : k.categoryId}</div>
-          <div class="cat">${cat ? cat.categoryLabel : ""}${k.note ? " — " + k.note : ""}</div>
+          <div class="sp">${cat ? cat.speciesLabel : escapeHtmlLuogo(k.categoryId)}</div>
+          <div class="cat">${cat ? cat.categoryLabel : ""}${k.note ? " — " + escapeHtmlLuogo(k.note) : ""}</div>
           ${dettagli}
         </div>
         <div class="log-actions">
@@ -987,8 +1001,10 @@
     caricaAnteprimeFoto(listEl);
   }
 
+  // Restituisce testo già protetto: si può inserire direttamente nell'HTML.
   function descrizioneFucile(g) {
-    return g.tipoCanna === "liscia" ? `${g.azione} — canna liscia, calibro ${g.caliber}` : g.caliber;
+    const t = g.tipoCanna === "liscia" ? `${g.azione} — canna liscia, calibro ${g.caliber}` : g.caliber;
+    return escapeHtmlLuogo(t == null ? "" : t);
   }
 
   // ---------- Finestre di conferma/avviso personalizzate ----------
@@ -1048,12 +1064,12 @@
       return;
     }
     el.innerHTML = guns.map(g => `
-      <div class="log-item" data-gun-id="${g.id}">
+      <div class="log-item" data-gun-id="${escapeHtmlLuogo(g.id)}">
         <div class="info">
-          <div class="sp">${g.name || descrizioneFucile(g)}</div>
+          <div class="sp">${g.name ? escapeHtmlLuogo(g.name) : descrizioneFucile(g)}</div>
           <div class="cat">${descrizioneFucile(g)}</div>
         </div>
-        <button class="del" data-gun-id="${g.id}">Elimina</button>
+        <button class="del" data-gun-id="${escapeHtmlLuogo(g.id)}">Elimina</button>
       </div>`).join("");
 
     el.querySelectorAll("button.del").forEach(btn => {
@@ -1144,7 +1160,7 @@
     if (!sel) return;
     const guns = Storage.getGuns().filter(g => fucileAdattoAHuntType(g, huntType));
     sel.innerHTML = `<option value="">— non indicata —</option>` +
-      guns.map(g => `<option value="${g.id}">${g.name ? g.name + " — " : ""}${descrizioneFucile(g)}</option>`).join("");
+      guns.map(g => `<option value="${escapeHtmlLuogo(g.id)}">${g.name ? escapeHtmlLuogo(g.name) + " — " : ""}${descrizioneFucile(g)}</option>`).join("");
     return guns;
   }
 
@@ -1486,7 +1502,8 @@
 
   function renderStatistiche() {
     const panel = document.getElementById("registroStatistiche");
-    const log = Storage.getLog();
+    // Solo capi veri: i punti «Segna punto» (Anschluss, Luogo…) non hanno categoria
+    const log = Storage.getLog().filter(k => k.categoryId);
     const year = String(regData.regulationYear || "");
     const season = year ? log.filter(k => k.date.startsWith(year)) : log;
     const outOfSeason = log.length - season.length;
@@ -1522,7 +1539,7 @@
 
     const bar = (label, count, max) => `
       <div class="stat-bar-row">
-        <div class="stat-bar-label">${label}</div>
+        <div class="stat-bar-label">${escapeHtmlLuogo(label)}</div>
         <div class="stat-bar-track"><div class="stat-bar-fill" style="width:${Math.max(6, Math.round(count / max * 100))}%"></div></div>
         <div class="stat-bar-count">${count}</div>
       </div>`;
@@ -1720,9 +1737,13 @@
 
   // ---------- Quick Log ----------
   let quickGpsResult = null; // posizione rilevata (o null se ancora in attesa)
+  let quickGpsPromise = null; // ricerca GPS in corso (null se conclusa o fallita)
+  let quickGpsToken = 0;      // per ignorare le risposte di ricerche superate
 
   function openQuickLog() {
     quickGpsResult = null;
+    quickGpsPromise = null;
+    const token = ++quickGpsToken;
     // Reset tipo punto
     document.querySelectorAll(".quick-type-btn").forEach(b => b.classList.remove("active"));
     document.querySelector(".quick-type-btn[data-type='abbattimento']").classList.add("active");
@@ -1743,8 +1764,11 @@
     dot.className  = "quick-gps-dot";
     text.textContent = "⏳ Rilevamento GPS…";
     document.getElementById("quickLogBackdrop").classList.add("active");
-    getPosition()
+    const ricerca = getPosition();
+    quickGpsPromise = ricerca;
+    ricerca
       .then(pos => {
+        if (token !== quickGpsToken) return;
         quickGpsResult = pos;
         dot.className    = "quick-gps-dot ok";
         const lat = pos.coords.latitude.toFixed(5);
@@ -1753,6 +1777,8 @@
         text.textContent = `✓ ${lat}, ${lon}${alt}`;
       })
       .catch(() => {
+        if (token !== quickGpsToken) return;
+        quickGpsPromise = null;
         dot.className    = "quick-gps-dot error";
         text.textContent = "⚠ GPS non disponibile — il punto sarà salvato senza coordinate.";
       });
@@ -1761,6 +1787,8 @@
   function closeQuickLog() {
     document.getElementById("quickLogBackdrop").classList.remove("active");
     quickGpsResult = null;
+    quickGpsPromise = null;
+    quickGpsToken++;
   }
 
   function selectedQuickType() {
@@ -1772,7 +1800,7 @@
     const tipo  = selectedQuickType();
     const nota  = document.getElementById("quickNote").value.trim();
     const now   = new Date();
-    const iso   = now.toISOString().slice(0, 10);
+    const iso   = RulesEngine.toISO(now); // data locale, non UTC
     const time  = now.toTimeString().slice(0, 5);
 
     const entry = {
@@ -1796,9 +1824,23 @@
       };
     }
 
+    // Se il GPS sta ancora cercando, il punto si salva subito e le coordinate
+    // si aggiungono appena arrivano: «Salva subito» non deve far perdere la posizione.
+    const inAttesaGps = !quickGpsResult && quickGpsPromise;
     if (!Storage.addKill(entry)) { // riusa addKill: salva in coda al log
       await showAlert("Impossibile salvare: la memoria del telefono è piena o bloccata. Il dato NON è stato salvato — annotalo altrove e libera spazio (es. esporta il registro).");
       return;
+    }
+    if (inAttesaGps) {
+      inAttesaGps.then(pos => {
+        Storage.updateKill(entry.id, { coords: {
+          lat: pos.coords.latitude,
+          lon: pos.coords.longitude,
+          acc: Math.round(pos.coords.accuracy),
+          ...(pos.coords.altitude != null ? { alt: Math.round(pos.coords.altitude) } : {}),
+        } });
+        renderRegistro();
+      }).catch(() => {});
     }
     closeQuickLog();
     renderRegistro();
@@ -2399,7 +2441,7 @@
     }
     const generale = hunt === "alta" && s.distretto === "Bellinzona" ? zones._caccia_alta
       : hunt === "acquatica" ? zones._caccia_acquatica : "";
-    return `<div class="dove-sotto">Distretto: <b>${s.distretto}</b>${s.comune ? ` · Comune: <b>${escapeHtmlLuogo(s.comune)}</b>` : ""}</div>` +
+    return `<div class="dove-sotto">Distretto: <b>${escapeHtmlLuogo(s.distretto)}</b>${s.comune ? ` · Comune: <b>${escapeHtmlLuogo(s.comune)}</b>` : ""}</div>` +
       (generale ? `<div class="dove-nota dove-avviso">${escapeHtmlLuogo(generale)}</div>` : "") +
       (righe.length ? righe.join("") : `<div class="dove-nota">Nessuna limitazione per distretto indicata per ${HUNT_LABELS[hunt].toLowerCase()}.</div>`);
   }
@@ -2650,6 +2692,31 @@
     closeModal();
     renderOggi();
     renderRegistro();
+  }
+
+  // Controlla che un regolamento importato abbia tutto ciò che l'app usa e che
+  // regga una valutazione di prova; altrimenti l'app andrebbe in errore a ogni
+  // avvio. Restituisce il motivo del rifiuto, o "" se va bene.
+  function verificaRegolamento(r) {
+    if (!r || typeof r !== "object") return "formato non valido";
+    if (!Array.isArray(r.categories) || r.categories.length === 0) return "mancano le categorie";
+    if (!r.hourProfiles || typeof r.hourProfiles !== "object") return "mancano gli orari (hourProfiles)";
+    if (!r.groupCaps || typeof r.groupCaps !== "object") return "mancano i limiti di gruppo (groupCaps)";
+    if (!/^\d{4}$/.test(String(r.regulationYear || ""))) return "manca l'anno del regolamento (regulationYear)";
+    for (const c of r.categories) {
+      if (!c || typeof c.id !== "string" || typeof c.huntType !== "string" ||
+          typeof c.speciesLabel !== "string" || typeof c.categoryLabel !== "string" ||
+          !Array.isArray(c.windows)) {
+        return "una categoria è incompleta (" + (c && c.id ? c.id : "senza id") + ")";
+      }
+    }
+    try {
+      RulesEngine.evaluateAll(r, [], new Date(), "12:00", { altitudeBelow400: false });
+      RulesEngine.evaluateAll(r, [], new Date(), null, { altitudeBelow400: true });
+    } catch (e) {
+      return "il file non regge la verifica (" + e.message + ")";
+    }
+    return "";
   }
 
   // ---------- Navigazione ----------
@@ -2912,11 +2979,12 @@
       try {
         const text = await file.text();
         const parsed = JSON.parse(text);
-        if (!parsed.categories || !parsed.hourProfiles) throw new Error("formato non valido");
+        const problema = verificaRegolamento(parsed);
+        if (problema) throw new Error(problema + ". Il regolamento attuale non è stato cambiato");
         Storage.setCustomRegolamento(parsed);
         regData = parsed;
         await showAlert("Regolamento importato correttamente.");
-        renderRegolamento();
+        renderImpostazioni();
         renderOggi();
       } catch (err) {
         await showAlert("File non valido: " + err.message);
@@ -2928,7 +2996,7 @@
       if (!(await showConfirm("Ripristinare il regolamento incluso nell'app?"))) return;
       Storage.clearCustomRegolamento();
       await loadRegData();
-      renderRegolamento();
+      renderImpostazioni();
       renderOggi();
     });
 
@@ -2944,22 +3012,27 @@
         const gunsNelFile = isNewFormat && Array.isArray(parsedRaw.fucili) ? parsedRaw.fucili : [];
         if (!Array.isArray(parsed)) throw new Error("il file non contiene un registro abbattimenti");
 
-        const isValid = (k) => k && typeof k.categoryId === "string" && /^\d{4}-\d{2}-\d{2}$/.test(k.date || "");
+        const isQuick = (k) => !!k && k.type === "quick_point";
+        const isValid = (k) => k && (typeof k.categoryId === "string" || isQuick(k)) && /^\d{4}-\d{2}-\d{2}$/.test(k.date || "");
         const valid = parsed.filter(isValid);
         const invalid = parsed.length - valid.length;
         if (valid.length === 0) throw new Error("nessun abbattimento valido trovato");
 
         // Unisce al registro attuale saltando i doppioni (stesso id, oppure stessa categoria + data + note)
         const log = Storage.getLog();
-        const sig = (k) => `${k.categoryId}|${k.date}|${(k.note || "").trim()}`;
+        // Con l'id, un capo è un doppione solo se lo stesso id c'è già. Il confronto
+        // per contenuto (categoria + data + nota) vale solo per i file vecchi senza
+        // id, e solo contro il registro attuale: due capi uguali nello stesso file
+        // (es. due volpi lo stesso giorno) sono capi diversi e non vanno fusi.
+        const sig = (k) => `${k.type || ""}|${k.categoryId}|${k.date}|${k.time || ""}|${(k.note || "").trim()}`;
         const ids = new Set(log.map(k => k.id));
-        const sigs = new Set(log.map(sig));
+        const sigsEsistenti = new Set(log.map(sig));
         const toAdd = [];
         for (const k of valid) {
-          if ((k.id && ids.has(k.id)) || sigs.has(sig(k))) continue;
+          if (k.id && ids.has(k.id)) continue;
+          if (!k.id && sigsEsistenti.has(sig(k))) continue;
           toAdd.push(k);
           if (k.id) ids.add(k.id);
-          sigs.add(sig(k));
         }
         const duplicates = valid.length - toAdd.length;
 
@@ -2969,7 +3042,13 @@
         // "quale arma hai usato" sugli abbattimenti importati resta intatto.
         const gunsEsistenti = Storage.getGuns();
         const gunIdEsistenti = new Set(gunsEsistenti.map(g => g.id));
-        const nuoviFucili = gunsNelFile.filter(g => g && typeof g.id === "string" && !gunIdEsistenti.has(g.id));
+        const testo = (v) => (typeof v === "string" ? v : "");
+        const nuoviFucili = gunsNelFile
+          .filter(g => g && typeof g.id === "string" && !gunIdEsistenti.has(g.id))
+          .map(g => ({ // solo i campi noti, come testo
+            id: g.id, name: testo(g.name), tipoCanna: g.tipoCanna === "liscia" ? "liscia" : "rigata",
+            azione: testo(g.azione), caliber: testo(g.caliber),
+          }));
         const gunIdValidi = new Set([...gunIdEsistenti, ...nuoviFucili.map(g => g.id)]);
 
         if (toAdd.length === 0 && nuoviFucili.length === 0) {
@@ -2979,7 +3058,7 @@
 
         const year = String(regData.regulationYear || "");
         const otherYear = year ? toAdd.filter(k => !k.date.startsWith(year)).length : 0;
-        const unknown = toAdd.filter(k => !regData.categories.some(c => c.id === k.categoryId)).length;
+        const unknown = toAdd.filter(k => !isQuick(k) && !regData.categories.some(c => c.id === k.categoryId)).length;
         const conFoto = toAdd.filter(k => k.photoDataUrl).length;
 
         let msg = `Abbattimenti nel file: ${valid.length}\nNuovi da aggiungere: ${toAdd.length}`;
@@ -2997,7 +3076,27 @@
         }
 
         const now = new Date().toISOString();
+        const TIPI_PUNTO = ["abbattimento", "anschluss", "luogo"];
         for (const k of toAdd) {
+          if (isQuick(k)) {
+            log.push({
+              id: (typeof k.id === "string" && k.id) || "q_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6),
+              type: "quick_point",
+              pointType: TIPI_PUNTO.includes(k.pointType) ? k.pointType : "luogo",
+              date: k.date,
+              time: typeof k.time === "string" ? k.time : "",
+              note: typeof k.note === "string" ? k.note : "",
+              complete: k.complete === true,
+              createdAt: typeof k.createdAt === "string" ? k.createdAt : now,
+              ...(k.coords && typeof k.coords.lat === "number" && typeof k.coords.lon === "number"
+                ? { coords: {
+                    lat: k.coords.lat, lon: k.coords.lon,
+                    ...(typeof k.coords.acc === "number" ? { acc: k.coords.acc } : {}),
+                    ...(typeof k.coords.alt === "number" ? { alt: k.coords.alt } : {}),
+                  } } : {}),
+            });
+            continue;
+          }
           const entry = {
             id: k.id || "k_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7),
             categoryId: k.categoryId,
@@ -3203,13 +3302,20 @@
 
     document.getElementById("exportOptionsConfirm").addEventListener("click", async () => {
       document.getElementById("exportOptionsBackdrop").classList.remove("active");
-      const file = await costruisciFileBackup();
+      let file;
+      try {
+        file = await costruisciFileBackup();
+      } catch (err) {
+        await showAlert("Non sono riuscito a preparare il backup: " + err.message);
+        return;
+      }
       const url = URL.createObjectURL(file);
       const a = document.createElement("a");
       a.href = url;
       a.download = file.name;
       a.click();
-      URL.revokeObjectURL(url);
+      // Rilasciato dopo un po': subito potrebbe interrompere il salvataggio su alcuni telefoni
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
       segnaBackupFatto();
       aggiornaPromemoriaBackup();
     });
@@ -3221,10 +3327,19 @@
       // ricarica una sola volta in automatico (niente doppio "aggiorna").
       const hadController = !!navigator.serviceWorker.controller;
       let reloading = false;
+      // Se in quel momento c'è un pannello aperto (registrazione, SOS…), aspetta
+      // che venga chiuso: ricaricando si perderebbe quello che si sta scrivendo.
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (!hadController || reloading) return;
         reloading = true;
-        window.location.reload();
+        const ricarica = () => {
+          if (document.querySelector(".modal-backdrop.active:not(.easteregg-backdrop)")) {
+            setTimeout(ricarica, 2000);
+          } else {
+            window.location.reload();
+          }
+        };
+        ricarica();
       });
 
       // Mostra nell'intestazione la versione del service worker attivo
