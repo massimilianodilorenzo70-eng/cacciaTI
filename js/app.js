@@ -14,6 +14,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.61", text: "La silhouette della beccaccia compare ora anche nel modal «Segna punto» quando si è in caccia bassa, sia sul bottone Abbattimento che nel menu +. In tema scuro l'icona si inverte automaticamente per restare leggibile." },
     { v: "3.60", text: "Il pulsante + mostra icone diverse in base al tipo di caccia selezionato: in caccia bassa compare la silhouette della beccaccia (PhyloPic, Public Domain), nelle altre cacce il cervo 🦌." },
     { v: "3.59", text: "Bug fix Quick Log: dopo aver completato un punto rapido con il modulo abbattimento, il punto rapido originale veniva mantenuto nel registro invece di essere eliminato automaticamente. Ora viene rimosso non appena l'abbattimento completo è salvato." },
     { v: "3.58.1", text: "Bug fix: il menu Quick Log (📍 Segna punto / 🦌 Abbattimento) non era più visibile all'avvio — compariva fisso sullo schermo invece di restare nascosto fino al tap sul +. Corretto." },
@@ -1722,6 +1723,15 @@
     // Reset tipo punto
     document.querySelectorAll(".quick-type-btn").forEach(b => b.classList.remove("active"));
     document.querySelector(".quick-type-btn[data-type='abbattimento']").classList.add("active");
+    // Icona abbattimento: beccaccia in caccia bassa, cervo nelle altre
+    const btnAbb = document.querySelector(".quick-type-btn[data-type='abbattimento']");
+    if (selectedHunt === "bassa") {
+      btnAbb.childNodes[0].nodeValue = "";
+      btnAbb.innerHTML = `<img src="icons/beccaccia.png" class="fab-beccaccia-img"
+        style="width:32px;height:auto;margin-bottom:2px;"><span>Abbattimento</span>`;
+    } else {
+      btnAbb.innerHTML = `🦌<span>Abbattimento</span>`;
+    }
     // Reset nota
     document.getElementById("quickNote").value = "";
     // Stato GPS: avvia subito
