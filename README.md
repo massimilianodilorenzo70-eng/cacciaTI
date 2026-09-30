@@ -122,13 +122,18 @@ salvato sul telefono finché non lo sostituisci di nuovo, o finché non tocchi
 
 ## Contingente ufficiale camoscio/capriolo
 
-Letto automaticamente ogni 4 ore da GitHub Actions
+Letto automaticamente ogni 4 ore, solo dal 5 al 17 settembre, da GitHub Actions
 (`.github/workflows/update-contingente.yml`) dalla pagina dell'Ufficio della
 caccia e della pesca, e riconosciuto **per nome** (titolo di ogni riquadro
 sulla pagina), non per posizione — un eventuale riordino della pagina non fa
 più scambiare i dati tra categorie. Se lo script non riconosce esattamente
 le categorie attese, si ferma senza scrivere nulla, così l'app continua a
 mostrare l'ultimo dato buono con il suo orario, invece di un dato sbagliato.
+
+**Ogni anno, quando esce il nuovo calendario:** aggiorna le date nella riga
+`cron` di `.github/workflows/update-contingente.yml` (adesso `5-17 9`,
+cioè 5-17 settembre). Se non lo fai, l'anno dopo il workflow non parte da
+solo; resta comunque lanciabile a mano da GitHub → Actions → Run workflow.
 
 Il workflow manuale `diagnostica-pagina.yml` salva una copia della pagina
 ufficiale in `debug/`, utile se un giorno il sito cambia struttura e lo
