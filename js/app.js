@@ -14,6 +14,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.63.6", text: "Su Edge per Android l'invito a installare l'app non propone più il pulsante «Installa» (Android lo blocca con l'avviso «App non sicura bloccata»): consiglia invece di aprire il sito in Chrome. Su Samsung Internet il pulsante resta, con un consiglio in caso di blocco. Su Chrome e sugli altri browser non cambia nulla." },
     { v: "3.63.5", text: "Completando un punto rapido dal Registro, il modulo si apre ora nel tipo di caccia in cui l'avevi segnato (specie, arma e munizione di quella caccia), anche se in quel momento è attiva un'altra scheda. I punti segnati prima di questa versione seguono ancora la scheda attiva." },
     { v: "3.63.4", text: "Le coordinate mostrate (pannello «Segna punto», dettagli del Registro, modulo di registrazione) hanno ora anche il formato svizzero CH1903+ / LV95, oltre a latitudine e longitudine: si ritrova il punto direttamente sulle carte di swisstopo e del Cantone. Il formato svizzero compare solo per punti in Svizzera." },
     { v: "3.63.3", text: "Nel Registro, un punto «Abbattimento» segnato in caccia bassa mostra ora la beccaccia (come nel pannello «Segna punto») invece del cervo; i punti già salvati restano con il cervo. Aggiunto il conteggio anonimo delle nuove installazioni dell'app (una sola volta per installazione, nessun dato personale) e sistemato il conteggio anonimo delle aperture, che poteva non partire quando il contatore si caricava più lentamente dell'app." },
@@ -2788,6 +2789,22 @@
       (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   }
 
+  // Edge su Android costruisce un pacchetto di installazione con un'impostazione
+  // Android vecchia: Play Protect lo blocca («App non sicura bloccata»). Con
+  // Chrome sullo stesso telefono l'installazione riesce.
+  function isEdgeAndroid() {
+    return /EdgA\//.test(navigator.userAgent);
+  }
+  // Samsung Internet: non è verificato che dia lo stesso blocco, quindi il pulsante
+  // resta e si aggiunge solo un consiglio per il caso in cui Android lo blocchi.
+  function isSamsungInternet() {
+    return /SamsungBrowser\//.test(navigator.userAgent);
+  }
+  const HINT_SAMSUNG_INTERNET = "Se Android blocca l'installazione (Play Protect), apri questo sito in Chrome " +
+    "e installa l'app da lì.";
+  const HINT_EDGE_ANDROID = "Su Edge l'installazione può essere bloccata da Android (Play Protect). " +
+    "Apri questo sito in Chrome per installare l'app.";
+
   function installSnoozed() {
     return Date.now() < Number(localStorage.getItem(KEY_INSTALL_SNOOZE) || 0);
   }
@@ -2809,7 +2826,8 @@
     window.addEventListener("beforeinstallprompt", (e) => {
       e.preventDefault();          // al posto della barra del browser mostriamo il nostro invito
       deferredInstall = e;
-      btn.hidden = false;
+      btn.hidden = isEdgeAndroid(); // su Edge niente pulsante: porterebbe al blocco
+      if (isSamsungInternet()) document.getElementById("installHint").textContent = HINT_SAMSUNG_INTERNET;
       showInstallBanner();
     });
 
@@ -2823,6 +2841,12 @@
       document.getElementById("installHint").textContent =
         "Tocca Condividi (il quadrato con la freccia in su) e poi «Aggiungi alla schermata Home»: " +
         "così i dati della tua stagione restano più al sicuro nel tempo.";
+      btn.hidden = true;
+      setTimeout(showInstallBanner, 1200);
+    }
+
+    if (isEdgeAndroid() && !isStandalone()) {
+      document.getElementById("installHint").textContent = HINT_EDGE_ANDROID;
       btn.hidden = true;
       setTimeout(showInstallBanner, 1200);
     }
