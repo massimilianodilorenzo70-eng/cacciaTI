@@ -14,6 +14,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.64", text: "Nuovo calendario della stagione sotto le schede del tipo di caccia (Settembrina, Tardo autunnale, Invernale cinghiale, Caccia bassa, Caccia acquatica): settimane compatte con i giorni di apertura, chiuso di default e apribile con un tocco. Toccando un giorno cambiano la data in alto, il meteo e le specie sotto. Per il tardo autunnale e il cinghiale invernale, senza regolamento ufficiale, mostra i giorni indicativi dell'anno scorso segnati come provvisori (da confermare dopo la pubblicazione del regolamento). Il meteo dice quando la previsione non è ancora disponibile (oltre 15 giorni)." },
     { v: "3.63.6", text: "Su Edge per Android l'invito a installare l'app non propone più il pulsante «Installa» (Android lo blocca con l'avviso «App non sicura bloccata»): consiglia invece di aprire il sito in Chrome. Su Samsung Internet il pulsante resta, con un consiglio in caso di blocco. Su Chrome e sugli altri browser non cambia nulla." },
     { v: "3.63.5", text: "Completando un punto rapido dal Registro, il modulo si apre ora nel tipo di caccia in cui l'avevi segnato (specie, arma e munizione di quella caccia), anche se in quel momento è attiva un'altra scheda. I punti segnati prima di questa versione seguono ancora la scheda attiva." },
     { v: "3.63.4", text: "Le coordinate mostrate (pannello «Segna punto», dettagli del Registro, modulo di registrazione) hanno ora anche il formato svizzero CH1903+ / LV95, oltre a latitudine e longitudine: si ritrova il punto direttamente sulle carte di swisstopo e del Cantone. Il formato svizzero compare solo per punti in Svizzera." },
@@ -186,6 +187,123 @@
           ${timeLabel ? ` · letto il ${timeLabel}` : ""}
         </div>
       </div>`;
+  }
+
+  // ---------- Calendario della stagione ----------
+  // Box compatto sotto le schede del tipo di caccia: una griglia di settimane
+  // (lunedì-domenica) con i giorni di apertura evidenziati e cliccabili.
+  // Dove il regolamento non è ancora uscito (tardo autunnale, cinghiale
+  // invernale) usa le date indicative della stagione scorsa, segnalate come tali.
+  let calAperto = false; // di norma chiuso: si apre con un tocco sul titolo
+
+  function categorieDellaSezione() {
+    let cats = (regData.categories || []).filter(c => c.huntType === selectedHunt);
+    if (selectedHunt === "alta") {
+      cats = cats.filter(c => altaSubView === "tardo" ? c.subCategory === "tardo"
+        : altaSubView === "invernale" ? c.subCategory === "invernale" : !c.subCategory);
+    }
+    return cats;
+  }
+
+  // Giorni di apertura della sezione: { giorni: Set<ISO>, provvisorio: bool }
+  function giorniAperturaSezione(cats) {
+    const giorni = new Set();
+    let provvisorio = false;
+    for (const cat of cats) {
+      if (cat.windows && cat.windows.length) {
+        let da = null, a = null;
+        for (const w of cat.windows) {
+          for (const d of (w.dates || [w.from, w.to])) {
+            if (!d) continue;
+            if (!da || d < da) da = d;
+            if (!a || d > a) a = d;
+          }
+        }
+        if (!da) continue;
+        const cur = RulesEngine.parseISO(da), fine = RulesEngine.parseISO(a);
+        while (cur <= fine) {
+          const iso = RulesEngine.toISO(cur);
+          if (RulesEngine.evaluateCategory(regData, cat, [], cur, iso, null, prefs).dateOpen) giorni.add(iso);
+          cur.setDate(cur.getDate() + 1);
+        }
+      } else if (cat.provisorio) {
+        provvisorio = true;
+        const cur = RulesEngine.parseISO(cat.provisorio.from), fine = RulesEngine.parseISO(cat.provisorio.to);
+        while (cur <= fine) {
+          if (cat.provisorio.weekdays.includes(cur.getDay())) giorni.add(RulesEngine.toISO(cur));
+          cur.setDate(cur.getDate() + 1);
+        }
+      }
+    }
+    return { giorni, provvisorio };
+  }
+
+  function renderCalendario(selIso) {
+    const box = document.getElementById("calendarioBox");
+    if (!box) return;
+    box.innerHTML = "";
+    const inPannello = selectedHunt === "bassa" && bassaSubView !== "regole";
+    if (!selectedHunt || inPannello) return;
+
+    const { giorni, provvisorio } = giorniAperturaSezione(categorieDellaSezione());
+    if (giorni.size === 0) return;
+    const ordinati = [...giorni].sort();
+    const primo = RulesEngine.parseISO(ordinati[0]);
+    const ultimo = RulesEngine.parseISO(ordinati[ordinati.length - 1]);
+    const oggiIso = RulesEngine.toISO(new Date());
+
+    // si parte dal lunedì della prima settimana
+    const cur = new Date(primo);
+    cur.setDate(cur.getDate() - ((cur.getDay() + 6) % 7));
+
+    let html = ["L", "M", "M", "G", "V", "S", "D"].map(g => `<div class="cal-dow">${g}</div>`).join("");
+    let meseMostrato = -1, saltate = 0;
+    while (cur <= ultimo) {
+      const settimana = [];
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(cur); d.setDate(cur.getDate() + i);
+        settimana.push({ d, iso: RulesEngine.toISO(d) });
+      }
+      const aperti = settimana.filter(x => giorni.has(x.iso));
+      if (aperti.length === 0) { saltate++; cur.setDate(cur.getDate() + 7); continue; }
+      if (saltate) { html += `<div class="cal-gap">⋯ ${saltate === 1 ? "1 settimana" : saltate + " settimane"} senza apertura</div>`; saltate = 0; }
+      const mese = aperti[0].d.getFullYear() * 12 + aperti[0].d.getMonth();
+      if (mese !== meseMostrato) {
+        meseMostrato = mese;
+        const nome = MESI_LUNGHI[aperti[0].d.getMonth()];
+        html += `<div class="cal-month">${nome[0].toUpperCase()}${nome.slice(1)} ${aperti[0].d.getFullYear()}</div>`;
+      }
+      for (const x of settimana) {
+        const cls = ["cal-day"];
+        const aperto = giorni.has(x.iso);
+        if (aperto) cls.push(provvisorio ? "prov" : "open");
+        else if (x.d < primo || x.d > ultimo) cls.push("out");
+        if (x.iso === oggiIso) cls.push("today");
+        if (x.iso === selIso) cls.push("sel");
+        html += `<button type="button" class="${cls.join(" ")}" data-iso="${x.iso}" aria-label="${escapeHtmlLuogo(dataLunga(x.iso))}">${x.d.getDate()}</button>`;
+      }
+      cur.setDate(cur.getDate() + 7);
+    }
+
+    const nomeSezione = selectedHunt === "alta"
+      ? (altaSubView === "tardo" ? "tardo autunnale" : altaSubView === "invernale" ? "cinghiale invernale" : "settembrina")
+      : HUNT_LABELS[selectedHunt].toLowerCase();
+    const det = document.createElement("details");
+    det.className = "cal-box";
+    det.open = calAperto;
+    det.innerHTML = `<summary>📅 Calendario · ${escapeHtmlLuogo(nomeSezione)}${provvisorio ? ' <span class="cal-badge">provvisorio</span>' : ""}</summary>
+      ${provvisorio ? `<div class="cal-nota">Date indicative dell'anno scorso: da confermare dopo la pubblicazione del regolamento.</div>` : ""}
+      <div class="cal-grid">${html}</div>
+      <div class="cal-legend"><span><i class="${provvisorio ? "prov" : "open"}"></i>${provvisorio ? "giorno indicativo" : "aperto"}</span><span><i></i>chiuso</span><span><i class="today"></i>oggi</span></div>`;
+    det.addEventListener("toggle", () => { calAperto = det.open; });
+    det.addEventListener("click", (e) => {
+      const b = e.target.closest(".cal-day");
+      if (!b) return;
+      selectedDate = RulesEngine.parseISO(b.dataset.iso);
+      document.getElementById("dateInput").value = b.dataset.iso;
+      renderOggi();
+    });
+    box.appendChild(det);
   }
 
   // ---------- Vista OGGI ----------
@@ -409,7 +527,15 @@
 
     inner.innerHTML = html;
 
-    if (showMeteo) {
+    // Le previsioni arrivano al massimo a 15 giorni da oggi: per date più lontane
+    // (es. il calendario delle cacce autunnali) lo si dice, invece di "non disponibile".
+    const giorniAvanti = Math.round((RulesEngine.parseISO(RulesEngine.toISO(date)) -
+      RulesEngine.parseISO(RulesEngine.toISO(new Date()))) / 86400000);
+    if (showMeteo && giorniAvanti > 15) {
+      document.getElementById("meteoBlock").innerHTML = `<span class="am-icon">\u{1F552}</span>` +
+        `<div><div class="am-label">Previsione non ancora uscita</div>` +
+        `<div class="am-sub">Disponibile 15 giorni prima</div></div>`;
+    } else if (showMeteo) {
       fetchMeteo(date).then(m => {
         if (date !== selectedDate) return; // nel frattempo hai cambiato giorno: risposta superata
         const el = document.getElementById("meteoBlock");
@@ -438,6 +564,19 @@
     const log = Storage.getLog();
     const results = RulesEngine.evaluateAll(regData, log, selectedDate, now, prefs);
 
+    // Cacce senza regolamento ufficiale ancora pubblicato (tardo autunnale,
+    // cinghiale invernale): si usano i giorni indicativi dell'anno scorso, segnati
+    // come provvisori. Non contano mai come «aperto» (niente riquadro Aperto oggi,
+    // niente registrazione): servono solo a orientarsi.
+    for (const r of results) {
+      const pv = r.category.provisorio;
+      if (pv && !(r.category.windows && r.category.windows.length)) {
+        r.provvisorio = true;
+        r.provvisorioAperto = iso >= pv.from && iso <= pv.to && pv.weekdays.includes(selectedDate.getDay());
+        if (pv.ore) r.hoursToday = testoOre(pv.ore) + " (indicativo)";
+      }
+    }
+
     renderApertoOra(results, now !== null);
 
     if (selectedHunt === null) {
@@ -446,6 +585,7 @@
     }
 
     renderHuntTabs(results);
+    renderCalendario(iso);
 
     // Prove cani e Da sapere non sono elenchi di specie: niente ricerca, pannello dedicato
     const pannelloBassa = selectedHunt === "bassa" && bassaSubView !== "regole";
@@ -480,9 +620,21 @@
       return;
     }
 
+    // Sezione ancora senza regolamento ufficiale: banner dedicato, sempre "provvisorio"
+    const tuttiProvvisori = sectionResults.every(r => r.provvisorio);
+    if (tuttiProvvisori) {
+      const banner = document.createElement("div");
+      banner.className = "info-box";
+      const giornoIndicativo = sectionResults.some(r => r.provvisorioAperto);
+      banner.innerHTML = giornoIndicativo
+        ? `🗓️ <b>Giorno indicativo del ${formatDateCH(iso)}</b><br>Secondo le date dell'anno scorso qui si caccia. Provvisorio: da confermare dopo la pubblicazione del regolamento ufficiale.`
+        : `<b>Nessuna caccia il ${formatDateCH(iso)}</b> secondo le date indicative dell'anno scorso. Provvisorio: da confermare dopo la pubblicazione del regolamento ufficiale.`;
+      container.appendChild(banner);
+    }
+
     // Se nel giorno scelto non c'è nulla di aperto, lo dice chiaramente in cima
     const anyOpen = sectionResults.some(isOpenNow);
-    if (!anyOpen) {
+    if (!anyOpen && !tuttiProvvisori) {
       const nomeSezione = selectedHunt === "alta" && altaSubView === "tardo" ? "caccia tardo autunnale"
         : selectedHunt === "alta" && altaSubView === "invernale" ? "caccia invernale al cinghiale"
         : selectedHunt === "alta" ? "caccia settembrina"
@@ -782,6 +934,13 @@
     // scrivere "ora", che altrimenti sembrerebbe riferirsi al momento attuale.
     const isToday = RulesEngine.toISO(selectedDate) === RulesEngine.toISO(new Date());
     const dataScelta = formatDateCH(RulesEngine.toISO(selectedDate));
+
+    // Senza regolamento ufficiale: solo un'indicazione, mai "aperta" vera e propria
+    if (r.provvisorio) {
+      return r.provvisorioAperto
+        ? { label: "Aperta · provvisorio", cls: "status-check", sub: "Giorno indicativo dell'anno scorso: da confermare." }
+        : { label: "Chiusa · provvisorio", cls: "status-check" };
+    }
 
     // Il contingente ufficiale chiuso prevale su tutto il resto: anche se il
     // regolamento direbbe che è ancora aperta, sul terreno non lo è più.
