@@ -14,6 +14,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.63.4", text: "Le coordinate mostrate (pannello «Segna punto», dettagli del Registro, modulo di registrazione) hanno ora anche il formato svizzero CH1903+ / LV95, oltre a latitudine e longitudine: si ritrova il punto direttamente sulle carte di swisstopo e del Cantone. Il formato svizzero compare solo per punti in Svizzera." },
     { v: "3.63.3", text: "Nel Registro, un punto «Abbattimento» segnato in caccia bassa mostra ora la beccaccia (come nel pannello «Segna punto») invece del cervo; i punti già salvati restano con il cervo. Aggiunto il conteggio anonimo delle nuove installazioni dell'app (una sola volta per installazione, nessun dato personale) e sistemato il conteggio anonimo delle aperture, che poteva non partire quando il contatore si caricava più lentamente dell'app." },
     { v: "3.63.2", text: "Revisione generale del codice, con queste correzioni: il contingente ufficiale di una stagione precedente non vale più per la nuova; l'importazione del nuovo regolamento non dà più un falso errore e rifiuta i file incompleti; il Registro mostra sempre tutte le stagioni; le statistiche non contano più i punti «Segna punto» come capi; il ripristino del backup mantiene i punti GPS e non fonde più capi identici; «Salva subito» aggiunge le coordinate appena il GPS risponde; la data di un punto salvato dopo mezzanotte è quella giusta; il meteo non mostra più il giorno sbagliato; note, munizioni e nomi dei fucili sono protetti da caratteri speciali; l'app non si ricarica più mentre stai compilando un modulo; miglioramenti alla memoria delle foto e al salvataggio del backup." },
     { v: "3.63.1", text: "Correzioni di sicurezza dei dati: se il registro sul telefono risulta illeggibile ne viene conservata una copia invece di sovrascriverlo; se un capo o un punto non si riesce a salvare (memoria piena) l'app ora lo segnala invece di far finta di niente; eliminato un errore nascosto nella riproduzione del video demo." },
@@ -906,7 +907,9 @@
         const tipoLabel  = { abbattimento: `${iconaAbb} Abbattimento`, anschluss: "📍 Anschluss", luogo: "⭐ Luogo" }[k.pointType] || escapeHtmlLuogo(k.pointType);
         const tipoClass  = { abbattimento: "badge-abbattimento", anschluss: "badge-anschluss", luogo: "badge-luogo" }[k.pointType] || "";
         const coordsHtml = k.coords
-          ? `<div><b>Posizione GPS:</b> ${k.coords.lat.toFixed(5)}, ${k.coords.lon.toFixed(5)}`
+          ? (testoLv95(k.coords.lat, k.coords.lon)
+              ? `<div><b>LV95:</b> ${testoLv95(k.coords.lat, k.coords.lon)}</div>` : "")
+            + `<div><b>Posizione GPS:</b> ${k.coords.lat.toFixed(5)}, ${k.coords.lon.toFixed(5)}`
             + (k.coords.acc  ? ` (±${k.coords.acc} m)` : "")
             + (k.coords.alt  ? ` · ${k.coords.alt} m` : "")
             + ` — <a href="https://www.google.com/maps?q=${k.coords.lat},${k.coords.lon}" target="_blank" rel="noopener">apri nelle mappe</a></div>`
@@ -966,6 +969,8 @@
       if (k.place) righeDettagli.push(`<div><b>Luogo:</b> ${escapeHtmlLuogo(k.place)}</div>`);
       if (k.coords) {
         const { lat, lon, acc } = k.coords;
+        const lv95 = testoLv95(lat, lon);
+        if (lv95) righeDettagli.push(`<div><b>LV95:</b> ${lv95}</div>`);
         righeDettagli.push(
           `<div><b>Posizione GPS:</b> ${lat.toFixed(5)}, ${lon.toFixed(5)}` +
           (acc ? ` (±${Math.round(acc)} m)` : "") +
@@ -1779,7 +1784,8 @@
         const lat = pos.coords.latitude.toFixed(5);
         const lon = pos.coords.longitude.toFixed(5);
         const alt = pos.coords.altitude != null ? ` · ${Math.round(pos.coords.altitude)} m` : "";
-        text.textContent = `✓ ${lat}, ${lon}${alt}`;
+        const lv95 = testoLv95(pos.coords.latitude, pos.coords.longitude);
+        text.innerHTML = `✓ ${lat}, ${lon}${alt}` + (lv95 ? `<br>LV95: ${lv95}` : ""); // solo numeri: nessun testo utente
       })
       .catch(() => {
         if (token !== quickGpsToken) return;
@@ -1910,6 +1916,17 @@
   function escapeHtmlLuogo(s) {
     return String(s).replace(/[&<>"']/g, (c) =>
       ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+
+  // Coordinate svizzere CH1903+ / LV95 come testo («2 600 123 / 1 200 456»),
+  // per affiancarle a latitudine/longitudine. Restituisce "" se il punto è
+  // fuori dalla Svizzera (dove la formula non ha senso) o non è valido.
+  function testoLv95(lat, lon) {
+    if (typeof lat !== "number" || typeof lon !== "number") return "";
+    if (lat < 45.7 || lat > 47.9 || lon < 5.9 || lon > 10.6) return "";
+    const { E, N } = wgs84ToLv95(lat, lon);
+    const migliaia = (v) => String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, "\u00a0");
+    return `${migliaia(E)} / ${migliaia(N)}`;
   }
 
   // WGS84 -> LV95 (formule approssimate ufficiali swisstopo, errore ~1 m).
@@ -2540,9 +2557,11 @@
     const btn = document.getElementById("modalGpsBtn");
     if (coords) {
       info.hidden = false;
+      const lv95 = testoLv95(coords.lat, coords.lon);
       info.innerHTML = `📍 Posizione salvata: ${coords.lat.toFixed(5)}, ${coords.lon.toFixed(5)}` +
         (coords.acc ? ` (±${Math.round(coords.acc)} m)` : "") +
-        ` — <a href="#" id="modalGpsFill">compila il luogo</a> · <a href="#" id="modalGpsRemove">rimuovi</a>`;
+        (lv95 ? `<br>LV95: ${lv95}` : "") +
+        `<br><a href="#" id="modalGpsFill">compila il luogo</a> · <a href="#" id="modalGpsRemove">rimuovi</a>`;
       btn.textContent = "📍 Aggiorna la posizione";
       const compila = document.getElementById("modalGpsFill");
       if (compila) {
