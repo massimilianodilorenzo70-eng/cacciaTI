@@ -1533,3 +1533,8 @@ input[type="file"] { display: none; }
   cursor: pointer;
   white-space: nowrap;
 }
+
+/* ---------- Icona beccaccia: inverte in tema scuro per evitare il bordo bianco ---------- */
+:root[data-theme="dark"] .fab-beccaccia-img {
+  filter: invert(1);
+}
