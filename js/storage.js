@@ -5,19 +5,31 @@
 
 const Storage = (() => {
   const KEY_LOG = "cacciaTI_log_v1";
+  const KEY_LOG_CORROTTO = "cacciaTI_log_v1_corrotto";
   const KEY_REGDATA = "cacciaTI_regolamento_v1";
   const KEY_PREFS = "cacciaTI_prefs_v1";
   const KEY_DISCLAIMER_ACK = "cacciaTI_disclaimer_ack_v1";
   const KEY_GUNS = "cacciaTI_guns_v1";
 
   function getLog() {
+    const raw = localStorage.getItem(KEY_LOG);
     try {
-      return JSON.parse(localStorage.getItem(KEY_LOG)) || [];
-    } catch (e) { return []; }
+      return JSON.parse(raw) || [];
+    } catch (e) {
+      // Registro illeggibile: se restituissimo [] in silenzio, il prossimo
+      // salvataggio lo sovrascriverebbe per sempre. Ne teniamo una copia.
+      try { localStorage.setItem(KEY_LOG_CORROTTO, raw); } catch (e2) { /* niente da fare */ }
+      return [];
+    }
   }
 
+  // Restituisce true se salvato, false se il salvataggio è fallito
+  // (memoria piena o archivio bloccato dal browser).
   function saveLog(log) {
-    localStorage.setItem(KEY_LOG, JSON.stringify(log));
+    try {
+      localStorage.setItem(KEY_LOG, JSON.stringify(log));
+      return true;
+    } catch (e) { return false; }
   }
 
   function addKill(entry) {
@@ -25,8 +37,7 @@ const Storage = (() => {
     entry.id = "k_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7);
     entry.createdAt = new Date().toISOString();
     log.push(entry);
-    saveLog(log);
-    return entry;
+    return saveLog(log) ? entry : null;
   }
 
   function deleteKill(id) {
@@ -40,8 +51,7 @@ const Storage = (() => {
     if (i === -1) return null;
     log[i] = { ...log[i], ...patch, id: log[i].id, createdAt: log[i].createdAt };
     log[i].editedAt = new Date().toISOString();
-    saveLog(log);
-    return log[i];
+    return saveLog(log) ? log[i] : null;
   }
 
   function getCustomRegolamento() {

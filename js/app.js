@@ -14,6 +14,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.63.1", text: "Correzioni di sicurezza dei dati: se il registro sul telefono risulta illeggibile ne viene conservata una copia invece di sovrascriverlo; se un capo o un punto non si riesce a salvare (memoria piena) l'app ora lo segnala invece di far finta di niente; eliminato un errore nascosto nella riproduzione del video demo." },
     { v: "3.63", text: "Quote e prerequisiti (es. «Quota raggiunta», capo richiesto prima) contano ora solo i capi della stagione del regolamento caricato: i capi degli anni precedenti restano nel registro e nelle statistiche ma non bloccano più la nuova stagione." },
     { v: "3.62", text: "L'icona della beccaccia ha ora lo sfondo trasparente: nel modal «Segna punto» e nel menu + non si vede più il riquadro bianco (tema chiaro) o nero (tema scuro) attorno alla silhouette." },
     { v: "3.61", text: "La silhouette della beccaccia compare ora anche nel modal «Segna punto» quando si è in caccia bassa, sia sul bottone Abbattimento che nel menu +. In tema scuro l'icona si inverte automaticamente per restare leggibile." },
@@ -1795,7 +1796,10 @@
       };
     }
 
-    Storage.addKill(entry); // riusa addKill: salva in coda al log
+    if (!Storage.addKill(entry)) { // riusa addKill: salva in coda al log
+      await showAlert("Impossibile salvare: la memoria del telefono è piena o bloccata. Il dato NON è stato salvato — annotalo altrove e libera spazio (es. esporta il registro).");
+      return;
+    }
     closeQuickLog();
     renderRegistro();
     renderOggi();
@@ -2632,9 +2636,9 @@
     }
 
     if (editingKillId) {
-      Storage.updateKill(editingKillId, entry);
+      if (!Storage.updateKill(editingKillId, entry)) { await showAlert("Impossibile salvare: la memoria del telefono è piena o bloccata. Il dato NON è stato salvato — annotalo altrove e libera spazio (es. esporta il registro)."); return; }
     } else {
-      Storage.addKill(entry);
+      if (!Storage.addKill(entry)) { await showAlert("Impossibile salvare: la memoria del telefono è piena o bloccata. Il dato NON è stato salvato — annotalo altrove e libera spazio (es. esporta il registro)."); return; }
       // Se stiamo completando un punto rapido, eliminarlo ora che l'abbattimento è salvato
       if (completingQuickId) {
         Storage.deleteKill(completingQuickId);
@@ -3025,7 +3029,10 @@
           }
           log.push(entry);
         }
-        Storage.saveLog(log);
+        if (!Storage.saveLog(log)) {
+          await showAlert("Impossibile salvare: la memoria del telefono è piena o bloccata. Il dato NON è stato salvato — annotalo altrove e libera spazio (es. esporta il registro).");
+          return;
+        }
         renderRegistro();
         renderOggi();
         renderGunsList();

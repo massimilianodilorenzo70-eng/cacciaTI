@@ -2,7 +2,7 @@
  * Quando aggiorni i file, incrementa CACHE_NAME (es. cacciaTI-v2) così i
  * telefoni scaricano la nuova versione invece di restare sulla vecchia cache. */
 
-const CACHE_NAME = "cacciaTI-v3.63";
+const CACHE_NAME = "cacciaTI-v3.63.1";
 
 const ASSETS = [
   "./",
@@ -61,7 +61,7 @@ function networkFirst(request) {
     fetch(request, { cache: "no-cache" })
       .then((resp) => {
         clearTimeout(timer);
-        if (resp && resp.ok) {
+        if (resp && resp.status === 200) { // le risposte parziali (206, video) non si possono mettere in cache
           const copy = resp.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
         }
