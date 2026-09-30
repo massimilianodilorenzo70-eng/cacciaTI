@@ -2,7 +2,7 @@
  * Quando aggiorni i file, incrementa CACHE_NAME (es. cacciaTI-v2) così i
  * telefoni scaricano la nuova versione invece di restare sulla vecchia cache. */
 
-const CACHE_NAME = "cacciaTI-v3.59";
+const CACHE_NAME = "cacciaTI-v3.60";
 
 const ASSETS = [
   "./",
@@ -19,6 +19,7 @@ const ASSETS = [
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/icon-maskable-512.png",
+  "./icons/beccaccia.png",
 ];
 
 self.addEventListener("install", (event) => {
