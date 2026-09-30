@@ -14,6 +14,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.62", text: "L'icona della beccaccia ha ora lo sfondo trasparente: nel modal «Segna punto» e nel menu + non si vede più il riquadro bianco (tema chiaro) o nero (tema scuro) attorno alla silhouette." },
     { v: "3.61", text: "La silhouette della beccaccia compare ora anche nel modal «Segna punto» quando si è in caccia bassa, sia sul bottone Abbattimento che nel menu +. In tema scuro l'icona si inverte automaticamente per restare leggibile." },
     { v: "3.60", text: "Il pulsante + mostra icone diverse in base al tipo di caccia selezionato: in caccia bassa compare la silhouette della beccaccia (PhyloPic, Public Domain), nelle altre cacce il cervo 🦌." },
     { v: "3.59", text: "Bug fix Quick Log: dopo aver completato un punto rapido con il modulo abbattimento, il punto rapido originale veniva mantenuto nel registro invece di essere eliminato automaticamente. Ora viene rimosso non appena l'abbattimento completo è salvato." },
