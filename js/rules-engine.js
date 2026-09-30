@@ -224,9 +224,17 @@ const RulesEngine = (() => {
     return result;
   }
 
+  // Il registro contiene tutte le stagioni: quote e prerequisiti valgono solo
+  // per i capi con data nell'anno del regolamento caricato.
+  function seasonLog(data, log) {
+    const year = data && data.regulationYear ? String(data.regulationYear) : "";
+    return year ? log.filter(k => (k.date || "").startsWith(year)) : log;
+  }
+
   function evaluateAll(data, log, dateObj, nowTime, prefs) {
     const iso = toISO(dateObj);
-    return data.categories.map(cat => evaluateCategory(data, cat, log, dateObj, iso, nowTime, prefs));
+    const stagione = seasonLog(data, log);
+    return data.categories.map(cat => evaluateCategory(data, cat, stagione, dateObj, iso, nowTime, prefs));
   }
 
   function isFullyOpen(evalResult) {
@@ -236,7 +244,7 @@ const RulesEngine = (() => {
 
   return {
     toISO, parseISO, nowHHMM,
-    evaluateAll, evaluateCategory, isFullyOpen,
+    evaluateAll, evaluateCategory, isFullyOpen, seasonLog,
     seasonCountByCategory, seasonCountByGroup,
   };
 })();
