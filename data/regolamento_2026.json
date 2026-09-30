@@ -613,6 +613,7 @@
     },
     {
       "id": "cervo_tardo_autunnale",
+      "provisorio": { "from": "2026-11-15", "to": "2026-12-21", "weekdays": [3, 6, 0] },
       "speciesKey": "cervo",
       "speciesLabel": "Cervo",
       "categoryLabel": "Caccia tardo autunnale — da pubblicare",
@@ -623,6 +624,7 @@
     },
     {
       "id": "capriolo_tardo_autunnale",
+      "provisorio": { "from": "2026-11-15", "to": "2026-12-21", "weekdays": [3, 6, 0] },
       "speciesKey": "capriolo",
       "speciesLabel": "Capriolo",
       "categoryLabel": "Caccia tardo autunnale — da pubblicare",
@@ -633,6 +635,7 @@
     },
     {
       "id": "volpe_tardo_autunnale",
+      "provisorio": { "from": "2026-11-15", "to": "2026-12-21", "weekdays": [3, 6, 0] },
       "speciesKey": "volpe",
       "speciesLabel": "Volpe",
       "categoryLabel": "Caccia speciale tardo autunnale — da pubblicare",
@@ -643,6 +646,7 @@
     },
     {
       "id": "cinghiale_invernale",
+      "provisorio": { "from": "2026-11-15", "to": "2027-01-22", "weekdays": [3, 6, 0] },
       "speciesKey": "cinghiale",
       "speciesLabel": "Cinghiale",
       "categoryLabel": "Caccia invernale — da pubblicare",
