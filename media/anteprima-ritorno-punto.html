@@ -1,0 +1,62 @@
+<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Anteprima: Torna al punto</title>
+<style>
+:root{--bg:#f4f1ea;--card:#fff;--ink:#1f2a1f;--mut:#6b7466;--g:#2f6b3a;--o:#d98a1c;--r:#b3321f;--line:#ddd8cb}
+@media(prefers-color-scheme:dark){:root{--bg:#161a16;--card:#1f251f;--ink:#e8ece4;--mut:#9aa595;--line:#33403a;--g:#5fb06d}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px system-ui,sans-serif;display:flex;justify-content:center;padding:16px}
+.app{width:100%;max-width:400px}
+h1{font-size:18px;margin:4px 0 2px}.sub{color:var(--mut);font-size:13px;margin-bottom:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px}
+.pt{display:flex;align-items:center;gap:12px;cursor:pointer}.pt .ic{font-size:26px}
+.pt b{display:block}.pt small{color:var(--mut)}.pt .d{margin-left:auto;font-weight:600;color:var(--g)}
+.hide{display:none}
+.compass{position:relative;width:240px;height:240px;margin:8px auto;border-radius:50%;border:3px solid var(--line);background:radial-gradient(circle,var(--card) 60%,var(--bg))}
+.compass .n{position:absolute;top:6px;left:50%;transform:translateX(-50%);font-size:12px;color:var(--r);font-weight:700}
+.arrow{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;transition:transform .25s}
+.arrow svg{width:120px;height:160px}
+.big{text-align:center;font-size:44px;font-weight:700;color:var(--g);line-height:1}
+.mid{text-align:center;color:var(--mut);margin-top:6px}
+.badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;background:var(--o);color:#fff}
+.ctrl{font-size:13px;color:var(--mut)}input[type=range]{width:100%}
+button{background:var(--g);color:#fff;border:0;border-radius:10px;padding:10px 14px;font-size:15px;width:100%}
+button.sec{background:transparent;color:var(--g);border:1px solid var(--g);margin-top:8px}
+.note{font-size:12px;color:var(--mut);margin-top:10px}
+</style></head><body><div class="app">
+<div id="lista">
+<h1>📍 Punti salvati</h1><div class="sub">Tocca un punto per tornarci. (Anteprima: dati di esempio)</div>
+<div class="card pt" data-i="0"><span class="ic">🎯</span><div><b>Anschluss</b><small>Ieri 07:42 · Val Colla</small></div><span class="d">— m</span></div>
+<div class="card pt" data-i="1"><span class="ic">⭐</span><div><b>Postazione al sasso</b><small>12 ott · Monte Bar</small></div><span class="d">— m</span></div>
+<div class="card pt" data-i="2"><span class="ic">🚗</span><div><b>Auto</b><small>Oggi 05:55 · Parcheggio Sonvico</small></div><span class="d">— m</span></div>
+</div>
+<div id="guida" class="hide">
+<h1 id="tit"></h1><div class="sub" id="sub"></div>
+<div class="card">
+<div class="compass"><span class="n">N</span><div class="arrow" id="arr"><svg viewBox="0 0 120 160"><polygon points="60,6 112,150 60,120 8,150" fill="var(--g)"/></svg></div></div>
+<div class="big" id="dist">0 m</div>
+<div class="mid" id="dir"></div>
+<div class="mid" id="alt"></div>
+</div>
+<div class="card ctrl"><b>Simulazione</b> (sul telefono usa GPS e bussola veri)<br><br>
+Direzione in cui punti il telefono: <span id="hv">0</span>°<input id="h" type="range" min="0" max="359" value="0">
+Distanza dal punto: <span id="dv">0</span> m<input id="d" type="range" min="0" max="800" value="320"></div>
+<button id="mappa">Apri il punto sulla carta swisstopo</button>
+<button class="sec" id="back">← Torna all'elenco</button>
+<div class="note">Il punto resta salvato solo sul telefono, come ogni altro dato. Funziona offline: servono solo il GPS e la bussola.</div>
+</div></div>
+<script>
+const P=[{n:"Anschluss",s:"Val Colla · ieri 07:42",b:40,d:320,a:"+45 m più in alto di te"},
+{n:"Postazione al sasso",s:"Monte Bar · 12 ott",b:200,d:610,a:"−120 m più in basso di te"},
+{n:"Auto",s:"Parcheggio Sonvico · oggi 05:55",b:285,d:90,a:"stessa quota"}];
+const $=id=>document.getElementById(id);let cur=0;
+document.querySelectorAll('.pt').forEach(e=>{const i=+e.dataset.i;e.querySelector('.d').textContent=P[i].d+' m';e.onclick=()=>{cur=i;$('lista').classList.add('hide');$('guida').classList.remove('hide');$('tit').textContent=P[i].n;$('sub').textContent=P[i].s;$('d').value=P[i].d;$('h').value=0;upd()}});
+$('back').onclick=()=>{$('guida').classList.add('hide');$('lista').classList.remove('hide')};
+$('mappa').onclick=()=>alert('Qui si aprirebbe la carta nazionale sul punto.');
+const card=['N','NE','E','SE','S','SO','O','NO'];
+function upd(){const h=+$('h').value,d=+$('d').value,b=P[cur].b;$('hv').textContent=h;$('dv').textContent=d;
+const rel=(b-h+360)%360;$('arr').style.transform='rotate('+rel+'deg)';
+$('dist').textContent=d<15?'Sei arrivato':(d>=1000?(d/1000).toFixed(1)+' km':d+' m');
+const dirTxt=card[Math.round(b/45)%8];
+$('dir').innerHTML='Il punto è a '+dirTxt+' ('+b+'°)'+(rel<15||rel>345?' · <span class="badge">sei sulla rotta</span>':'');
+$('alt').textContent=P[cur].a;}
+$('h').oninput=upd;$('d').oninput=upd;
+</script></body></html>
