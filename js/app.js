@@ -3142,10 +3142,8 @@
   function isSamsungInternet() {
     return /SamsungBrowser\//.test(navigator.userAgent);
   }
-  const HINT_SAMSUNG_INTERNET = "Su Samsung Internet l'installazione può essere bloccata da Android (Play Protect). " +
-    "Apri questo sito in Chrome per installare l'app.";
-  const HINT_EDGE_ANDROID = "Su Edge l'installazione può essere bloccata da Android (Play Protect). " +
-    "Apri questo sito in Chrome per installare l'app.";
+  const HINT_SAMSUNG_INTERNET = "Per installare l'app apri questo sito in Chrome.";
+  const HINT_EDGE_ANDROID = "Per installare l'app apri questo sito in Chrome.";
 
   function installSnoozed() {
     return Date.now() < Number(localStorage.getItem(KEY_INSTALL_SNOOZE) || 0);
