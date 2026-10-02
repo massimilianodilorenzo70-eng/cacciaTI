@@ -18,7 +18,7 @@ funzionante» invece di restare in silenzio.
 Uso:
   python scripts/controlla_ucp.py              # rete + issue (in GitHub Actions)
   python scripts/controlla_ucp.py --dry-run    # niente issue, stampa soltanto
-  python scripts/controlla_ucp.py --from-dir debug/ucp --dry-run   # pagine locali
+  python scripts/controlla_ucp.py --from-dir CARTELLA --dry-run   # pagine HTML salvate in locale (nome-pagina.html)
 """
 
 import argparse
