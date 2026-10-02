@@ -356,6 +356,13 @@
       aggiungere specie, foto e arma. Un banner ricorda quanti punti sono ancora da completare.
       <b>Abbattimento</b> apre il modulo completo.<br><br>
 
+      <b>Torna al punto:</b> su ogni voce del registro che ha una posizione GPS (punti rapidi e
+      abbattimenti) trovi il pulsante <b>🧭 Torna qui</b>. Una freccia, che gira insieme al
+      telefono, ti indica la direzione del punto, con la distanza e il dislivello; sotto i 15 m
+      ti dice che sei arrivato. Serve solo il GPS, anche senza rete. In bosco o in valle stretta
+      il GPS può sbagliare di parecchi metri e la bussola va tarata muovendo il telefono a otto:
+      è un aiuto per orientarsi, non una navigazione precisa.<br><br>
+
       <b>Statistiche:</b> capi per specie, tipo di caccia e arma, con grafici stagionali e
       confronto anni precedenti.<br><br>
 
@@ -509,6 +516,26 @@
   <div class="easteregg-sheet">
     <img id="easterEggImg" src="" alt="">
     <div class="easteregg-caption" id="easterEggCaption"></div>
+  </div>
+</div>
+
+<!-- MODAL: torna al punto (freccia, distanza e direzione verso un punto registrato) -->
+<div class="modal-backdrop" id="tornaBackdrop">
+  <div class="modal-sheet">
+    <h3 id="tornaTitolo">🧭 Torna al punto</h3>
+    <div class="torna-bussola" id="tornaBussola">
+      <span class="torna-n">N</span>
+      <div class="torna-freccia" id="tornaFreccia" hidden>
+        <svg viewBox="0 0 120 160" aria-hidden="true"><polygon points="60,6 112,150 60,120 8,150" fill="currentColor"/></svg>
+      </div>
+    </div>
+    <div class="torna-dist" id="tornaDist">Cerco la posizione…</div>
+    <div class="torna-info" id="tornaInfo"></div>
+    <div class="note" id="tornaNota"></div>
+    <div class="modal-actions">
+      <a class="btn secondary" id="tornaMappe" href="#" target="_blank" rel="noopener">Apri nelle mappe</a>
+      <button class="btn" id="tornaChiudi">Chiudi</button>
+    </div>
   </div>
 </div>
 
