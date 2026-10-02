@@ -1456,8 +1456,7 @@
     function mostraEasterEgg() {
       const foto = [
         { src: "media/autore-2.jpg", didascalia: "L'autore con Luminensis Fuoco e Loco" },
-        // IN PAUSA finché non arrivano nuove istruzioni (per riattivarla basta togliere le due barre):
-        // { src: "media/sccd.jpg", didascalia: "Società Cacciatori Chiasso e dintorni" },
+        { src: "media/sccd.jpg", didascalia: "Società Cacciatori Chiasso e dintorni" },
       ];
       // Non ripete la stessa foto due volte di fila (se ce n'è più di una)
       const scelte = foto.length > 1 ? foto.filter(f => f.src !== eggUltimaFoto) : foto;
