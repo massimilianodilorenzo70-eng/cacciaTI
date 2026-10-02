@@ -3137,13 +3137,13 @@
   function isEdgeAndroid() {
     return /EdgA\//.test(navigator.userAgent);
   }
-  // Samsung Internet: non è verificato che dia lo stesso blocco, quindi il pulsante
-  // resta e si aggiunge solo un consiglio per il caso in cui Android lo blocchi.
+  // Samsung Internet: segnalato lo stesso blocco (Galaxy S25), quindi come su Edge
+  // niente pulsante «Installa» e si consiglia Chrome.
   function isSamsungInternet() {
     return /SamsungBrowser\//.test(navigator.userAgent);
   }
-  const HINT_SAMSUNG_INTERNET = "Se Android blocca l'installazione (Play Protect), apri questo sito in Chrome " +
-    "e installa l'app da lì.";
+  const HINT_SAMSUNG_INTERNET = "Su Samsung Internet l'installazione può essere bloccata da Android (Play Protect). " +
+    "Apri questo sito in Chrome per installare l'app.";
   const HINT_EDGE_ANDROID = "Su Edge l'installazione può essere bloccata da Android (Play Protect). " +
     "Apri questo sito in Chrome per installare l'app.";
 
@@ -3168,7 +3168,7 @@
     window.addEventListener("beforeinstallprompt", (e) => {
       e.preventDefault();          // al posto della barra del browser mostriamo il nostro invito
       deferredInstall = e;
-      btn.hidden = isEdgeAndroid(); // su Edge niente pulsante: porterebbe al blocco
+      btn.hidden = isEdgeAndroid() || isSamsungInternet(); // niente pulsante: porterebbe al blocco
       if (isSamsungInternet()) document.getElementById("installHint").textContent = HINT_SAMSUNG_INTERNET;
       showInstallBanner();
     });
@@ -3187,8 +3187,8 @@
       setTimeout(showInstallBanner, 1200);
     }
 
-    if (isEdgeAndroid() && !isStandalone()) {
-      document.getElementById("installHint").textContent = HINT_EDGE_ANDROID;
+    if ((isEdgeAndroid() || isSamsungInternet()) && !isStandalone()) {
+      document.getElementById("installHint").textContent = isEdgeAndroid() ? HINT_EDGE_ANDROID : HINT_SAMSUNG_INTERNET;
       btn.hidden = true;
       setTimeout(showInstallBanner, 1200);
     }
