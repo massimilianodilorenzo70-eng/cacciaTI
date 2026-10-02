@@ -43,7 +43,9 @@ PAGES = {
 STATE_PATH = Path(__file__).resolve().parent / "ucp_stato.json"
 UA = ("cacciaTI-app/1.0 (uso personale non commerciale; "
       "https://github.com/massimilianodilorenzo70-eng/cacciaTI)")
-TITOLO_ERRORE = "Controllo regolamenti non funzionante"
+# Prefissi fissi: servono a riconoscere subito le email (filtro Gmail su "UCP NUOVO DOCUMENTO")
+PREFISSO_NOVITA = "🔔 UCP NUOVO DOCUMENTO"
+TITOLO_ERRORE = "⚠️ UCP CONTROLLO NON FUNZIONANTE"
 
 
 class ErroreLettura(Exception):
@@ -180,7 +182,7 @@ def main():
         diff = descrivi_diff(vecchio.get(nome, {}), segn)
         if not diff:
             continue
-        titolo = f"UCP: novità su «{nome}»"
+        titolo = f"{PREFISSO_NOVITA}: {nome}"
         corpo = (f"Il controllo automatico ha trovato una novità sulla pagina `{PAGES[nome]}`:\n\n{diff}\n\n"
                  "**Cosa fare:** controlla il documento sul sito dell'Ufficio. Se è un regolamento o un "
                  "calendario nuovo, caricalo a Claude per convertirlo nel JSON dell'app "
