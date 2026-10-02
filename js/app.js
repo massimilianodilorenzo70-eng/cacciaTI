@@ -330,6 +330,8 @@
     const list = document.getElementById("apertoOraList");
     const summary = document.getElementById("apertoOraSummary");
     if (!list || !summary) return;
+    const box = document.getElementById("apertoOraBox");
+    if (box) box.classList.remove("nessuna"); // rosso solo quando oggi non è aperto niente
 
     if (!isToday) {
       summary.textContent = "Aperto oggi — vale solo per la data di oggi";
@@ -343,6 +345,7 @@
     const aperte = results.filter(r => r.category.windows && r.category.windows.length > 0 && isOpenNow(r));
 
     summary.textContent = aperte.length === 0 ? "Aperto oggi — nessuna categoria" : `Aperto oggi (${aperte.length})`;
+    if (box && aperte.length === 0) box.classList.add("nessuna");
 
     if (aperte.length === 0) {
       list.innerHTML = `<div class="aperto-ora-empty">Nessuna specie è cacciabile oggi.</div>`;
