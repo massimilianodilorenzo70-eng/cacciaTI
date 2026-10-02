@@ -1,0 +1,46 @@
+name: Controlla nuovi regolamenti UCP
+
+# Guarda le pagine dell'Ufficio della caccia e della pesca e apre un avviso
+# (issue, che GitHub ti manda anche per email) quando compare un regolamento,
+# un calendario o un decreto nuovo. Non modifica l'app.
+on:
+  schedule:
+    # Ogni giorno quando di solito escono i documenti: giugno-agosto
+    # (regolamento e caccia alta) e ottobre-novembre (tardo autunnale e
+    # cinghiale invernale)
+    - cron: "17 5 * 6-8,10,11 *"
+    # Negli altri mesi una volta a settimana, il lunedì
+    - cron: "17 5 * 1-5,9,12 1"
+  workflow_dispatch: {}   # avviabile a mano da GitHub → Actions → Run workflow
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  controlla:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Installa dipendenze
+        run: pip install requests beautifulsoup4
+
+      - name: Controlla le pagine
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python scripts/controlla_ucp.py
+
+      - name: Salva lo stato se è cambiato
+        if: always()
+        run: |
+          git config user.name "cacciaTI-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add scripts/ucp_stato.json
+          git diff --cached --quiet || git commit -m "Aggiorna stato controllo UCP [bot]"
+          git pull --rebase
+          git push
