@@ -91,6 +91,9 @@ caccia alta/bassa/acquatica:
 - Esporta/importa il registro in JSON — utile come backup o per passare i
   dati da un telefono all'altro; l'importazione salta automaticamente i
   doppioni e chiede conferma prima di aggiungere.
+- **Torna al punto**: su ogni voce con posizione GPS (punti rapidi e
+  abbattimenti) il pulsante 🧭 «Torna qui» mostra una freccia con la bussola
+  del telefono, la distanza e il dislivello verso il punto. Funziona offline.
 - "Registra abbattimento" da qui, dal pulsante ➕ su ogni scheda aperta in
   Giornata, o dal pulsante ➕ flottante: l'elenco delle specie proposte
   segue il tipo di caccia selezionato.
@@ -166,5 +169,5 @@ voce in cima all'array `CHANGELOG` in `js/app.js`.
 
 ## Versione attuale
 
-**v3.50** — vedi la cronologia completa nell'app, scheda Info →
+**v3.65** — vedi la cronologia completa nell'app, scheda Info →
 "Cronologia aggiornamenti".

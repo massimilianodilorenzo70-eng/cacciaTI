@@ -14,6 +14,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.65", text: "Nuovo pulsante «🧭 Torna qui» su ogni voce del Registro che ha una posizione GPS (punti rapidi, Anschluss, luoghi e abbattimenti): una freccia che gira insieme al telefono indica la direzione del punto, con distanza e dislivello; sotto i 15 m dice «Sei arrivato». Serve solo il GPS, anche senza rete; se la bussola non è disponibile mostra la direzione in gradi. Su iPhone chiede il permesso per la bussola. Nessun dato lascia il telefono." },
     { v: "3.64", text: "Nuovo calendario della stagione sotto le schede del tipo di caccia (Settembrina, Tardo autunnale, Invernale cinghiale, Caccia bassa, Caccia acquatica): settimane compatte con i giorni di apertura, chiuso di default e apribile con un tocco. Toccando un giorno cambiano la data in alto, il meteo e le specie sotto. Per il tardo autunnale e il cinghiale invernale, senza regolamento ufficiale, mostra i giorni indicativi dell'anno scorso segnati come provvisori (da confermare dopo la pubblicazione del regolamento). Il meteo dice quando la previsione non è ancora disponibile (oltre 15 giorni)." },
     { v: "3.63.6", text: "Su Edge per Android l'invito a installare l'app non propone più il pulsante «Installa» (Android lo blocca con l'avviso «App non sicura bloccata»): consiglia invece di aprire il sito in Chrome. Su Samsung Internet il pulsante resta, con un consiglio in caso di blocco. Su Chrome e sugli altri browser non cambia nulla." },
     { v: "3.63.5", text: "Completando un punto rapido dal Registro, il modulo si apre ora nel tipo di caccia in cui l'avevi segnato (specie, arma e munizione di quella caccia), anche se in quel momento è attiva un'altra scheda. I punti segnati prima di questa versione seguono ancora la scheda attiva." },
@@ -1102,6 +1103,7 @@
           </div>
           <div class="log-actions">
             ${!k.complete ? `<button class="edit complete-btn">Completa</button>` : ""}
+            ${haCoordinate(k) ? `<button class="edit torna-btn">🧭 Torna qui</button>` : ""}
             <button class="del">Elimina</button>
           </div>
         `;
@@ -1119,6 +1121,8 @@
             completingQuickId = k.id;
           });
         }
+        const tornaQ = item.querySelector(".torna-btn");
+        if (tornaQ) tornaQ.addEventListener("click", () => apriTornaAlPunto(k));
         item.querySelector(".del").addEventListener("click", async () => {
           if (await showConfirm("Eliminare questo punto rapido?")) {
             Storage.deleteKill(k.id);
@@ -1168,10 +1172,13 @@
         </div>
         <div class="log-actions">
           <button class="edit">Modifica</button>
+          ${haCoordinate(k) ? `<button class="edit torna-btn">🧭 Torna qui</button>` : ""}
           <button class="del">Elimina</button>
         </div>
       `;
       item.querySelector(".edit").addEventListener("click", () => openModalForEdit(k.id));
+      const tornaK = item.querySelector(".torna-btn");
+      if (tornaK) tornaK.addEventListener("click", () => apriTornaAlPunto(k));
       item.querySelector(".del").addEventListener("click", async () => {
         if (await showConfirm("Eliminare questo abbattimento dal registro?")) {
           if (k.photoId) Storage.deletePhoto(k.photoId);
@@ -1484,6 +1491,105 @@
       const meteo = document.getElementById("meteoBlock");
       if (moon && e.target.closest("#moonBlock")) tocco("luna");
       else if (meteo && e.target.closest("#meteoBlock")) tocco("meteo");
+    });
+  }
+
+  // ---------- Torna al punto: freccia, distanza e dislivello verso una voce del registro ----------
+  function haCoordinate(k) {
+    return !!k.coords && Number.isFinite(k.coords.lat) && Number.isFinite(k.coords.lon);
+  }
+
+  // Distanza (m) e direzione (gradi da nord) tra due punti: haversine, precisa
+  // a sufficienza sulle distanze di una giornata di caccia.
+  function distanzaERotta(lat1, lon1, lat2, lon2) {
+    const r = Math.PI / 180;
+    const dLat = (lat2 - lat1) * r, dLon = (lon2 - lon1) * r;
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * r) * Math.cos(lat2 * r) * Math.sin(dLon / 2) ** 2;
+    const d = 2 * 6371000 * Math.asin(Math.sqrt(a));
+    const y = Math.sin(dLon) * Math.cos(lat2 * r);
+    const x = Math.cos(lat1 * r) * Math.sin(lat2 * r) - Math.sin(lat1 * r) * Math.cos(lat2 * r) * Math.cos(dLon);
+    return { d, b: (Math.atan2(y, x) / r + 360) % 360 };
+  }
+
+  let tornaStop = null; // ferma GPS e bussola della schermata aperta
+
+  function apriTornaAlPunto(k) {
+    if (tornaStop) tornaStop();
+    const el = (id) => document.getElementById(id);
+    const NOMI = ["N", "NE", "E", "SE", "S", "SO", "O", "NO"];
+    const { lat, lon, alt } = k.coords;
+    let pos = null;      // ultima posizione GPS
+    let heading = null;  // direzione in cui punta il telefono (gradi da nord)
+    let watchId = null;
+
+    const tipo = k.type === "quick_point"
+      ? ({ abbattimento: "Abbattimento", anschluss: "Anschluss", luogo: "Luogo" }[k.pointType] || "Punto")
+      : (() => { const c = regData.categories.find(x => x.id === k.categoryId); return c ? c.speciesLabel : "Abbattimento"; })();
+    el("tornaTitolo").textContent = `🧭 ${tipo} del ${formatDateCH(k.date)}`;
+    el("tornaMappe").href = `https://www.google.com/maps?q=${lat},${lon}`;
+
+    function aggiorna() {
+      const dist = el("tornaDist"), info = el("tornaInfo"), nota = el("tornaNota"), freccia = el("tornaFreccia");
+      if (!pos) { dist.textContent = "Cerco la posizione…"; info.textContent = ""; freccia.hidden = true; return; }
+      const { d, b } = distanzaERotta(pos.coords.latitude, pos.coords.longitude, lat, lon);
+      dist.textContent = d < 15 ? "Sei arrivato" : d >= 1000 ? (d / 1000).toFixed(1).replace(".", ",") + " km" : Math.round(d) + " m";
+      const righe = [`Il punto è a ${NOMI[Math.round(b / 45) % 8]} (${Math.round(b)}°)`];
+      if (Number.isFinite(alt) && Number.isFinite(pos.coords.altitude)) {
+        const dh = Math.round(alt - pos.coords.altitude);
+        righe.push(Math.abs(dh) < 5 ? "Stessa quota" : `${Math.abs(dh)} m più ${dh > 0 ? "in alto" : "in basso"} di te`);
+      }
+      info.innerHTML = righe.join("<br>");
+      if (heading == null) {
+        freccia.hidden = true;
+        nota.textContent = "Bussola non disponibile: segui la direzione indicata sopra.";
+      } else {
+        freccia.hidden = false;
+        freccia.style.transform = `rotate(${(b - heading + 360) % 360}deg)`;
+        nota.textContent = pos.coords.accuracy ? `Precisione GPS ±${Math.round(pos.coords.accuracy)} m. Tieni il telefono in piano.` : "Tieni il telefono in piano.";
+      }
+    }
+
+    function suOrientamento(e) {
+      let h = null;
+      if (typeof e.webkitCompassHeading === "number") h = e.webkitCompassHeading; // iPhone
+      else if (e.absolute && e.alpha != null) h = (360 - e.alpha) % 360;          // Android
+      if (h != null) { heading = h; aggiorna(); }
+    }
+
+    // Su iPhone il permesso per la bussola va chiesto subito, dentro il tocco dell'utente
+    if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
+      DeviceOrientationEvent.requestPermission().catch(() => {});
+    }
+    window.addEventListener("deviceorientationabsolute", suOrientamento);
+    window.addEventListener("deviceorientation", suOrientamento);
+
+    if ("geolocation" in navigator) {
+      watchId = navigator.geolocation.watchPosition(
+        (p) => { pos = p; aggiorna(); },
+        (err) => { el("tornaDist").textContent = "Posizione non disponibile"; el("tornaInfo").textContent = geoErrorText(err); },
+        { enableHighAccuracy: true, maximumAge: 2000, timeout: 20000 }
+      );
+    } else {
+      el("tornaDist").textContent = "Posizione non disponibile";
+      el("tornaInfo").textContent = "Questo telefono/browser non supporta la localizzazione.";
+    }
+
+    tornaStop = () => {
+      if (watchId != null) navigator.geolocation.clearWatch(watchId);
+      window.removeEventListener("deviceorientationabsolute", suOrientamento);
+      window.removeEventListener("deviceorientation", suOrientamento);
+      el("tornaBackdrop").classList.remove("active");
+      tornaStop = null;
+    };
+    el("tornaNota").textContent = "";
+    aggiorna();
+    el("tornaBackdrop").classList.add("active");
+  }
+
+  function setupTornaAlPunto() {
+    document.getElementById("tornaChiudi").addEventListener("click", () => { if (tornaStop) tornaStop(); });
+    document.getElementById("tornaBackdrop").addEventListener("click", (e) => {
+      if (e.target.id === "tornaBackdrop" && tornaStop) tornaStop();
     });
   }
 
@@ -3428,6 +3534,7 @@
 
     setupRegistroSubtabs();
     setupSOS();
+    setupTornaAlPunto();
     setupEasterEgg();
     setupGuns();
 
