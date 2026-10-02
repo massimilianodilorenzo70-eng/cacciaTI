@@ -14,6 +14,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.65.1", text: "«Torna qui»: la bussola funziona ora anche sui telefoni Android in cui il solito segnale non arrivava (usa anche il sensore di orientamento assoluto). Se la bussola proprio non c'è, mentre cammini la freccia usa la direzione del tuo movimento, e l'avviso spiega cosa controllare." },
     { v: "3.65", text: "Nuovo pulsante «🧭 Torna qui» su ogni voce del Registro che ha una posizione GPS (punti rapidi, Anschluss, luoghi e abbattimenti): una freccia che gira insieme al telefono indica la direzione del punto, con distanza e dislivello; sotto i 15 m dice «Sei arrivato». Serve solo il GPS, anche senza rete; se la bussola non è disponibile mostra la direzione in gradi. Su iPhone chiede il permesso per la bussola. Nessun dato lascia il telefono." },
     { v: "3.64", text: "Nuovo calendario della stagione sotto le schede del tipo di caccia (Settembrina, Tardo autunnale, Invernale cinghiale, Caccia bassa, Caccia acquatica): settimane compatte con i giorni di apertura, chiuso di default e apribile con un tocco. Toccando un giorno cambiano la data in alto, il meteo e le specie sotto. Per il tardo autunnale e il cinghiale invernale, senza regolamento ufficiale, mostra i giorni indicativi dell'anno scorso segnati come provvisori (da confermare dopo la pubblicazione del regolamento). Il meteo dice quando la previsione non è ancora disponibile (oltre 15 giorni)." },
     { v: "3.63.6", text: "Su Edge per Android l'invito a installare l'app non propone più il pulsante «Installa» (Android lo blocca con l'avviso «App non sicura bloccata»): consiglia invece di aprire il sito in Chrome. Su Samsung Internet il pulsante resta, con un consiglio in caso di blocco. Su Chrome e sugli altri browser non cambia nulla." },
@@ -1511,6 +1512,22 @@
     return { d, b: (Math.atan2(y, x) / r + 360) % 360 };
   }
 
+  // Direzione (gradi da nord) a cui punta il telefono, dal quaternione del sensore
+  // di orientamento assoluto (x verso est, y verso nord, z verso l'alto). Con il
+  // telefono in piano conta la parte alta del telefono, in piedi la parte posteriore.
+  function direzioneDaQuaternione(q) {
+    if (!q || q.length < 4 || q.some(n => !Number.isFinite(n))) return null;
+    const [x, y, z, w] = q;
+    const ruota = (vx, vy, vz) => {            // v' = q · v · q⁻¹
+      const tx = 2 * (y * vz - z * vy), ty = 2 * (z * vx - x * vz), tz = 2 * (x * vy - y * vx);
+      return [vx + w * tx + (y * tz - z * ty), vy + w * ty + (z * tx - x * tz), vz + w * tz + (x * ty - y * tx)];
+    };
+    const normale = ruota(0, 0, 1);            // dove "guarda" lo schermo
+    const v = Math.abs(normale[2]) > 0.6 ? ruota(0, 1, 0) : ruota(0, 0, -1);
+    if (Math.hypot(v[0], v[1]) < 0.05) return null;
+    return (Math.atan2(v[0], v[1]) * 180 / Math.PI + 360) % 360;
+  }
+
   let tornaStop = null; // ferma GPS e bussola della schermata aperta
 
   function apriTornaAlPunto(k) {
@@ -1539,13 +1556,19 @@
         righe.push(Math.abs(dh) < 5 ? "Stessa quota" : `${Math.abs(dh)} m più ${dh > 0 ? "in alto" : "in basso"} di te`);
       }
       info.innerHTML = righe.join("<br>");
-      if (heading == null) {
+      // Senza bussola, mentre cammini la freccia usa la direzione del movimento (dal GPS)
+      const inMovimento = Number.isFinite(pos.coords.heading) && (pos.coords.speed || 0) > 0.8;
+      const h = heading != null ? heading : (inMovimento ? pos.coords.heading : null);
+      if (h == null) {
         freccia.hidden = true;
-        nota.textContent = "Bussola non disponibile: segui la direzione indicata sopra.";
+        nota.textContent = "Bussola non disponibile: segui la direzione indicata sopra. Camminando, la freccia userà la direzione del tuo movimento." +
+          (/android/i.test(navigator.userAgent) ? " Se vuoi la bussola, in Chrome › Impostazioni sito controlla che i «Sensori di movimento» siano consentiti." : "");
       } else {
         freccia.hidden = false;
-        freccia.style.transform = `rotate(${(b - heading + 360) % 360}deg)`;
-        nota.textContent = pos.coords.accuracy ? `Precisione GPS ±${Math.round(pos.coords.accuracy)} m. Tieni il telefono in piano.` : "Tieni il telefono in piano.";
+        freccia.style.transform = `rotate(${(b - h + 360) % 360}deg)`;
+        const prec = pos.coords.accuracy ? `Precisione GPS ±${Math.round(pos.coords.accuracy)} m. ` : "";
+        nota.textContent = heading != null ? prec + "Tieni il telefono in piano."
+          : prec + "Bussola non disponibile: la freccia usa la direzione in cui cammini, quindi serve muoversi.";
       }
     }
 
@@ -1554,6 +1577,20 @@
       if (typeof e.webkitCompassHeading === "number") h = e.webkitCompassHeading; // iPhone
       else if (e.absolute && e.alpha != null) h = (360 - e.alpha) % 360;          // Android
       if (h != null) { heading = h; aggiorna(); }
+    }
+
+    // Android (Chrome): se l'evento classico non arriva, prova il sensore di orientamento assoluto
+    let sensore = null;
+    if (typeof AbsoluteOrientationSensor !== "undefined") {
+      try {
+        sensore = new AbsoluteOrientationSensor({ frequency: 15 });
+        sensore.addEventListener("reading", () => {
+          const h = direzioneDaQuaternione(sensore.quaternion);
+          if (h != null) { heading = h; aggiorna(); }
+        });
+        sensore.addEventListener("error", () => {});
+        sensore.start();
+      } catch (e) { sensore = null; }
     }
 
     // Su iPhone il permesso per la bussola va chiesto subito, dentro il tocco dell'utente
@@ -1576,6 +1613,7 @@
 
     tornaStop = () => {
       if (watchId != null) navigator.geolocation.clearWatch(watchId);
+      if (sensore) { try { sensore.stop(); } catch (e) {} }
       window.removeEventListener("deviceorientationabsolute", suOrientamento);
       window.removeEventListener("deviceorientation", suOrientamento);
       el("tornaBackdrop").classList.remove("active");
