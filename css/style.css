@@ -808,6 +808,8 @@ nav.tabbar button.active { color: var(--forest); font-weight: 600; }
   color: var(--forest);
   cursor: pointer;
 }
+.aperto-ora-box.nessuna { border-color: var(--rust); background: var(--rust-soft); }
+.aperto-ora-box.nessuna summary { color: var(--rust); }
 .aperto-ora-empty {
   margin-top: 8px;
   font-size: 13px;
