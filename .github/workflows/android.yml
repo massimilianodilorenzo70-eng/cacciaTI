@@ -1,0 +1,68 @@
+name: Android (TWA)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/android-twa-prova]
+    paths: ['android/**', '.github/workflows/android.yml']
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      # Chiave di firma: se esiste il segreto ANDROID_KEYSTORE_B64 si usa quella,
+      # altrimenti se ne crea una NUOVA (solo per prova: cambia a ogni esecuzione).
+      - name: Chiave di firma
+        env:
+          KS_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          if [ -n "$KS_B64" ]; then
+            echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/cacciati.jks"
+            echo "KEYSTORE_PASSWORD=$KS_PASS" >> "$GITHUB_ENV"
+            echo "SIGNING=chiave del progetto" >> "$GITHUB_ENV"
+          else
+            PASS=$(openssl rand -hex 12)
+            keytool -genkeypair -v -keystore "$RUNNER_TEMP/cacciati.jks" -alias cacciati \
+              -keyalg RSA -keysize 2048 -validity 10000 -storepass "$PASS" -keypass "$PASS" \
+              -dname "CN=cacciaTI, O=cacciaTI, C=CH"
+            echo "KEYSTORE_PASSWORD=$PASS" >> "$GITHUB_ENV"
+            echo "SIGNING=chiave TEMPORANEA di prova" >> "$GITHUB_ENV"
+          fi
+          echo "KEYSTORE_FILE=$RUNNER_TEMP/cacciati.jks" >> "$GITHUB_ENV"
+          echo "KEY_ALIAS=cacciati" >> "$GITHUB_ENV"
+          echo "VERSION_CODE=${{ github.run_number }}" >> "$GITHUB_ENV"
+
+      - name: Compila APK e AAB
+        working-directory: android
+        run: gradle --no-daemon assembleRelease bundleRelease
+
+      - name: Impronta della chiave
+        run: |
+          {
+            echo "### Firma: $SIGNING"
+            echo "Impronta SHA-256 (serve per assetlinks.json):"
+            echo '```'
+            keytool -list -v -keystore "$KEYSTORE_FILE" -alias cacciati -storepass "$KEYSTORE_PASSWORD" | grep "SHA256:"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cacciaTI-android
+          path: |
+            android/app/build/outputs/apk/release/*.apk
+            android/app/build/outputs/bundle/release/*.aab
