@@ -183,5 +183,5 @@ voce in cima all'array `CHANGELOG` in `js/app.js`.
 
 ## Versione attuale
 
-**v3.65.1** — vedi la cronologia completa nell'app, scheda Info →
+**v3.65.2** — vedi la cronologia completa nell'app, scheda Info →
 "Cronologia aggiornamenti".
