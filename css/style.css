@@ -1597,3 +1597,7 @@ input[type="file"] { display: none; }
 
 /* Spazio in fondo all'elenco: l'ultima voce si può scorrere sopra il pulsante + */
 #logList { padding-bottom: 80px; }
+
+/* Punti rapidi: la nota fa da titolo nella lista */
+.log-item.quick-point .sp.quick-note { color: var(--ink); font-style: normal; font-weight: 600; font-size: 1.05em; overflow-wrap: anywhere; }
+.log-item.quick-point .quick-sub { color: var(--ink-soft); font-size: 0.9em; }

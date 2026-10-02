@@ -14,6 +14,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
+    { v: "3.65.2", text: "Nel Registro i punti rapidi (Luogo, Anschluss, Abbattimento) mostrano ora nella lista la tua nota (es. «posto bello», «passo del cervo») come titolo, con la quota sotto, così si riconosce subito quale punto è quale senza aprire i dettagli. Senza nota resta «Punto rapido»." },
     { v: "3.65.1", text: "«Torna qui»: la bussola funziona ora anche sui telefoni Android in cui il solito segnale non arrivava (usa anche il sensore di orientamento assoluto). La freccia non lampeggia più: se la bussola del telefono non c'è, usa l'ultima direzione di marcia dal GPS e la tiene per qualche secondo (sbiadita se è vecchia) invece di sparire a ogni sosta, e non fa più il giro lungo quando si passa da 359° a 1°. Se la bussola proprio non c'è, l'avviso spiega perché e cosa controllare. Nel pannello «Segna punto» la posizione GPS mostra ora anche la precisione in metri (±), come già nel Registro: si vede subito se il segnale è abbastanza buono prima di salvare." },
     { v: "3.65", text: "Nuovo pulsante «🧭 Torna qui» su ogni voce del Registro che ha una posizione GPS (punti rapidi, Anschluss, luoghi e abbattimenti): una freccia che gira insieme al telefono indica la direzione del punto, con distanza e dislivello; sotto i 15 m dice «Sei arrivato». Serve solo il GPS, anche senza rete; se la bussola non è disponibile mostra la direzione in gradi. Su iPhone chiede il permesso per la bussola. Nessun dato lascia il telefono." },
     { v: "3.64", text: "Nuovo calendario della stagione sotto le schede del tipo di caccia (Settembrina, Tardo autunnale, Invernale cinghiale, Caccia bassa, Caccia acquatica): settimane compatte con i giorni di apertura, chiuso di default e apribile con un tocco. Toccando un giorno cambiano la data in alto, il meteo e le specie sotto. Per il tardo autunnale e il cinghiale invernale, senza regolamento ufficiale, mostra i giorni indicativi dell'anno scorso segnati come provvisori (da confermare dopo la pubblicazione del regolamento). Il meteo dice quando la previsione non è ancora disponibile (oltre 15 giorni)." },
@@ -1088,7 +1089,13 @@
             + (k.coords.alt  ? ` · ${k.coords.alt} m` : "")
             + ` — <a href="https://www.google.com/maps?q=${k.coords.lat},${k.coords.lon}" target="_blank" rel="noopener">apri nelle mappe</a></div>`
           : `<div style="color:var(--ink-soft)">Nessuna coordinata GPS salvata</div>`;
-        const notaHtml = k.note ? `<div><b>Nota:</b> ${escapeHtmlLuogo(k.note)}</div>` : "";
+        // La nota (es. «posto bello», «passo del cervo») è il titolo della card: serve a
+        // riconoscere il punto senza aprire i dettagli. Senza nota resta «Punto rapido».
+        const titoloHtml = k.note
+          ? `<div class="sp quick-note">${escapeHtmlLuogo(k.note)}</div>`
+          : `<div class="sp">Punto rapido</div>`;
+        const quotaHtml = k.coords && k.coords.alt
+          ? `<div class="quick-sub">${escapeHtmlLuogo(String(k.coords.alt))} m s.l.m.</div>` : "";
         const oraHtml  = k.time ? ` alle ${escapeHtmlLuogo(k.time)}` : "";
 
         const item = document.createElement("div");
@@ -1097,9 +1104,10 @@
           <div class="info" style="flex:1">
             <span class="log-type-badge ${tipoClass}">${tipoLabel}</span>
             <div class="date">${k.date}${oraHtml}</div>
-            <div class="sp">Punto rapido</div>
+            ${titoloHtml}
+            ${quotaHtml}
             <details class="log-extra"><summary>Dettagli</summary>
-              ${coordsHtml}${notaHtml}
+              ${coordsHtml}
             </details>
           </div>
           <div class="log-actions">
