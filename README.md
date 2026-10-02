@@ -151,8 +151,8 @@ dell'Ufficio della caccia e della pesca: «Basi legali» (cartella dell'anno
 con regolamento e disposizioni), caccia alta (calendario), tardo autunnale
 (PDF), cinghiale invernale (anno della stagione), bandite e zone di
 tranquillità (decreti). Se trova una novità apre un **avviso (issue) su
-GitHub**, che arriva anche per email; se non riesce a leggere una pagina apre
-«Controllo regolamenti non funzionante». Non modifica l'app: dopo l'avviso
+GitHub**, che arriva anche per email, con titolo «🔔 UCP NUOVO DOCUMENTO: …»; se non riesce a leggere una pagina apre
+«⚠️ UCP CONTROLLO NON FUNZIONANTE». Non modifica l'app: dopo l'avviso
 l'aggiornamento dei dati resta manuale (sezione precedente). Quando hai
 finito, chiudi l'avviso. Lo stato noto è in `scripts/ucp_stato.json`.
 
