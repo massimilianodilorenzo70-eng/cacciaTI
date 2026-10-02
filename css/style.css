@@ -1594,3 +1594,6 @@ input[type="file"] { display: none; }
 .torna-info { text-align: center; color: var(--ink-soft); margin-top: 6px; min-height: 2.6em; }
 #tornaMappe { text-align: center; text-decoration: none; }
 #tornaNota { text-align: center; }
+
+/* Spazio in fondo all'elenco: l'ultima voce si può scorrere sopra il pulsante + */
+#logList { padding-bottom: 80px; }
