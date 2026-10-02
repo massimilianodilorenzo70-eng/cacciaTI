@@ -14,8 +14,7 @@
   // Cronologia versioni — dalla più recente alla più vecchia.
   // Ad ogni nuova versione: aggiungere una voce qui, in cima all'elenco.
   const CHANGELOG = [
-    { v: "3.65.2", text: "«Torna qui»: la freccia non lampeggia più. Se la bussola del telefono non c'è, la freccia usa l'ultima direzione di marcia dal GPS e la tiene per qualche secondo (sbiadita se è vecchia) invece di sparire a ogni sosta; non fa più il giro lungo quando si passa da 359° a 1°. Se manca la bussola, l'avviso indica anche perché (utile per capire se i sensori sono bloccati)." },
-    { v: "3.65.1", text: "«Torna qui»: la bussola funziona ora anche sui telefoni Android in cui il solito segnale non arrivava (usa anche il sensore di orientamento assoluto). Se la bussola proprio non c'è, mentre cammini la freccia usa la direzione del tuo movimento, e l'avviso spiega cosa controllare." },
+    { v: "3.65.1", text: "«Torna qui»: la bussola funziona ora anche sui telefoni Android in cui il solito segnale non arrivava (usa anche il sensore di orientamento assoluto). La freccia non lampeggia più: se la bussola del telefono non c'è, usa l'ultima direzione di marcia dal GPS e la tiene per qualche secondo (sbiadita se è vecchia) invece di sparire a ogni sosta, e non fa più il giro lungo quando si passa da 359° a 1°. Se la bussola proprio non c'è, l'avviso spiega perché e cosa controllare. Nel pannello «Segna punto» la posizione GPS mostra ora anche la precisione in metri (±), come già nel Registro: si vede subito se il segnale è abbastanza buono prima di salvare." },
     { v: "3.65", text: "Nuovo pulsante «🧭 Torna qui» su ogni voce del Registro che ha una posizione GPS (punti rapidi, Anschluss, luoghi e abbattimenti): una freccia che gira insieme al telefono indica la direzione del punto, con distanza e dislivello; sotto i 15 m dice «Sei arrivato». Serve solo il GPS, anche senza rete; se la bussola non è disponibile mostra la direzione in gradi. Su iPhone chiede il permesso per la bussola. Nessun dato lascia il telefono." },
     { v: "3.64", text: "Nuovo calendario della stagione sotto le schede del tipo di caccia (Settembrina, Tardo autunnale, Invernale cinghiale, Caccia bassa, Caccia acquatica): settimane compatte con i giorni di apertura, chiuso di default e apribile con un tocco. Toccando un giorno cambiano la data in alto, il meteo e le specie sotto. Per il tardo autunnale e il cinghiale invernale, senza regolamento ufficiale, mostra i giorni indicativi dell'anno scorso segnati come provvisori (da confermare dopo la pubblicazione del regolamento). Il meteo dice quando la previsione non è ancora disponibile (oltre 15 giorni)." },
     { v: "3.63.6", text: "Su Edge per Android l'invito a installare l'app non propone più il pulsante «Installa» (Android lo blocca con l'avviso «App non sicura bloccata»): consiglia invece di aprire il sito in Chrome. Su Samsung Internet il pulsante resta, con un consiglio in caso di blocco. Su Chrome e sugli altri browser non cambia nulla." },
@@ -2122,8 +2121,9 @@
         const lat = pos.coords.latitude.toFixed(5);
         const lon = pos.coords.longitude.toFixed(5);
         const alt = pos.coords.altitude != null ? ` · ${Math.round(pos.coords.altitude)} m` : "";
+        const prec = Number.isFinite(pos.coords.accuracy) ? ` (±${Math.round(pos.coords.accuracy)} m)` : "";
         const lv95 = testoLv95(pos.coords.latitude, pos.coords.longitude);
-        text.innerHTML = `✓ ${lat}, ${lon}${alt}` + (lv95 ? `<br>LV95: ${lv95}` : ""); // solo numeri: nessun testo utente
+        text.innerHTML = `✓ ${lat}, ${lon}${prec}${alt}` + (lv95 ? `<br>LV95: ${lv95}` : ""); // solo numeri: nessun testo utente
       })
       .catch(() => {
         if (token !== quickGpsToken) return;
