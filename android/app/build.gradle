@@ -8,7 +8,7 @@ android {
         applicationId 'io.github.massimilianodilorenzo70eng.cacciati'
         minSdk 23
         targetSdk 35   // ultima versione supportata: evita l'avviso di Play Protect
-        versionCode (System.getenv('VERSION_CODE') ?: '1') as int
+        versionCode Integer.parseInt(System.getenv('VERSION_CODE') ?: '1')
         versionName '1.0'
     }
 
