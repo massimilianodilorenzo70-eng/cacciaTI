@@ -142,6 +142,20 @@ Il workflow manuale `diagnostica-pagina.yml` salva una copia della pagina
 ufficiale in `debug/`, utile se un giorno il sito cambia struttura e lo
 script smette di funzionare.
 
+## Avviso sui nuovi regolamenti
+
+Il workflow `.github/workflows/controlla-ucp.yml` (script
+`scripts/controlla_ucp.py`) guarda ogni giorno in giugno-agosto e
+ottobre-novembre, e una volta a settimana negli altri mesi, le pagine
+dell'Ufficio della caccia e della pesca: «Basi legali» (cartella dell'anno
+con regolamento e disposizioni), caccia alta (calendario), tardo autunnale
+(PDF), cinghiale invernale (anno della stagione), bandite e zone di
+tranquillità (decreti). Se trova una novità apre un **avviso (issue) su
+GitHub**, che arriva anche per email; se non riesce a leggere una pagina apre
+«Controllo regolamenti non funzionante». Non modifica l'app: dopo l'avviso
+l'aggiornamento dei dati resta manuale (sezione precedente). Quando hai
+finito, chiudi l'avviso. Lo stato noto è in `scripts/ucp_stato.json`.
+
 ## Contatore di aperture
 
 L'app include GoatCounter (`cacciati.goatcounter.com`), un contatore di

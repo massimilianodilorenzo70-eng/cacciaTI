@@ -1,0 +1,42 @@
+{
+  "basi-legali": {
+    "documenti": [
+      "https://www4.ti.ch/fileadmin/DT/temi/caccia/leggi___regolamenti/2026/Disposizioni_al_cacciatore.pdf",
+      "https://www4.ti.ch/fileadmin/DT/temi/caccia/leggi___regolamenti/2026/TABELLA_Caccia_alta.pdf",
+      "https://www4.ti.ch/fileadmin/DT/temi/caccia/leggi___regolamenti/2026/Tavola_sinottica.pdf"
+    ],
+    "anni": [
+      "2026"
+    ]
+  },
+  "caccia-al-cinghiale": {
+    "stagioni": [
+      "2025"
+    ]
+  },
+  "caccia-tardo-autunnale": {
+    "documenti": [
+      "https://www4.ti.ch/fileadmin/DT/temi/caccia/documenti/Prescrizioni_caccia_tardo_autunnale_2025.pdf",
+      "https://www4.ti.ch/fileadmin/DT/temi/caccia/upload/Piano_di_abbattimento_per_ZONE_2025_21.12.2025.pdf"
+    ]
+  },
+  "caccia-alta": {
+    "calendario": {
+      "2025": "dal 06.09 al 20.09 e dal 24.09 al 28.09.2025",
+      "2026": "dal 05.09 al 19.09 e dal 23.09 al 27.09.2026",
+      "2027": "dal 04.09 al 18.09 e dal 22.09 al 26.09.2027"
+    }
+  },
+  "bandite-2021-2026": {
+    "documenti": [
+      "https://www3.ti.ch/CAN/fu/2021/BU_027.pdf"
+    ]
+  },
+  "zone-tranquillita": {
+    "documenti": [
+      "https://www4.ti.ch/fileadmin/DT/temi/caccia/pubblicazione_ZT/Norme_attuazione_ZT.pdf",
+      "https://www4.ti.ch/fileadmin/DT/temi/caccia/pubblicazione_ZT/Rapporto_esplicativo_ZT.pdf",
+      "https://www4.ti.ch/fileadmin/DT/temi/caccia/pubblicazione_ZT/Schede_ZT.pdf"
+    ]
+  }
+}
