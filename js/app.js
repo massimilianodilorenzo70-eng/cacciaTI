@@ -1053,7 +1053,7 @@
     listEl.innerHTML = "";
     const sorted = [...log].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
     if (sorted.length === 0) {
-      listEl.innerHTML = `<div class="empty-state">Nessun abbattimento registrato.</div>`;
+      listEl.innerHTML = `<div class="empty-state">Il registro è vuoto: qui compariranno catture, punti rapidi, Anschluss e luoghi.</div>`;
       document.getElementById("quickLogBanner").hidden = true;
       return;
     }

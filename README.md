@@ -79,7 +79,7 @@ caccia alta/bassa/acquatica:
 - **Tema scuro** attivabile dal pulsante ☀️/🌙 in alto a destra, utile
   all'alba e al crepuscolo.
 
-**Registro catture** — tre sottoschede:
+**Registro** (catture, punti rapidi, Anschluss e luoghi) — tre sottoschede:
 - *Elenco*: tutti gli abbattimenti registrati, con i totali sulle quote di
   gruppo che sommano più categorie insieme (es. camoscio: 3 capi totali di
   cui max 2 adulti; lepre comune+variabile: 2 capi totali). Le quote a
