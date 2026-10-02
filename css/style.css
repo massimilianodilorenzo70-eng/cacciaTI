@@ -1587,7 +1587,7 @@ input[type="file"] { display: none; }
   border-radius: 50%; border: 3px solid var(--line); background: var(--surface);
 }
 .torna-n { position: absolute; top: 6px; left: 50%; transform: translateX(-50%); font-size: 12px; font-weight: 700; color: var(--rust); }
-.torna-freccia { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--forest); transition: transform .25s; }
+.torna-freccia { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--forest); transition: transform .25s, opacity .3s; }
 .torna-freccia[hidden] { display: none; }
 .torna-freccia svg { width: 110px; height: 150px; }
 .torna-dist { text-align: center; font-size: 38px; font-weight: 700; color: var(--forest); line-height: 1.1; }
